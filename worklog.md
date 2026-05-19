@@ -23,3 +23,50 @@ Stage Summary:
 - Complete 3D Interior Design Previewer built with Next.js 16 + Three.js
 - All features from the original HTML implemented as a proper React component
 - App compiles and serves successfully on port 3000
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Market-ready feature expansion (auth, dashboard, multi-room, more furniture, etc.)
+
+Work Log:
+- Updated Prisma schema with Account, Session, VerificationToken, Project, Room models
+- Set up NextAuth.js v4 with Credentials provider + PrismaAdapter
+- Created auth pages: Login, Sign Up, Forgot Password (matching warm design palette)
+- Created Landing/Marketing page with hero, features grid, how-it-works, CTA, footer
+- Created Pricing page with Free/Pro/Studio tiers and FAQ accordion
+- Created Dashboard with project grid, new project card, dropdown menus, delete/rename dialogs
+- Created API routes: /api/projects, /api/projects/[id], /api/rooms, /api/rooms/[id], /api/rooms/public/[id]
+- Created Profile & Settings page with two tabs (Profile, Preferences)
+- Created Onboarding flow (3 steps: room type, style, ready)
+- Created public View page for shared designs (read-only 3D viewer)
+- Added 17 new furniture builders (Bed, Nightstand, Wardrobe, Dresser, VanityTable, KitchenIsland, BarStool, DiningTable, DiningChair, KitchenCounter, Desk, OfficeChair, FilingCabinet, MonitorStand, Bathtub, Toilet, PedestalSink, Shower)
+- Extracted furniture builders to separate lib file (furniture-builders.ts)
+- Created furniture-data.ts with categories, item definitions, material colors, room type defaults
+- Upgraded InteriorStudio component with:
+  - 8 furniture categories (Seating, Tables, Lighting, Decor, Bedroom, Kitchen, Office, Bathroom) — 30+ items
+  - Multi-room support with room switcher tabs and add-room modal
+  - Expanded room settings: 5 flooring types, door placement, window count/wall, 4 lighting moods
+  - Furniture search bar
+  - Snap-to-grid toggle
+  - Keyboard shortcuts (Delete, D, R, Escape) with shortcuts modal
+  - Share button (copies public view link)
+  - Item count badge
+  - Mobile warning overlay
+  - Design name input (editable inline)
+  - Save status indicator (Saved/Saving/Unsaved)
+  - Auto-save timer (every 60s)
+  - Room type defaults (pre-loaded furniture for each room type)
+- Added AuthProvider wrapper to root layout
+- Added middleware for route protection
+- Configured environment variables (NEXTAUTH_SECRET, NEXTAUTH_URL)
+
+Stage Summary:
+- Complete market-ready Interior Studio application
+- 10+ pages: Landing, Pricing, Login, Signup, Forgot Password, Dashboard, Editor, Onboarding, Profile, Public View
+- 30+ furniture items across 8 categories
+- Full auth system with NextAuth.js
+- Database-backed save/load with Prisma + SQLite
+- Multi-room project support
+- All routes tested and serving correctly (200 status codes)
+- Lint passes clean

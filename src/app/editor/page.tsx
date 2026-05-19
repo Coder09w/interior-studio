@@ -14,12 +14,12 @@ const InteriorStudio = dynamic(() => import('@/components/InteriorStudio'), {
           </svg>
         </div>
         <h2 className="text-lg font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Interior Studio</h2>
-        <p className="text-sm mt-1" style={{ color: '#8A8478' }}>Loading 3D Engine...</p>
+        <p className="text-sm mt-1" style={{ color: '#8A8478' }}>Loading 3D Editor...</p>
       </div>
     </div>
   ),
 });
 
-export default function Home() {
+export default function EditorPage() {
   return <InteriorStudio />;
 }

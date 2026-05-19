@@ -1,0 +1,681 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { formatDistanceToNow } from 'date-fns';
+import {
+  Sofa,
+  Plus,
+  MoreHorizontal,
+  FolderOpen,
+  Pencil,
+  Trash2,
+  User,
+  Settings,
+  LogOut,
+  LayoutGrid,
+  Loader2,
+  Home,
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { AuthProvider } from '@/components/providers/auth-provider';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface Room {
+  id: string;
+  name: string;
+  roomType: string;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  rooms: Room[];
+}
+
+// ─── Room type display helpers ───────────────────────────────────────────────
+
+const ROOM_TYPE_LABELS: Record<string, string> = {
+  living: 'Living Room',
+  bedroom: 'Bedroom',
+  kitchen: 'Kitchen',
+  bathroom: 'Bathroom',
+  office: 'Office',
+  dining: 'Dining Room',
+};
+
+const ROOM_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
+  living: { bg: '#F0E8D8', text: '#8B7355' },
+  bedroom: { bg: '#E8E0F0', text: '#6B5B8A' },
+  kitchen: { bg: '#E0F0E8', text: '#4A7A5A' },
+  bathroom: { bg: '#E0E8F0', text: '#4A6A8A' },
+  office: { bg: '#F0E0D8', text: '#8A5A4A' },
+  dining: { bg: '#F0E8E0', text: '#7A6A4A' },
+};
+
+// ─── Dashboard Content ───────────────────────────────────────────────────────
+
+function DashboardContent() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login');
+    }
+  }, [status, router]);
+
+  // Fetch projects
+  const fetchProjects = useCallback(async () => {
+    try {
+      const res = await fetch('/api/projects');
+      if (res.ok) {
+        const data = await res.json();
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchProjects();
+    }
+  }, [status, fetchProjects]);
+
+  // Create new project
+  const handleCreateProject = async () => {
+    if (isCreating) return;
+    setIsCreating(true);
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'New Project' }),
+      });
+      if (res.ok) {
+        const project = await res.json();
+        router.push(`/editor/${project.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create project:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Delete project
+  const handleDeleteProject = async () => {
+    if (!selectedProject || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/projects/${selectedProject.id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setProjects((prev) =>
+          prev.filter((p) => p.id !== selectedProject.id)
+        );
+        setDeleteDialogOpen(false);
+        setSelectedProject(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Rename project
+  const handleRenameProject = async () => {
+    if (!selectedProject || !renameValue.trim() || isRenaming) return;
+    setIsRenaming(true);
+    try {
+      const res = await fetch(`/api/projects/${selectedProject.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: renameValue.trim() }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setProjects((prev) =>
+          prev.map((p) => (p.id === updated.id ? updated : p))
+        );
+        setRenameDialogOpen(false);
+        setSelectedProject(null);
+        setRenameValue('');
+      }
+    } catch (error) {
+      console.error('Failed to rename project:', error);
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  // Get unique room types from a project
+  const getRoomTypes = (project: Project) => {
+    const types = [...new Set(project.rooms.map((r) => r.roomType))];
+    return types.slice(0, 3); // Max 3 tags shown
+  };
+
+  // Format relative time
+  const formatRelativeTime = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch {
+      return 'recently';
+    }
+  };
+
+  // User initials for avatar fallback
+  const getUserInitials = () => {
+    const name = session?.user?.name || '';
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Loading state
+  if (status === 'loading' || (status === 'authenticated' && isLoading)) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#F5F0E8' }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Loader2
+            className="w-8 h-8 animate-spin"
+            style={{ color: '#C17F4E' }}
+          />
+          <p style={{ color: '#8A8478' }} className="text-sm">
+            Loading your workspace…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated - will redirect
+  if (!session) return null;
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
+      {/* ─── Top Nav Bar ─────────────────────────────────────────────────── */}
+      <header
+        className="sticky top-0 z-50 border-b"
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E2DDD4',
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm"
+              style={{ backgroundColor: '#C17F4E' }}
+            >
+              <Sofa className="w-5 h-5 text-white" />
+            </div>
+            <span
+              className="text-lg font-bold tracking-tight hidden sm:inline"
+              style={{ color: '#2D2D2D' }}
+            >
+              Interior Studio
+            </span>
+          </div>
+
+          {/* User Menu */}
+          <div className="flex items-center gap-3">
+            <span
+              className="text-sm font-medium hidden md:inline"
+              style={{ color: '#2D2D2D' }}
+            >
+              {session.user?.name || session.user?.email}
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-9 w-9 rounded-full p-0"
+                >
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage
+                      src={session.user?.image || ''}
+                      alt={session.user?.name || 'User'}
+                    />
+                    <AvatarFallback
+                      style={{ backgroundColor: '#F0E8D8', color: '#8B7355' }}
+                      className="text-sm font-semibold"
+                    >
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-56"
+                align="end"
+                forceMount
+              >
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {session.user?.name || 'User'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {session.user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  onClick={() => signOut({ callbackUrl: '/auth/login' })}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </header>
+
+      {/* ─── Main Content ────────────────────────────────────────────────── */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1
+            className="text-2xl sm:text-3xl font-bold tracking-tight"
+            style={{ color: '#2D2D2D' }}
+          >
+            Welcome back, {session.user?.name?.split(' ')[0] || 'Designer'}!
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: '#8A8478' }}>
+            {projects.length === 0
+              ? 'Start creating your dream spaces'
+              : `You have ${projects.length} design${projects.length === 1 ? '' : 's'} in your workspace`}
+          </p>
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* + New Project Card */}
+          <Card
+            className="group cursor-pointer border-2 border-dashed transition-all duration-200 hover:shadow-md hover:border-solid py-0"
+            style={{
+              borderColor: '#C17F4E40',
+              backgroundColor: '#FFFFFF',
+              minHeight: '220px',
+            }}
+            onClick={handleCreateProject}
+          >
+            <CardContent className="flex flex-col items-center justify-center h-full p-6 gap-4" style={{ minHeight: '220px' }}>
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                style={{ backgroundColor: '#F0E8D8' }}
+              >
+                <Plus
+                  className="w-7 h-7"
+                  style={{ color: '#C17F4E' }}
+                />
+              </div>
+              <div className="text-center">
+                <p
+                  className="font-semibold text-base"
+                  style={{ color: '#C17F4E' }}
+                >
+                  Create New Project
+                </p>
+                <p
+                  className="text-xs mt-1"
+                  style={{ color: '#8A8478' }}
+                >
+                  Start designing a new space
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Existing Project Cards */}
+          {projects.map((project) => (
+            <Card
+              key={project.id}
+              className="group cursor-pointer transition-all duration-200 hover:shadow-md py-0"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderColor: '#E2DDD4',
+                minHeight: '220px',
+              }}
+              onClick={() => router.push(`/editor/${project.id}`)}
+            >
+              <CardContent className="flex flex-col justify-between p-6" style={{ minHeight: '220px' }}>
+                {/* Top: Room preview area */}
+                <div className="flex-1 flex flex-col">
+                  {/* Thumbnail placeholder */}
+                  <div
+                    className="w-full h-20 rounded-lg flex items-center justify-center mb-4"
+                    style={{ backgroundColor: '#FAF8F4' }}
+                  >
+                    <Home
+                      className="w-8 h-8"
+                      style={{ color: '#E2DDD4' }}
+                    />
+                  </div>
+
+                  {/* Project name */}
+                  <h3
+                    className="font-semibold text-base leading-tight mb-1 line-clamp-1"
+                    style={{ color: '#2D2D2D' }}
+                  >
+                    {project.name}
+                  </h3>
+
+                  {/* Room count + last updated */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span
+                      className="text-xs"
+                      style={{ color: '#8A8478' }}
+                    >
+                      {project.rooms.length} room{project.rooms.length !== 1 ? 's' : ''}
+                    </span>
+                    <span style={{ color: '#E2DDD4' }}>·</span>
+                    <span
+                      className="text-xs"
+                      style={{ color: '#8A8478' }}
+                    >
+                      {formatRelativeTime(project.updatedAt)}
+                    </span>
+                  </div>
+
+                  {/* Room type tags */}
+                  {project.rooms.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {getRoomTypes(project).map((type) => (
+                        <Badge
+                          key={type}
+                          variant="secondary"
+                          className="text-xs font-medium px-2 py-0.5 rounded-md border-0"
+                          style={{
+                            backgroundColor: ROOM_TYPE_COLORS[type]?.bg || '#F0E8D8',
+                            color: ROOM_TYPE_COLORS[type]?.text || '#8B7355',
+                          }}
+                        >
+                          {ROOM_TYPE_LABELS[type] || type}
+                        </Badge>
+                      ))}
+                      {project.rooms.length > 3 && (
+                        <Badge
+                          variant="secondary"
+                          className="text-xs font-medium px-2 py-0.5 rounded-md border-0"
+                          style={{
+                            backgroundColor: '#F0E8D8',
+                            color: '#8A8478',
+                          }}
+                        >
+                          +{project.rooms.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* 3-dot menu */}
+                <div className="flex justify-end mt-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ color: '#8A8478' }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/editor/${project.id}`);
+                        }}
+                      >
+                        <FolderOpen className="mr-2 h-4 w-4" />
+                        Open
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProject(project);
+                          setRenameValue(project.name);
+                          setRenameDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="cursor-pointer text-red-600 focus:text-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProject(project);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {projects.length === 0 && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-16 sm:py-24">
+            <div
+              className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
+              style={{ backgroundColor: '#F0E8D8' }}
+            >
+              <LayoutGrid
+                className="w-10 h-10"
+                style={{ color: '#C17F4E' }}
+              />
+            </div>
+            <h2
+              className="text-xl font-semibold mb-2"
+              style={{ color: '#2D2D2D' }}
+            >
+              No projects yet
+            </h2>
+            <p
+              className="text-sm text-center max-w-sm mb-6"
+              style={{ color: '#8A8478' }}
+            >
+              Create your first design and start visualizing your dream spaces in 3D.
+            </p>
+            <Button
+              onClick={handleCreateProject}
+              disabled={isCreating}
+              className="font-medium text-white px-6 cursor-pointer"
+              style={{ backgroundColor: '#C17F4E' }}
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating…
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Create Your First Project
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </main>
+
+      {/* ─── Delete Confirmation Dialog ──────────────────────────────────── */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent style={{ backgroundColor: '#FFFFFF', borderColor: '#E2DDD4' }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: '#2D2D2D' }}>Delete Project</DialogTitle>
+            <DialogDescription style={{ color: '#8A8478' }}>
+              Are you sure you want to delete &quot;{selectedProject?.name}&quot;? This action cannot be undone. All rooms and furniture data will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setSelectedProject(null);
+              }}
+              className="cursor-pointer"
+              style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteProject}
+              disabled={isDeleting}
+              className="cursor-pointer"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                'Delete Project'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Rename Dialog ───────────────────────────────────────────────── */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent style={{ backgroundColor: '#FFFFFF', borderColor: '#E2DDD4' }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: '#2D2D2D' }}>Rename Project</DialogTitle>
+            <DialogDescription style={{ color: '#8A8478' }}>
+              Enter a new name for your project.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="Project name"
+            className="h-11"
+            style={{ borderColor: '#E2DDD4' }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRenameProject();
+            }}
+          />
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRenameDialogOpen(false);
+                setSelectedProject(null);
+                setRenameValue('');
+              }}
+              className="cursor-pointer"
+              style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRenameProject}
+              disabled={isRenaming || !renameValue.trim()}
+              className="cursor-pointer text-white"
+              style={{ backgroundColor: '#C17F4E' }}
+            >
+              {isRenaming ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── Main Page Export (wrapped with AuthProvider) ────────────────────────────
+
+export default function DashboardPage() {
+  return (
+    <AuthProvider>
+      <DashboardContent />
+    </AuthProvider>
+  );
+}
