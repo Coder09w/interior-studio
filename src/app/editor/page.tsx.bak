@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 
-function LoadingScreen() {
-  return (
+const InteriorStudio = dynamic(() => import('@/components/InteriorStudio'), {
+  ssr: false,
+  loading: () => (
     <div className="flex items-center justify-center h-screen" style={{ background: '#F5F0E8' }}>
       <div className="text-center">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: '#C17F4E' }}>
@@ -16,22 +17,9 @@ function LoadingScreen() {
         <p className="text-sm mt-1" style={{ color: '#8A8478' }}>Loading 3D Editor...</p>
       </div>
     </div>
-  );
-}
+  ),
+});
 
 export default function EditorPage() {
-  const [Studio, setStudio] = useState<React.ComponentType | null>(null);
-
-  useEffect(() => {
-    // Import Three.js components only on the client side after mount
-    // This prevents the server from ever trying to parse/compile Three.js
-    import('@/components/InteriorStudio').then((mod) => {
-      setStudio(() => mod.default);
-    }).catch((err) => {
-      console.error('Failed to load InteriorStudio:', err);
-    });
-  }, []);
-
-  if (!Studio) return <LoadingScreen />;
-  return <Studio />;
+  return <InteriorStudio />;
 }

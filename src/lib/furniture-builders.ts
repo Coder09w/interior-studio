@@ -11,7 +11,12 @@ export function makeMat(color: string, type: MatType): THREE.MeshStandardMateria
   return new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, metalness: 0 });
 }
 
-const legMat = new THREE.MeshStandardMaterial({ color: 0x3b2f28, roughness: 0.5, metalness: 0.1 });
+// Lazy-initialized to avoid creating Three.js objects at module scope (crashes SSR compilation)
+let _legMat: THREE.MeshStandardMaterial | null = null;
+function getLegMat(): THREE.MeshStandardMaterial {
+  if (!_legMat) _legMat = new THREE.MeshStandardMaterial({ color: 0x3b2f28, roughness: 0.5, metalness: 0.1 });
+  return _legMat;
+}
 const legGeo = (h = 0.15, r = 0.025) => new THREE.CylinderGeometry(Math.max(0.01, r), Math.max(0.01, r), Math.max(0.01, h), 8);
 
 /* ===== SEATING ===== */
@@ -27,7 +32,7 @@ export function createSofa(col: string, mtype: MatType): THREE.Group {
     arm.position.set(x, 0.52, 0); arm.castShadow = true; g.add(arm);
   });
   [[-0.9, 0.12, 0.32], [0.9, 0.12, 0.32], [-0.9, 0.12, -0.32], [0.9, 0.12, -0.32]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(legGeo(), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   const cm = makeMat(col, mtype); cm.color.offsetHSL(0, 0, 0.04);
   [-0.52, 0, 0.52].forEach(x => {
@@ -54,7 +59,7 @@ export function createArmchair(col: string, mtype: MatType): THREE.Group {
     arm.position.set(x, 0.47, 0); arm.castShadow = true; g.add(arm);
   });
   [[-0.28, 0.1, 0.28], [0.28, 0.1, 0.28], [-0.28, 0.1, -0.28], [0.28, 0.1, -0.28]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(legGeo(), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Armchair', desc: 'Accent chair, 75×80cm', matType: mtype, matColor: col };
   return g;
@@ -68,7 +73,7 @@ export function createOttoman(col: string, mtype: MatType): THREE.Group {
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.25, 0.15, 24), m.clone());
   base.position.y = 0.12; base.castShadow = true; g.add(base);
   [[-0.18, 0.025, 0.18], [0.18, 0.025, 0.18], [-0.18, 0.025, -0.18], [0.18, 0.025, -0.18]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.05, 0.02), legMat); l.position.set(...p as [number, number, number]); g.add(l);
+    const l = new THREE.Mesh(legGeo(0.05, 0.02), getLegMat()); l.position.set(...p as [number, number, number]); g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Ottoman', desc: 'Round ottoman, ⌀60cm', matType: mtype, matColor: col };
   return g;
@@ -83,7 +88,7 @@ export function createCoffeeTable(col: string, mtype: MatType): THREE.Group {
   const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.5), m.clone());
   shelf.position.y = 0.1; shelf.receiveShadow = true; g.add(shelf);
   [[-0.52, 0.19, 0.24], [0.52, 0.19, 0.24], [-0.52, 0.19, -0.24], [0.52, 0.19, -0.24]].forEach(p => {
-    const l = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.38, 0.03), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.38, 0.03), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Coffee Table', desc: 'Low table, 120×60cm', matType: mtype, matColor: col };
   return g;
@@ -94,9 +99,9 @@ export function createSideTable(col: string, mtype: MatType): THREE.Group {
   const m = makeMat(col, mtype);
   const top = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 20), m);
   top.position.y = 0.5; top.castShadow = true; g.add(top);
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.47, 10), legMat);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.47, 10), getLegMat());
   stem.position.y = 0.26; stem.castShadow = true; g.add(stem);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.02, 16), legMat);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.02, 16), getLegMat());
   base.position.y = 0.01; g.add(base);
   g.userData = { isFurniture: true, name: 'Side Table', desc: 'Round side table, ⌀45cm', matType: mtype, matColor: col };
   return g;
@@ -110,7 +115,7 @@ export function createConsole(col: string, mtype: MatType): THREE.Group {
   const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.025, 0.3), m.clone());
   shelf.position.y = 0.25; g.add(shelf);
   [[-0.58, 0.36, 0.13], [0.58, 0.36, 0.13], [-0.58, 0.36, -0.13], [0.58, 0.36, -0.13]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.72, 0.02), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(legGeo(0.72, 0.02), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Console', desc: 'Console table, 130×35cm', matType: mtype, matColor: col };
   return g;
@@ -237,7 +242,7 @@ export function createTVStand(col: string, _mtype: MatType): THREE.Group {
     door.position.set(x, 0.22, 0.2); g.add(door);
   });
   [[-0.7, 0.02, 0.16], [0.7, 0.02, 0.16], [-0.7, 0.02, -0.16], [0.7, 0.02, -0.16]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.04, 0.02), legMat); l.position.set(...p as [number, number, number]); g.add(l);
+    const l = new THREE.Mesh(legGeo(0.04, 0.02), getLegMat()); l.position.set(...p as [number, number, number]); g.add(l);
   });
   const tv = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.7, 0.04), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.4 }));
   tv.position.set(0, 0.82, 0); tv.castShadow = true; g.add(tv);
@@ -285,7 +290,7 @@ export function createNightstand(col: string, mtype: MatType): THREE.Group {
   const knob = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 6), new THREE.MeshStandardMaterial({ color: 0xc4a882, metalness: 0.5 }));
   knob.position.set(0, 0.3, 0.21); g.add(knob);
   [[-0.2, 0.025, 0.16], [0.2, 0.025, 0.16], [-0.2, 0.025, -0.16], [0.2, 0.025, -0.16]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.05, 0.02), legMat); l.position.set(...p as [number, number, number]); g.add(l);
+    const l = new THREE.Mesh(legGeo(0.05, 0.02), getLegMat()); l.position.set(...p as [number, number, number]); g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Nightstand', desc: 'Bedside table, 50×40cm', matType: mtype, matColor: col };
   return g;
@@ -327,7 +332,7 @@ export function createDresser(col: string, _mtype: MatType): THREE.Group {
     knob.position.set(0, y, 0.26); g.add(knob);
   });
   [[-0.55, 0.025, 0.2], [0.55, 0.025, 0.2], [-0.55, 0.025, -0.2], [0.55, 0.025, -0.2]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.05, 0.02), legMat); l.position.set(...p as [number, number, number]); g.add(l);
+    const l = new THREE.Mesh(legGeo(0.05, 0.02), getLegMat()); l.position.set(...p as [number, number, number]); g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Dresser', desc: 'Low cabinet, 120×50cm', matType: 'wood' as MatType, matColor: col || '#B8956A' };
   return g;
@@ -339,7 +344,7 @@ export function createVanityTable(col: string, _mtype: MatType): THREE.Group {
   const top = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.03, 0.4), m);
   top.position.y = 0.72; top.castShadow = true; g.add(top);
   [[-0.38, 0.36, 0.15], [0.38, 0.36, 0.15], [-0.38, 0.36, -0.15], [0.38, 0.36, -0.15]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.72, 0.02), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(legGeo(0.72, 0.02), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   // Mirror (oval using ellipse)
   const mirror = new THREE.Mesh(new THREE.CircleGeometry(0.25, 24), new THREE.MeshStandardMaterial({ color: 0xc8d8e0, roughness: 0.1, metalness: 0.7 }));
@@ -388,7 +393,7 @@ export function createDiningTable(col: string, mtype: MatType): THREE.Group {
   const top = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.9), m);
   top.position.y = 0.74; top.castShadow = true; top.receiveShadow = true; g.add(top);
   [[-0.7, 0.36, 0.38], [0.7, 0.36, 0.38], [-0.7, 0.36, -0.38], [0.7, 0.36, -0.38]].forEach(p => {
-    const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.72, 0.04), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.72, 0.04), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Dining Table', desc: 'Dining table, 160×90cm', matType: mtype, matColor: col };
   return g;
@@ -402,7 +407,7 @@ export function createDiningChair(col: string, mtype: MatType): THREE.Group {
   const back = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.4, 0.03), m.clone());
   back.position.set(0, 0.66, -0.19); back.castShadow = true; g.add(back);
   [[-0.16, 0.21, 0.16], [0.16, 0.21, 0.16], [-0.16, 0.21, -0.16], [0.16, 0.21, -0.16]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.42, 0.018), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(legGeo(0.42, 0.018), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Dining Chair', desc: 'Wooden chair, 42×42cm', matType: mtype, matColor: col };
   return g;
@@ -438,7 +443,7 @@ export function createDesk(col: string, mtype: MatType): THREE.Group {
   drawers.position.set(0.45, 0.35, 0); drawers.castShadow = true; g.add(drawers);
   // Legs on other side
   [[-0.6, 0.35, 0.28], [-0.6, 0.35, -0.28]].forEach(p => {
-    const l = new THREE.Mesh(legGeo(0.7, 0.025), legMat); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+    const l = new THREE.Mesh(legGeo(0.7, 0.025), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
   });
   g.userData = { isFurniture: true, name: 'Desk', desc: 'Office desk, 140×70cm', matType: mtype, matColor: col };
   return g;
