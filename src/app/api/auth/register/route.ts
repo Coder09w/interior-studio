@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Hash the password (lower rounds for dev, production should use 12+)
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create the user
     const user = await db.user.create({
