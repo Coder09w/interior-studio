@@ -30,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { AuthProvider } from '@/components/providers/auth-provider';
+
 
 // ─── Wall Color Options ──────────────────────────────────────────────────────
 
@@ -737,9 +737,5 @@ function ProfileContent() {
 // ─── Main Page Export ────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
-  return (
-    <AuthProvider>
-      <ProfileContent />
-    </AuthProvider>
-  );
+  return <ProfileContent />;
 }

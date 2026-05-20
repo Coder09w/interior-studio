@@ -40,7 +40,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { AuthProvider } from '@/components/providers/auth-provider';
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -670,12 +670,8 @@ function DashboardContent() {
   );
 }
 
-// ─── Main Page Export (wrapped with AuthProvider) ────────────────────────────
+// ─── Main Page Export ────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  return (
-    <AuthProvider>
-      <DashboardContent />
-    </AuthProvider>
-  );
+  return <DashboardContent />;
 }

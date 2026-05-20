@@ -70,3 +70,26 @@ Stage Summary:
 - Multi-room project support
 - All routes tested and serving correctly (200 status codes)
 - Lint passes clean
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Fix server errors (404 and 500) and minor bugs
+
+Work Log:
+- Investigated 404 and 500 errors from dev server logs
+- Identified root cause of 500 error: missing NEXTAUTH_SECRET env variable causing Configuration error on /api/auth/error
+- Added NEXTAUTH_SECRET and NEXTAUTH_URL to .env file
+- Identified root cause of 404 error: missing /editor/[projectId] dynamic route (dashboard redirects to /editor/${project.id} but only /editor/page.tsx existed)
+- Created /src/app/editor/[projectId]/page.tsx with project data fetching, auth guard, and dynamic InteriorStudio import
+- Identified and fixed double AuthProvider wrapping in dashboard, onboarding, and profile pages (root layout already provides AuthProvider)
+- Verified @auth/prisma-adapter v2 compatibility with next-auth v4 at runtime (no changes needed)
+- Regenerated Prisma client and pushed schema to database
+- Successfully built production build with all 22 routes including the new /editor/[projectId]
+- Verified no NO_SECRET or Configuration errors in logs after fix
+
+Stage Summary:
+- Fixed 500 error by adding NEXTAUTH_SECRET and NEXTAUTH_URL to .env
+- Fixed 404 error by creating /editor/[projectId] dynamic route page
+- Fixed double AuthProvider wrapping (removed redundant AuthProvider from 3 pages)
+- Production build succeeds with all routes present and no errors

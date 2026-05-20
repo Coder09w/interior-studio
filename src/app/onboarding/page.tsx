@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AuthProvider } from '@/components/providers/auth-provider';
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -509,9 +509,5 @@ function OnboardingContent() {
 // ─── Main Page Export ────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
-  return (
-    <AuthProvider>
-      <OnboardingContent />
-    </AuthProvider>
-  );
+  return <OnboardingContent />;
 }
