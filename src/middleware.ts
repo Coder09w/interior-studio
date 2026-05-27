@@ -15,28 +15,27 @@ export default withAuth(
 export const config = {
   matcher: [
     /*
-     * Protected routes:
+     * Protected routes (require authentication):
      * - /dashboard
-     * - /editor
      * - /profile
      * - /onboarding
-     * - /api/designs
-     * - /api/projects
-     * - /api/rooms
+     * - /api/projects (read/write user data)
+     * - /api/rooms (read/write user data)
+     * - /api/user (profile management)
      *
-     * Public routes (NOT matched):
-     * - / (home)
+     * Public routes (NOT matched — accessible without login):
+     * - / (home / landing page)
+     * - /editor (free 3D editor, no auth required)
      * - /auth/* (login, register, etc.)
      * - /pricing
      * - /view/*
      * - /api/auth/* (next-auth routes)
      */
     "/dashboard/:path*",
-    "/editor/:path*",
     "/profile/:path*",
     "/onboarding/:path*",
-    "/api/designs/:path*",
     "/api/projects/:path*",
     "/api/rooms/:path*",
+    "/api/user/:path*",
   ],
 };
