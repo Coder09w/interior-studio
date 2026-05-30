@@ -297,9 +297,9 @@ function HeroSection() {
                 className="mt-5 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed"
                 style={{ color: '#8A8478' }}
               >
-                Visualize, customize, and perfect your interior designs with our
-                interactive 3D room editor. Drag furniture, swap materials, and
-                see your vision come to life — no design experience needed.
+                Design and explore your rooms in an interactive 3D editor.
+                Place furniture, swap materials, adjust lighting, and iterate on your
+                layout from any angle — no design experience needed.
               </p>
             </FadeInWhenVisible>
 
@@ -348,9 +348,9 @@ function HeroSection() {
                 </div>
                 <p className="text-sm" style={{ color: '#8A8478' }}>
                   <span className="font-semibold" style={{ color: '#2D2D2D' }}>
-                    2,400+
+                    Join our
                   </span>{' '}
-                  designers already creating
+                  beta community
                 </p>
               </div>
             </FadeInWhenVisible>
@@ -402,6 +402,11 @@ function HeroSection() {
                     transformOrigin: 'top center',
                   }}
                 />
+
+                {/* Beta Preview badge */}
+                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-[10px] font-semibold" style={{ background: 'rgba(193,127,78,0.9)', color: '#fff' }}>
+                  BETA PREVIEW
+                </div>
 
                 {/* Animated furniture items */}
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -1416,13 +1421,17 @@ function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-sm">Legal</h4>
             <ul className="space-y-2.5">
-              {['Privacy', 'Terms'].map((item) => (
-                <li key={item}>
+              {[
+                { label: 'Privacy', href: '/privacy' },
+                { label: 'Terms', href: '/terms' },
+                { label: 'Contact', href: '/contact' },
+              ].map((item) => (
+                <li key={item.label}>
                   <Link
-                    href="#"
+                    href={item.href}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
-                    {item}
+                    {item.label}
                   </Link>
                 </li>
               ))}

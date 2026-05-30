@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import SiteNav from '@/components/site-nav';
 import {
   Sofa,
   Check,
@@ -163,28 +164,15 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F5F0E8' }}>
       {/* Navbar */}
-      <nav className="border-b sticky top-0 z-50" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#C17F4E' }}>
-              <Sofa className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-              Interior Studio
-            </span>
-            <span
-              className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
-              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
-            >
-              BETA
-            </span>
-          </Link>
-          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: '#8A8478' }}>
+      <SiteNav
+        variant="solid"
+        rightContent={
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#8A8478' }}>
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
-        </div>
-      </nav>
+        }
+      />
 
       {/* Hero Section — Early Access Beta */}
       <div className="text-center pt-16 pb-8 px-4">

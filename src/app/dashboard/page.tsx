@@ -189,7 +189,7 @@ function DashboardContent() {
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'New Project' }),
+        body: JSON.stringify({ name: `My Design ${projects.length + 1}` }),
       });
 
       if (res.status === 403) {

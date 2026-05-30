@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Sofa, ArrowLeft, Mail, MessageSquare, HelpCircle, Send, Phone, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, Sofa, Mail, MessageSquare, HelpCircle, Send, Phone, MapPin, Clock } from 'lucide-react';
+import SiteNav from '@/components/site-nav';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -80,22 +81,16 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F5F0E8' }}>
       {/* Navbar */}
-      <nav className="border-b" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#C17F4E' }}>
-              <Sofa className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-              Interior Studio
-            </span>
-          </Link>
+      <SiteNav
+        variant="solid"
+        showBeta={false}
+        rightContent={
           <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#8A8478' }}>
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
-        </div>
-      </nav>
+        }
+      />
 
       {/* Breadcrumb */}
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6">

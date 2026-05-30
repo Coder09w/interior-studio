@@ -203,6 +203,7 @@ export default function InteriorStudio() {
   const [toastVisible, setToastVisible] = useState(false);
   const [autoRotActive, setAutoRotActive] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(false);
+  const [shadowsEnabled, setShadowsEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [designName, setDesignName] = useState('Untitled Room');
@@ -230,6 +231,7 @@ export default function InteriorStudio() {
   const doorWallRef = useRef('none'); const windowCountRef = useRef(1);
   const windowWallRef = useRef('back'); const lightMoodRef = useRef('daylight');
   const snapToGridRef = useRef(false);
+  const shadowsEnabledRef = useRef(true);
   const ceilingLightPresetRef = useRef<'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'>('recessed');
   const roomStatesRef = useRef<Map<string, FurnitureData[]>>(new Map());
 
@@ -1856,7 +1858,7 @@ export default function InteriorStudio() {
             {filteredItems.map(item => (
               <button key={item.name} onClick={() => { addFurniture(item.fn, currentColor, currentMatType); setMobilePanel(null); }} className="p-2 rounded-lg border cursor-pointer transition-all text-center"
                 style={{ background: '#FAF8F4', borderColor: '#E2DDD4' }}>
-                <div className="w-8 h-8 rounded flex items-center justify-center mx-auto mb-1 text-base" style={{ background: '#F0E8D8' }}>{item.thumb}</div>
+                <div className="w-8 h-8 rounded flex items-center justify-center mx-auto mb-1 text-sm" style={{ background: '#F0E8D8', color: '#8A8478' }}><i className={`fas ${item.icon}`} /></div>
                 <p className="text-[9px] font-semibold leading-tight">{item.name}</p>
               </button>
             ))}
@@ -1880,6 +1882,7 @@ export default function InteriorStudio() {
                 style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
             ))}
           </div>
+          <div className="flex items-center gap-1 mt-1"><span className="text-[8px]" style={{ color: '#8A8478' }}>Color:</span><span className="text-[9px] font-semibold" style={{ color: '#C17F4E' }}>{colorNames[currentColor] || currentColor}</span></div>
           {/* Wall Color */}
           <p className="text-[10px] font-bold uppercase tracking-[1.5px] mt-3 mb-2" style={{ color: '#8A8478' }}>Wall Color</p>
           <div className="flex flex-wrap gap-1.5">
@@ -2040,7 +2043,7 @@ export default function InteriorStudio() {
             <button key={item.name} onClick={() => addFurniture(item.fn, currentColor, currentMatType)} className="p-2 rounded-lg border cursor-pointer transition-all text-left hover:-translate-y-0.5"
               style={{ background: '#FAF8F4', borderColor: '#E2DDD4' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#C17F4E'; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E2DDD4'; }}>
-              <div className="w-8 h-8 rounded flex items-center justify-center mb-1 text-base" style={{ background: '#F0E8D8' }}>{item.thumb}</div>
+              <div className="w-8 h-8 rounded flex items-center justify-center mb-1 text-sm" style={{ background: '#F0E8D8', color: '#8A8478' }}><i className={`fas ${item.icon}`} /></div>
               <p className="text-[10px] font-semibold leading-tight">{item.name}</p>
               <p className="text-[8px]" style={{ color: '#8A8478' }}>{item.desc}</p>
             </button>
@@ -2066,7 +2069,7 @@ export default function InteriorStudio() {
               style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
           ))}
         </div>
-        <div className="flex items-center gap-2 mt-2"><span className="text-[9px]" style={{ color: '#8A8478' }}>Applied:</span><span className="text-[10px] font-semibold" style={{ color: '#C17F4E' }}>{selectedMat}</span></div>
+        <div className="flex items-center gap-2 mt-2"><span className="text-[9px]" style={{ color: '#8A8478' }}>Selected:</span><span className="text-[10px] font-semibold" style={{ color: '#C17F4E' }}>{colorNames[currentColor] || currentColor}</span></div>
       </div>
 
       {/* Room Settings */}
@@ -2352,7 +2355,7 @@ export default function InteriorStudio() {
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className={`flex-1 relative ${isMobile ? 'h-[55vh]' : ''}`} style={{ background: '#FAF8F4' }}>
+      <main className={`flex-1 relative ${isMobile ? 'h-[50vh]' : ''}`} style={{ background: '#FAF8F4' }}>
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #E2DDD4' }}>
           {!isMobile && (
@@ -2385,6 +2388,7 @@ export default function InteriorStudio() {
           {!isMobile && (
             <div className="flex items-center gap-1">
               <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: snapToGrid ? '#C17F4E' : '#E2DDD4', color: snapToGrid ? '#C17F4E' : '#8A8478' }} title="Snap to Grid"><i className="fas fa-th text-[9px]" /></button>
+              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: shadowsEnabled ? '#C17F4E' : '#E2DDD4', color: shadowsEnabled ? '#C17F4E' : '#8A8478' }} title="Toggle Shadows"><i className="fas fa-cloud-sun text-[9px]" /></button>
               <button onClick={shareRoom} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }} title="Share"><i className="fas fa-share-alt text-[9px]" /></button>
               <button onClick={() => setShowShortcuts(true)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }} title="Shortcuts"><i className="fas fa-keyboard text-[9px]" /></button>
               <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: '#F0E8D8', color: '#8A8478' }}>{itemCount} items</span>
@@ -2515,26 +2519,26 @@ export default function InteriorStudio() {
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="h-[45vh] bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4' }}>
+        <div className="h-[50vh] bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4' }}>
           {/* Tab bar */}
           <div className="flex border-b" style={{ borderColor: '#E2DDD4' }}>
             <button onClick={() => setMobilePanel(mobilePanel === 'furniture' ? null : 'furniture')}
-              className={`flex-1 py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'furniture' ? 'border-b-2' : ''}`}
+              className={`flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'furniture' ? 'border-b-2' : ''}`}
               style={{ color: mobilePanel === 'furniture' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'furniture' ? '#C17F4E' : 'transparent', background: mobilePanel === 'furniture' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-couch" />Furniture
             </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'material' ? null : 'material')}
-              className={`flex-1 py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'material' ? 'border-b-2' : ''}`}
+              className={`flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'material' ? 'border-b-2' : ''}`}
               style={{ color: mobilePanel === 'material' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'material' ? '#C17F4E' : 'transparent', background: mobilePanel === 'material' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-palette" />Colors
             </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'room' ? null : 'room')}
-              className={`flex-1 py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'room' ? 'border-b-2' : ''}`}
+              className={`flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'room' ? 'border-b-2' : ''}`}
               style={{ color: mobilePanel === 'room' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'room' ? '#C17F4E' : 'transparent', background: mobilePanel === 'room' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-sliders-h" />Room
             </button>
             <button onClick={takeScreenshot}
-              className="flex-1 py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1"
+              className="flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1"
               style={{ color: '#8A8478' }}>
               <i className="fas fa-camera" />Capture
             </button>

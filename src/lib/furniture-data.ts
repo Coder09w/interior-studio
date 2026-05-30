@@ -4,9 +4,9 @@ export type MatType = 'fabric' | 'leather' | 'wood' | 'metal';
 export interface FurnitureItemDef {
   name: string;
   desc: string;
-  icon: string;
+  icon: string; // FontAwesome icon class (e.g. 'fa-couch') — used for UI rendering
   fn: string;
-  thumb: string;
+  thumb: string; // emoji thumbnail (legacy, superseded by icon in UI)
 }
 
 export const categories = [
