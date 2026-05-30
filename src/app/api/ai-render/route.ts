@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import ZAI from 'z-ai-web-dev-sdk';
 
 export const maxDuration = 60; // Allow up to 60s for AI rendering
 
@@ -11,8 +12,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    // Dynamically import z-ai-web-dev-sdk (ESM module)
-    const ZAI = (await import('z-ai-web-dev-sdk')).default;
     const zai = await ZAI.create();
 
     // Build a detailed architectural rendering prompt

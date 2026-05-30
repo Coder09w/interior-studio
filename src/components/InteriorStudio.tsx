@@ -1227,7 +1227,7 @@ export default function InteriorStudio() {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, preserveDrawingBuffer: true, powerPreference: mobile ? 'low-power' : 'high-performance' });
     renderer.setPixelRatio(pr);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1; renderer.outputColorSpace = THREE.SRGBColorSpace;
     rendererRef.current = renderer;
 
@@ -2290,7 +2290,7 @@ export default function InteriorStudio() {
 
   return (
     <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-screen overflow-hidden`} style={{ background: '#F5F0E8', color: '#2D2D2D', fontFamily: "'DM Sans', sans-serif" }}>
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+      {/* FontAwesome loaded globally via layout.tsx */}
 
       {/* Shortcuts Modal */}
       {showShortcuts && (
