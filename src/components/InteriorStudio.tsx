@@ -1676,6 +1676,9 @@ export default function InteriorStudio() {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.isSandboxSleeping) {
+          throw new Error('__SANDBOX_SLEEPING__');
+        }
         if (data.isUnavailable) {
           throw new Error('__UNAVAILABLE__');
         }
@@ -2542,7 +2545,24 @@ export default function InteriorStudio() {
 
               {aiRenderError && (
                 <div className="text-center py-8">
-                  {aiRenderError === '__UNAVAILABLE__' ? (
+                  {aiRenderError === '__SANDBOX_SLEEPING__' ? (
+                    <>
+                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(193,127,78,0.12)' }}>
+                        <i className="fas fa-moon text-xl" style={{ color: '#C17F4E' }} />
+                      </div>
+                      <h4 className="text-base font-bold mb-1" style={{ color: '#2D2D2D' }}>AI Sandbox is Asleep</h4>
+                      <p className="text-sm mb-2" style={{ color: '#8A8478' }}>The AI design sandbox is currently asleep. Please refresh or try again in a moment.</p>
+                      <p className="text-xs mb-4" style={{ color: '#8A8478' }}>The sandbox wakes up when you interact with the platform. Try sending a chat message first, then come back and render.</p>
+                      <div className="flex gap-2 justify-center">
+                        <button onClick={() => { setAiRenderError(null); }} className="px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
+                          <i className="fas fa-times mr-1.5" />Close
+                        </button>
+                        <button onClick={handleAiRender} className="px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer border-none" style={{ background: '#C17F4E' }}>
+                          <i className="fas fa-redo mr-1.5" />Retry
+                        </button>
+                      </div>
+                    </>
+                  ) : aiRenderError === '__UNAVAILABLE__' ? (
                     <>
                       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(193,127,78,0.1)' }}>
                         <i className="fas fa-wand-magic-sparkles text-xl" style={{ color: '#C17F4E' }} />
