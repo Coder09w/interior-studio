@@ -47,7 +47,7 @@ export const furnitureItems: Record<CategoryId, FurnitureItemDef[]> = {
     { name: 'Nightstand', desc: 'Bedside table, 50×40cm', icon: 'fa-table', fn: 'createNightstand', thumb: '🔲' },
     { name: 'Wardrobe', desc: 'Tall closet, 120×60cm', icon: 'fa-door-closed', fn: 'createWardrobe', thumb: '🚪' },
     { name: 'Dresser', desc: 'Low cabinet, 120×50cm', icon: 'fa-box', fn: 'createDresser', thumb: '🗄️' },
-    { name: 'Vanity Table', desc: 'Table with mirror, 90×40cm', icon: 'fa-mirror', fn: 'createVanityTable', thumb: '🪞' },
+    { name: 'Vanity Table', desc: 'Table with mirror, 90×40cm', icon: 'fa-square', fn: 'createVanityTable', thumb: '🪞' },
   ],
   kitchen: [
     { name: 'Kitchen Island', desc: 'Island counter, 150×80cm', icon: 'fa-table', fn: 'createKitchenIsland', thumb: '🏪' },

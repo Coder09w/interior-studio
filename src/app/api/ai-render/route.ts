@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ZAI from 'z-ai-web-dev-sdk';
 
 export const maxDuration = 60; // Allow up to 60s for AI rendering
+
+// Read Z-AI config from environment variables (set in Vercel dashboard)
+// Falls back to .z-ai-config file values for local dev
+function getConfig() {
+  return {
+    baseUrl: process.env.ZAI_BASE_URL || 'https://internal-api.z.ai/v1',
+    apiKey: process.env.ZAI_API_KEY || 'Z.ai',
+    chatId: process.env.ZAI_CHAT_ID || '',
+    userId: process.env.ZAI_USER_ID || '',
+    token: process.env.ZAI_TOKEN || '',
+  };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    const zai = await ZAI.create();
+    const config = getConfig();
 
     // Build a detailed architectural rendering prompt
     const fullPrompt = [
@@ -28,22 +39,58 @@ export async function POST(req: NextRequest) {
 
     console.log('[AI Render] Generating with prompt:', fullPrompt.substring(0, 200));
 
-    // Generate the photorealistic render using the SDK
-    const response = await zai.images.generations.create({
-      prompt: fullPrompt,
-      size: '1344x768', // Wide aspect ratio for room renders
+    // Call the image generation API directly (bypassing SDK to avoid .z-ai-config file dependency)
+    const url = `${config.baseUrl}/images/generations`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`,
+      'X-Z-AI-From': 'Z',
+    };
+    if (config.chatId) headers['X-Chat-Id'] = config.chatId;
+    if (config.userId) headers['X-User-Id'] = config.userId;
+    if (config.token) headers['X-Token'] = config.token;
+
+    const apiResponse = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        prompt: fullPrompt,
+        size: '1344x768',
+      }),
     });
 
-    if (!response.data || response.data.length === 0) {
+    if (!apiResponse.ok) {
+      const errorBody = await apiResponse.text();
+      console.error('[AI Render] API error:', apiResponse.status, errorBody);
+      throw new Error(`Image API returned ${apiResponse.status}: ${errorBody}`);
+    }
+
+    const result = await apiResponse.json();
+
+    if (!result.data || result.data.length === 0) {
       throw new Error('No image data returned from AI');
     }
 
-    const imageData = response.data[0];
+    // Process: if the API returns URLs, download and convert to base64
+    const processedData = await Promise.all(
+      result.data.map(async (item: { url?: string; base64?: string }) => {
+        if (item.base64) {
+          return { base64: item.base64 };
+        }
+        if (item.url) {
+          const imgResponse = await fetch(item.url);
+          if (!imgResponse.ok) throw new Error(`Failed to download image: ${imgResponse.status}`);
+          const arrayBuffer = await imgResponse.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          return { base64 };
+        }
+        return item;
+      })
+    );
 
-    // Return base64 image data
     return NextResponse.json({
       success: true,
-      image: imageData.base64 ? `data:image/png;base64,${imageData.base64}` : null,
+      image: processedData[0]?.base64 ? `data:image/png;base64,${processedData[0].base64}` : null,
       prompt: fullPrompt,
     });
   } catch (error: any) {

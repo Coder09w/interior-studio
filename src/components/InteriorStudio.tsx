@@ -296,7 +296,7 @@ export default function InteriorStudio() {
     { id: 'chandelier', label: 'Chandelier', icon: 'fa-gem', desc: 'Elegant hanging chandelier' },
     { id: 'track', label: 'Track Light', icon: 'fa-grip-lines', desc: 'Directional track lights' },
     { id: 'panel', label: 'Panel Light', icon: 'fa-square', desc: 'Modern LED panel' },
-    { id: 'pendant', label: 'Pendant Row', icon: 'fa-ellipsis-h', desc: 'Row of hanging pendants' },
+    { id: 'pendant', label: 'Pendant Row', icon: 'fa-ellipsis', desc: 'Row of hanging pendants' },
   ];
 
   /* ===== SERIALIZE / DESERIALIZE FURNITURE ===== */
