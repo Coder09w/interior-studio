@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     console.log('[AI Render] Generating with prompt:', fullPrompt.substring(0, 200));
 
     // Use the z-ai-web-dev-sdk which reads .z-ai-config from the filesystem.
-    // This works because the API route runs on the same server where .z-ai-config exists.
-    // On Vercel serverless, the SDK would fail (no .z-ai-config), so we handle that gracefully.
+    // Works when running on the Z.ai platform (has .z-ai-config).
+    // On Vercel serverless, the config file doesn't exist — handled below.
     const ZAI = (await import('z-ai-web-dev-sdk')).default;
     const zai = await ZAI.create();
 
@@ -51,18 +51,25 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('[AI Render] Error:', error?.message || error);
 
-    // Return a user-friendly error with debug info
-    const isConfigError = error?.message?.includes('Configuration file not found');
-    const errorMessage = isConfigError
-      ? 'AI Render is not available in this deployment environment. This feature requires server-side AI configuration.'
-      : error?.message || 'AI rendering failed';
+    const msg = error?.message || '';
+    const isConfigError = msg.includes('Configuration file not found') || msg.includes('.z-ai-config');
+    const isNetworkError = msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || msg.includes('ENOTFOUND');
+
+    if (isConfigError || isNetworkError) {
+      // These are infrastructure issues, not user errors — return structured info
+      return NextResponse.json(
+        {
+          error: 'AI Render requires the live preview environment.',
+          hint: 'Use the preview link to access the full-featured editor with AI rendering.',
+          isUnavailable: true,
+        },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json(
-      {
-        error: errorMessage,
-        isConfigError: !!isConfigError,
-      },
-      { status: isConfigError ? 503 : 500 }
+      { error: msg || 'AI rendering failed', isUnavailable: false },
+      { status: 500 }
     );
   }
 }

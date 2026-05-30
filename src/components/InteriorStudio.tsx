@@ -1676,9 +1676,8 @@ export default function InteriorStudio() {
       });
       const data = await res.json();
       if (!res.ok) {
-        // Show user-friendly message for config errors
-        if (data.isConfigError) {
-          throw new Error('AI Render is available in the preview environment. Visit the editor from the main site to use this feature.');
+        if (data.isUnavailable) {
+          throw new Error('__UNAVAILABLE__');
         }
         throw new Error(data.error || 'Rendering failed');
       }
@@ -2523,14 +2522,30 @@ export default function InteriorStudio() {
 
               {aiRenderError && (
                 <div className="text-center py-8">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#FDE8E8' }}>
-                    <i className="fas fa-exclamation-triangle text-xl" style={{ color: '#C0392B' }} />
-                  </div>
-                  <h4 className="text-base font-bold mb-1" style={{ color: '#C0392B' }}>Rendering Failed</h4>
-                  <p className="text-sm mb-4" style={{ color: '#8A8478' }}>{aiRenderError}</p>
-                  <button onClick={handleAiRender} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer border-none" style={{ background: '#C17F4E' }}>
-                    <i className="fas fa-redo mr-1.5" />Try Again
-                  </button>
+                  {aiRenderError === '__UNAVAILABLE__' ? (
+                    <>
+                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(193,127,78,0.1)' }}>
+                        <i className="fas fa-wand-magic-sparkles text-xl" style={{ color: '#C17F4E' }} />
+                      </div>
+                      <h4 className="text-base font-bold mb-1" style={{ color: '#2D2D2D' }}>AI Render — Preview Only</h4>
+                      <p className="text-sm mb-2" style={{ color: '#8A8478' }}>AI Photorealistic Rendering is available in the live preview environment.</p>
+                      <p className="text-xs mb-4" style={{ color: '#8A8478' }}>Use the preview link to access the full-featured editor with AI rendering capabilities.</p>
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium" style={{ background: '#FAF8F4', color: '#C17F4E', border: '1px solid #E2DDD4' }}>
+                        <i className="fas fa-info-circle" />This feature uses server-side AI not available on all deployments
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#FDE8E8' }}>
+                        <i className="fas fa-exclamation-triangle text-xl" style={{ color: '#C0392B' }} />
+                      </div>
+                      <h4 className="text-base font-bold mb-1" style={{ color: '#C0392B' }}>Rendering Failed</h4>
+                      <p className="text-sm mb-4" style={{ color: '#8A8478' }}>{aiRenderError}</p>
+                      <button onClick={handleAiRender} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer border-none" style={{ background: '#C17F4E' }}>
+                        <i className="fas fa-redo mr-1.5" />Try Again
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
