@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { builders, makeMat } from '@/lib/furniture-builders';
 import type { MatType } from '@/lib/furniture-builders';
-import { categories, furnitureItems, matColors, wallColorOptions, roomTypeDefaults } from '@/lib/furniture-data';
+import { categories, furnitureItems, matColors, wallColorOptions, roomTypeDefaults, colorNames } from '@/lib/furniture-data';
 import type { CategoryId } from '@/lib/furniture-data';
 
 /* ===== TYPES ===== */
@@ -359,12 +359,42 @@ export default function InteriorStudio() {
   const saveRoom = useCallback(async () => {
     roomStatesRef.current.set(currentRoomId, serializeFurniture());
     setSaveStatus('saving');
+
+    // Persist to localStorage
+    try {
+      const roomData = {
+        furniture: JSON.stringify(serializeFurniture()),
+        width: roomWRef.current,
+        depth: roomDRef.current,
+        height: roomHRef.current,
+        wallColor: wallColRef.current,
+        floorType: floorTypeRef.current,
+        floorColor: floorColorRef.current,
+        doorWall: doorWallRef.current,
+        windowCount: windowCountRef.current,
+        windowWall: windowWallRef.current,
+        lightMood: lightMoodRef.current,
+        ceilingLightPreset: ceilingLightPresetRef.current,
+        designName,
+      };
+      const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
+      savedRooms[currentRoomId] = roomData;
+      localStorage.setItem('instod_rooms', JSON.stringify(savedRooms));
+
+      // Also save all room states
+      const allRoomStates: Record<string, FurnitureData[]> = {};
+      roomStatesRef.current.forEach((val, key) => { allRoomStates[key] = val; });
+      localStorage.setItem('instod_room_states', JSON.stringify(allRoomStates));
+    } catch (_e) {
+      // localStorage might not be available
+    }
+
     setTimeout(() => {
       setSaveStatus('saved');
       saveStatusRef.current = 'saved';
       showToast('Room saved!');
     }, 500);
-  }, [currentRoomId, serializeFurniture, showToast]);
+  }, [currentRoomId, serializeFurniture, showToast, designName]);
 
   /* ===== BUILD ROOM ===== */
   const buildRoom = useCallback(() => {
@@ -1214,7 +1244,47 @@ export default function InteriorStudio() {
     scene.add(new THREE.DirectionalLight(0xE0E8F0, 0.3).translateX(-4).translateY(5).translateZ(-3));
 
     const roomGroup = new THREE.Group(); scene.add(roomGroup); roomGroupRef.current = roomGroup;
-    buildRoom(); setTimeout(() => { addDefaultFurniture(); historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0; }, 100);
+    buildRoom(); setTimeout(() => {
+      // Try to load saved room state from localStorage
+      let loadedFromStorage = false;
+      try {
+        const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
+        const savedRoom = savedRooms['default'];
+        if (savedRoom) {
+          loadedFromStorage = true;
+          if (savedRoom.width) { roomWRef.current = savedRoom.width; setRoomW(savedRoom.width); }
+          if (savedRoom.depth) { roomDRef.current = savedRoom.depth; setRoomD(savedRoom.depth); }
+          if (savedRoom.height) { roomHRef.current = savedRoom.height; setRoomH(savedRoom.height); }
+          if (savedRoom.wallColor) { wallColRef.current = savedRoom.wallColor; setWallCol(savedRoom.wallColor); }
+          if (savedRoom.floorType) { floorTypeRef.current = savedRoom.floorType; setFloorType(savedRoom.floorType); }
+          if (savedRoom.floorColor) { floorColorRef.current = savedRoom.floorColor; setFloorColor(savedRoom.floorColor); }
+          if (savedRoom.doorWall) { doorWallRef.current = savedRoom.doorWall; setDoorWall(savedRoom.doorWall); }
+          if (savedRoom.windowCount) { windowCountRef.current = savedRoom.windowCount; setWindowCount(savedRoom.windowCount); }
+          if (savedRoom.windowWall) { windowWallRef.current = savedRoom.windowWall; setWindowWall(savedRoom.windowWall); }
+          if (savedRoom.lightMood) { lightMoodRef.current = savedRoom.lightMood; setLightMood(savedRoom.lightMood); }
+          if (savedRoom.ceilingLightPreset) { ceilingLightPresetRef.current = savedRoom.ceilingLightPreset; setCeilingLightPreset(savedRoom.ceilingLightPreset); }
+          if (savedRoom.designName) { setDesignName(savedRoom.designName); }
+          buildRoom();
+          if (savedRoom.furniture) {
+            const furnitureData = JSON.parse(savedRoom.furniture);
+            if (Array.isArray(furnitureData) && furnitureData.length > 0) {
+              loadFurnitureData(furnitureData);
+            }
+          }
+        }
+        // Also load saved room states map
+        const savedStates = JSON.parse(localStorage.getItem('instod_room_states') || '{}');
+        Object.entries(savedStates).forEach(([key, val]) => {
+          roomStatesRef.current.set(key, val as FurnitureData[]);
+        });
+      } catch (_e) {
+        // Ignore localStorage errors
+      }
+      if (!loadedFromStorage) {
+        addDefaultFurniture();
+      }
+      historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+    }, 100);
 
     const onResize = () => {
       const p = canvas.parentElement; if (!p) return;
@@ -1786,7 +1856,7 @@ export default function InteriorStudio() {
             {filteredItems.map(item => (
               <button key={item.name} onClick={() => { addFurniture(item.fn, currentColor, currentMatType); setMobilePanel(null); }} className="p-2 rounded-lg border cursor-pointer transition-all text-center"
                 style={{ background: '#FAF8F4', borderColor: '#E2DDD4' }}>
-                <div className="w-7 h-7 rounded flex items-center justify-center mx-auto mb-1" style={{ background: '#F0E8D8' }}><i className={`fas ${item.icon} text-[9px]`} style={{ color: '#C17F4E' }} /></div>
+                <div className="w-8 h-8 rounded flex items-center justify-center mx-auto mb-1 text-base" style={{ background: '#F0E8D8' }}>{item.thumb}</div>
                 <p className="text-[9px] font-semibold leading-tight">{item.name}</p>
               </button>
             ))}
@@ -1807,7 +1877,7 @@ export default function InteriorStudio() {
           <div className="flex flex-wrap gap-1.5">
             {matColors[currentMatType].map(c => (
               <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }} className="w-8 h-8 rounded-lg cursor-pointer transition-all border-2"
-                style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={c} />
+                style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
             ))}
           </div>
           {/* Wall Color */}
@@ -1851,7 +1921,12 @@ export default function InteriorStudio() {
             { label: 'Height', val: roomH, min: 2.5, max: 5, step: 0.25, setter: [setRoomH, (v: number) => roomHRef.current = v] },
           ].map(({ label, val, min, max, step, setter }) => (
             <div key={label as string} className="mb-2">
-              <div className="flex justify-between mb-0.5"><span className="text-[10px] font-medium">{label as string}</span><span className="text-[9px]" style={{ color: '#8A8478' }}>{(val as number).toFixed(1)}m</span></div>
+              <div className="flex justify-between mb-0.5 items-center"><span className="text-[10px] font-medium">{label as string}</span>
+                <div className="flex items-center gap-0.5">
+                  <input type="number" className="w-10 text-[9px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#8A8478' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); } }} />
+                  <span className="text-[9px]" style={{ color: '#8A8478' }}>m</span>
+                </div>
+              </div>
               <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} />
             </div>
           ))}
@@ -1965,7 +2040,7 @@ export default function InteriorStudio() {
             <button key={item.name} onClick={() => addFurniture(item.fn, currentColor, currentMatType)} className="p-2 rounded-lg border cursor-pointer transition-all text-left hover:-translate-y-0.5"
               style={{ background: '#FAF8F4', borderColor: '#E2DDD4' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#C17F4E'; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E2DDD4'; }}>
-              <div className="w-6 h-6 rounded flex items-center justify-center mb-1" style={{ background: '#F0E8D8' }}><i className={`fas ${item.icon} text-[9px]`} style={{ color: '#C17F4E' }} /></div>
+              <div className="w-8 h-8 rounded flex items-center justify-center mb-1 text-base" style={{ background: '#F0E8D8' }}>{item.thumb}</div>
               <p className="text-[10px] font-semibold leading-tight">{item.name}</p>
               <p className="text-[8px]" style={{ color: '#8A8478' }}>{item.desc}</p>
             </button>
@@ -1988,7 +2063,7 @@ export default function InteriorStudio() {
         <div className="flex flex-wrap gap-1.5">
           {matColors[currentMatType].map(c => (
             <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }} className="w-7 h-7 rounded-lg cursor-pointer transition-all border-2"
-              style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={c} />
+              style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
           ))}
         </div>
         <div className="flex items-center gap-2 mt-2"><span className="text-[9px]" style={{ color: '#8A8478' }}>Applied:</span><span className="text-[10px] font-semibold" style={{ color: '#C17F4E' }}>{selectedMat}</span></div>
@@ -2003,7 +2078,12 @@ export default function InteriorStudio() {
           { label: 'Ceiling Height', val: roomH, min: 2.5, max: 5, step: 0.25, setter: [setRoomH, (v: number) => roomHRef.current = v] },
         ].map(({ label, val, min, max, step, setter }) => (
           <div key={label as string} className="mb-2">
-            <div className="flex justify-between mb-0.5"><span className="text-[10px] font-medium">{label as string}</span><span className="text-[9px]" style={{ color: '#8A8478' }}>{(val as number).toFixed(1)}m</span></div>
+            <div className="flex justify-between mb-0.5 items-center"><span className="text-[10px] font-medium">{label as string}</span>
+              <div className="flex items-center gap-0.5">
+                <input type="number" className="w-10 text-[9px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#8A8478' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); buildRoom(); markUnsaved(); } }} />
+                <span className="text-[9px]" style={{ color: '#8A8478' }}>m</span>
+              </div>
+            </div>
             <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); buildRoom(); markUnsaved(); }} />
           </div>
         ))}
@@ -2281,6 +2361,9 @@ export default function InteriorStudio() {
           <input value={designName} onChange={e => { setDesignName(e.target.value); markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 120 : 180, fontFamily: "'Outfit', sans-serif" }} />
           <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#C17F4E' : '#8A8478', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
             {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}
+          </span>
+          <span className="text-[9px] px-2 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1" style={{ background: 'rgba(193,127,78,0.1)', color: '#C17F4E' }} title="This is a layout drafting view. Use Export for polished renders.">
+            <i className="fas fa-drafting-compass text-[7px]" />Draft
           </span>
 
           {/* Room tabs */}

@@ -446,7 +446,7 @@ function DashboardContent() {
             className="text-2xl sm:text-3xl font-bold tracking-tight"
             style={{ color: '#2D2D2D' }}
           >
-            Welcome back, {session.user?.name?.split(' ')[0] || 'Designer'}!
+            {session.user?.name ? `Welcome back, ${session.user.name.split(' ')[0]}!` : 'Welcome to your Studio!'}
           </h1>
           <p className="mt-1 text-sm" style={{ color: '#8A8478' }}>
             {projects.length === 0
