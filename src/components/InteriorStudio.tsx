@@ -1675,7 +1675,13 @@ export default function InteriorStudio() {
         body: JSON.stringify({ prompt, style: aiRenderStyle }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Rendering failed');
+      if (!res.ok) {
+        // Show user-friendly message for config errors
+        if (data.isConfigError) {
+          throw new Error('AI Render is available in the preview environment. Visit the editor from the main site to use this feature.');
+        }
+        throw new Error(data.error || 'Rendering failed');
+      }
       if (data.image) {
         setAiRenderResult(data.image);
       } else {
