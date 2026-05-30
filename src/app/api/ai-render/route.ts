@@ -54,8 +54,9 @@ export async function POST(req: NextRequest) {
     const msg = error?.message || '';
     const isConfigError = msg.includes('Configuration file not found') || msg.includes('.z-ai-config');
     const isNetworkError = msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || msg.includes('ENOTFOUND');
+    const isSandboxError = msg.includes('sandbox is inactive');
 
-    if (isConfigError || isNetworkError) {
+    if (isConfigError || isNetworkError || isSandboxError) {
       // These are infrastructure issues, not user errors — return structured info
       return NextResponse.json(
         {
