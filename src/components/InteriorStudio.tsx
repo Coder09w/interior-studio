@@ -1989,9 +1989,27 @@ export default function InteriorStudio() {
           </div>
           {activeSkin !== 'default' && (
             <button onClick={() => applySkin('default')} className="w-full mt-3 py-2 rounded-lg text-xs font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
-              <i className="fas fa-undo mr-1" />Reset to Default
+              <i className="fas fa-undo mr-1" />Reset Skin to Default
             </button>
           )}
+
+          {/* Clear Skeleton Section */}
+          <div className="mt-4 pt-3 border-t" style={{ borderColor: '#E2DDD4' }}>
+            <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#8A8478' }}>Skeleton</p>
+            <p className="text-[9px] mb-2" style={{ color: '#8A8478' }}>The skeleton is your room structure — walls, floor, furniture layout. Clear it to start fresh.</p>
+            <div className="flex gap-2">
+              <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
+                className="flex-1 py-2 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
+                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
+                <i className="fas fa-eraser text-[9px]" />Clear Furniture
+              </button>
+              <button onClick={() => { if (confirm('Reset the entire room? This will remove all furniture and reset room settings.')) resetRoom(); }}
+                className="flex-1 py-2 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
+                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
+                <i className="fas fa-trash-alt text-[9px]" />Reset Room
+              </button>
+            </div>
+          </div>
         </div>
       ),
       room: (
@@ -2299,6 +2317,22 @@ export default function InteriorStudio() {
             </button>
           ))}
         </div>
+        {/* Clear Skeleton */}
+        <div className="mt-3 pt-2 border-t" style={{ borderColor: '#F0E8D8' }}>
+          <p className="text-[9px] font-bold uppercase tracking-[1.5px] mb-1.5" style={{ color: '#8A8478' }}>Skeleton</p>
+          <div className="flex gap-1.5">
+            <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
+              className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
+              style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
+              <i className="fas fa-eraser text-[8px]" />Clear
+            </button>
+            <button onClick={() => { if (confirm('Reset the entire room?')) resetRoom(); }}
+              className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
+              style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
+              <i className="fas fa-trash-alt text-[8px]" />Reset
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Actions */}
@@ -2459,13 +2493,13 @@ export default function InteriorStudio() {
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className={`flex-1 relative ${isMobile ? 'h-[50vh]' : ''}`} style={{ background: '#FAF8F4' }}>
+      <main className={`flex-1 relative ${isMobile ? 'h-[55vh]' : ''}`} style={{ background: '#FAF8F4' }}>
         {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #E2DDD4' }}>
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #E2DDD4' }}>
           {!isMobile && (
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-bars text-xs" /></button>
           )}
-          <input value={designName} onChange={e => { setDesignName(e.target.value); markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 120 : 180, fontFamily: "'Outfit', sans-serif" }} />
+          <input value={designName} onChange={e => { setDesignName(e.target.value); markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Outfit', sans-serif" }} />
           <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#C17F4E' : '#8A8478', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
             {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}
           </span>
@@ -2478,17 +2512,26 @@ export default function InteriorStudio() {
             {rooms.map(room => {
               const roomItemCount = room.id === currentRoomId ? itemCount : 0;
               return (
-                <button key={room.id} onClick={() => switchRoom(room.id)} className="px-3 py-1 rounded-lg text-[10px] font-medium cursor-pointer transition-all whitespace-nowrap border flex items-center gap-1"
+                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all whitespace-nowrap border flex items-center gap-1 ${isMobile ? 'px-3 py-1.5 text-[11px]' : 'px-3 py-1 text-[10px]'}`}
                   style={{ background: currentRoomId === room.id ? '#C17F4E' : '#FAF8F4', color: currentRoomId === room.id ? '#fff' : '#8A8478', borderColor: currentRoomId === room.id ? '#C17F4E' : '#E2DDD4' }}>
-                  <i className="fas fa-door-open text-[8px]" />{room.name}<span className="text-[8px] opacity-70">({roomItemCount})</span>
+                  <i className={`fas fa-door-open ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} />{room.name}<span className="text-[8px] opacity-70">({roomItemCount})</span>
                 </button>
               );
             })}
-            <button onClick={() => setRoomManagerOpen(true)} className="w-6 h-6 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Room Manager"><i className="fas fa-th-list text-[8px]" /></button>
-            <button onClick={() => setShowAddRoom(true)} className="w-6 h-6 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Add Room"><i className="fas fa-plus text-[8px]" /></button>
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
           </div>
 
-          {/* Right actions */}
+          {/* Mobile right actions */}
+          {isMobile && (
+            <div className="flex items-center gap-1.5">
+              <button onClick={saveRoom} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#7A8B6F', color: '#7A8B6F' }} title="Save"><i className="fas fa-save text-[11px]" /></button>
+              <button onClick={undo} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Undo"><i className="fas fa-undo text-[11px]" /></button>
+              <button onClick={redo} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Redo"><i className="fas fa-redo text-[11px]" /></button>
+            </div>
+          )}
+
+          {/* Desktop right actions */}
           {!isMobile && (
             <div className="flex items-center gap-1">
               <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: snapToGrid ? '#C17F4E' : '#E2DDD4', color: snapToGrid ? '#C17F4E' : '#8A8478' }} title="Snap to Grid"><i className="fas fa-th text-[9px]" /></button>
@@ -2623,33 +2666,33 @@ export default function InteriorStudio() {
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="h-[50vh] bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4' }}>
+        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '45vh' : '38vh' }}>
           {/* Tab bar */}
           <div className="flex border-b" style={{ borderColor: '#E2DDD4' }}>
             <button onClick={() => setMobilePanel(mobilePanel === 'furniture' ? null : 'furniture')}
-              className={`flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'furniture' ? 'border-b-2' : ''}`}
+              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'furniture' ? 'border-b-2' : ''}`}
               style={{ color: mobilePanel === 'furniture' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'furniture' ? '#C17F4E' : 'transparent', background: mobilePanel === 'furniture' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-couch" />Furniture
             </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'material' ? null : 'material')}
-              className={`flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'material' ? 'border-b-2' : ''}`}
+              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'material' ? 'border-b-2' : ''}`}
               style={{ color: mobilePanel === 'material' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'material' ? '#C17F4E' : 'transparent', background: mobilePanel === 'material' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-palette" />Colors
             </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'room' ? null : 'room')}
-              className={`flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'room' ? 'border-b-2' : ''}`}
+              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'room' ? 'border-b-2' : ''}`}
               style={{ color: mobilePanel === 'room' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'room' ? '#C17F4E' : 'transparent', background: mobilePanel === 'room' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-sliders-h" />Room
             </button>
-            <button onClick={takeScreenshot}
-              className="flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1"
-              style={{ color: '#8A8478' }}>
-              <i className="fas fa-camera" />Capture
-            </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'skin' ? null : 'skin')}
-              className={`flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'skin' ? 'border-b-2' : ''}`}
+              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'skin' ? 'border-b-2' : ''}`}
               style={{ color: mobilePanel === 'skin' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'skin' ? '#C17F4E' : 'transparent', background: mobilePanel === 'skin' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-palette" />Skins
+            </button>
+            <button onClick={takeScreenshot}
+              className="flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1"
+              style={{ color: '#8A8478' }}>
+              <i className="fas fa-camera" />Capture
             </button>
           </div>
 
@@ -2657,30 +2700,21 @@ export default function InteriorStudio() {
           <div className="flex-1 overflow-hidden">
             {/* eslint-disable-next-line react-hooks/refs */}
             {mobilePanel ? renderMobilePanel() : (
-              <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: '#F0E8D8' }}>
-                  <i className="fas fa-hand-pointer text-lg" style={{ color: '#C17F4E' }} />
+              <div className="h-full flex flex-col items-center justify-center p-3 text-center">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-2" style={{ background: '#F0E8D8' }}>
+                  <i className="fas fa-hand-pointer text-base" style={{ color: '#C17F4E' }} />
                 </div>
-                <p className="text-xs font-semibold mb-1" style={{ fontFamily: "'Outfit', sans-serif" }}>Tap a tab to start editing</p>
-                <p className="text-[10px]" style={{ color: '#8A8478' }}>Add furniture, change colors, or adjust room settings</p>
-                <div className="mt-3 flex gap-2">
-                  <button onClick={saveRoom} className="px-4 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border-none" style={{ background: '#7A8B6F', color: '#fff' }}>
-                    <i className="fas fa-save mr-1" />Save
-                  </button>
-                  <button onClick={() => setMobilePanel('skin')} className="px-4 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border-none" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', color: '#fff' }}>
+                <p className="text-xs font-semibold mb-0.5" style={{ fontFamily: "'Outfit', sans-serif" }}>Tap a tab to start editing</p>
+                <p className="text-[10px]" style={{ color: '#8A8478' }}>Add furniture, change colors, or apply skins</p>
+                <div className="mt-2 flex gap-2 flex-wrap justify-center">
+                  <button onClick={() => setMobilePanel('skin')} className="px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer border-none" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', color: '#fff' }}>
                     <i className="fas fa-palette mr-1" />Skins
                   </button>
-                  <button onClick={undo} className="px-3 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }}>
-                    <i className="fas fa-undo" />
-                  </button>
-                  <button onClick={redo} className="px-3 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }}>
-                    <i className="fas fa-redo" />
-                  </button>
-                  <button onClick={() => setShowAddRoom(true)} className="px-4 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E' }}>
+                  <button onClick={() => setShowAddRoom(true)} className="px-4 py-2 rounded-lg text-[11px] font-semibold cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E' }}>
                     <i className="fas fa-plus mr-1" />Add Room
                   </button>
                 </div>
-                <p className="text-[9px] mt-3" style={{ color: '#8A8478' }}>{itemCount} items placed &bull; <i className="fas fa-hand-pointer mr-0.5" />Tap item in 3D view to select &bull; Two fingers to rotate</p>
+                <p className="text-[9px] mt-2" style={{ color: '#8A8478' }}>{itemCount} items placed &bull; <i className="fas fa-hand-pointer mr-0.5" />Tap item to select &bull; Two fingers to rotate</p>
               </div>
             )}
           </div>
@@ -2688,7 +2722,7 @@ export default function InteriorStudio() {
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? '47vh' : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? '40vh' : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff' }}>{toastMsg}</div>
       </div>
     </div>
