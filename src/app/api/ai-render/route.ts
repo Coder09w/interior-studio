@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 export const maxDuration = 60; // Allow up to 60s for AI rendering
 export const dynamic = 'force-dynamic';
 
+// Config from env vars (Vercel) or hardcoded fallbacks (preview server)
+const CONFIG = {
+  baseUrl: process.env.ZAI_BASE_URL || 'https://internal-api.z.ai/v1',
+  apiKey: process.env.ZAI_API_KEY || 'Z.ai',
+  chatId: process.env.ZAI_CHAT_ID || 'chat-35deae8a-4b35-4721-b3e0-c275d64dc879',
+  userId: process.env.ZAI_USER_ID || '8f0db4c6-71f2-4b99-aca5-72eb123618e6',
+  token: process.env.ZAI_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOGYwZGI0YzYtNzFmMi00Yjk5LWFjYTUtNzJlYjEyMzYxOGU2IiwiY2hhdF9pZCI6ImNoYXQtMzVkZWFlOGEtNGIzNS00NzIxLWIzZTAtYzI3NWQ2NGRjODc5IiwicGxhdGZvcm0iOiJ6YWkifQ.1NcunMXQ-S_5A0Xuwx_tvuis4AfRx_8WIvaYqVHqPGA',
+};
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -26,38 +35,70 @@ export async function POST(req: NextRequest) {
 
     console.log('[AI Render] Generating with prompt:', fullPrompt.substring(0, 200));
 
-    // Use the z-ai-web-dev-sdk which reads .z-ai-config from the filesystem.
-    // Works when running on the Z.ai platform (has .z-ai-config).
-    // On Vercel serverless, the config file doesn't exist — handled below.
-    const ZAI = (await import('z-ai-web-dev-sdk')).default;
-    const zai = await ZAI.create();
+    // Call the z-ai image generation API directly
+    const url = `${CONFIG.baseUrl}/images/generations`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${CONFIG.apiKey}`,
+      'X-Z-AI-From': 'Z',
+    };
+    if (CONFIG.chatId) headers['X-Chat-Id'] = CONFIG.chatId;
+    if (CONFIG.userId) headers['X-User-Id'] = CONFIG.userId;
+    if (CONFIG.token) headers['X-Token'] = CONFIG.token;
 
-    const response = await zai.images.generations.create({
-      prompt: fullPrompt,
-      size: '1344x768',
+    const apiResponse = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        prompt: fullPrompt,
+        size: '1024x1024',
+      }),
     });
 
-    if (!response.data || response.data.length === 0) {
+    if (!apiResponse.ok) {
+      const errorBody = await apiResponse.text();
+      console.error('[AI Render] API error:', apiResponse.status, errorBody);
+
+      if (errorBody.includes('sandbox is inactive')) {
+        return NextResponse.json(
+          {
+            error: 'AI Render requires the live preview environment.',
+            hint: 'The AI service is currently unavailable. Please try again later.',
+            isUnavailable: true,
+          },
+          { status: 503 }
+        );
+      }
+
+      throw new Error(`Image API returned ${apiResponse.status}: ${errorBody.substring(0, 200)}`);
+    }
+
+    const result = await apiResponse.json();
+
+    if (!result.data || result.data.length === 0) {
       throw new Error('No image data returned from AI');
     }
 
-    const imageData = response.data[0];
+    // Return the image URL directly — frontend will display it via <img> tag.
+    // No server-side base64 conversion (which crashes the Node process with large images).
+    const imageUrl = result.data[0]?.url || null;
 
     return NextResponse.json({
       success: true,
-      image: imageData.base64 ? `data:image/png;base64,${imageData.base64}` : null,
+      imageUrl, // Direct URL to the generated image
       prompt: fullPrompt,
     });
   } catch (error: any) {
     console.error('[AI Render] Error:', error?.message || error);
 
     const msg = error?.message || '';
-    const isConfigError = msg.includes('Configuration file not found') || msg.includes('.z-ai-config');
-    const isNetworkError = msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || msg.includes('ENOTFOUND');
-    const isSandboxError = msg.includes('sandbox is inactive');
+    const isUnavailable =
+      msg.includes('fetch failed') ||
+      msg.includes('ECONNREFUSED') ||
+      msg.includes('ENOTFOUND') ||
+      msg.includes('sandbox is inactive');
 
-    if (isConfigError || isNetworkError || isSandboxError) {
-      // These are infrastructure issues, not user errors — return structured info
+    if (isUnavailable) {
       return NextResponse.json(
         {
           error: 'AI Render requires the live preview environment.',

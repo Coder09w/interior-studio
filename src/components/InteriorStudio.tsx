@@ -1681,8 +1681,10 @@ export default function InteriorStudio() {
         }
         throw new Error(data.error || 'Rendering failed');
       }
-      if (data.image) {
-        setAiRenderResult(data.image);
+      // API returns either imageUrl (URL) or image (base64 legacy)
+      const imageData = data.imageUrl || data.image;
+      if (imageData) {
+        setAiRenderResult(imageData);
       } else {
         throw new Error('No image returned from AI');
       }
@@ -2510,9 +2512,27 @@ export default function InteriorStudio() {
                   </div>
                   {/* Download button */}
                   <div className="flex gap-2">
-                    <a download={`AI_Render_${designName.replace(/\s+/g, '_')}.png`} href={aiRenderResult} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white text-center cursor-pointer border-none no-underline" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(aiRenderResult);
+                          const blob = await response.blob();
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `AI_Render_${designName.replace(/\s+/g, '_')}.png`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        } catch {
+                          // Fallback: open in new tab
+                          window.open(aiRenderResult, '_blank');
+                        }
+                      }}
+                      className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white text-center cursor-pointer border-none"
+                      style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                    >
                       <i className="fas fa-download mr-1.5" />Download Render
-                    </a>
+                    </button>
                     <button onClick={() => { setAiRenderResult(null); setAiRenderSource(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
                       <i className="fas fa-redo mr-1.5" />Render Again
                     </button>
