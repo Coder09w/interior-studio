@@ -1,4 +1,5 @@
 import { DefaultSession } from 'next-auth';
+import type { PlanKey } from '@/lib/plans';
 
 declare module 'next-auth' {
   interface Session {
@@ -7,7 +8,7 @@ declare module 'next-auth' {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      plan?: string;
+      plan?: PlanKey;
     } & DefaultSession['user'];
   }
 
@@ -16,7 +17,7 @@ declare module 'next-auth' {
     name?: string | null;
     email?: string | null;
     image?: string | null;
-    plan?: string;
+    plan?: PlanKey;
   }
 }
 
@@ -24,6 +25,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     name?: string | null;
-    plan?: string;
+    plan?: PlanKey;
   }
 }

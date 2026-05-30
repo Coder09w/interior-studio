@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { applyRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { getUserPlan, checkRoomLimit, checkRoomType, planLimitResponse, featureGateResponse } from '@/lib/plan-enforcement';
 
 const ROOM_DEFAULTS: Record<string, { width: number; depth: number; height: number; name: string }> = {
   living: { width: 8, depth: 6, height: 3, name: 'Living Room' },
@@ -15,9 +15,12 @@ const ROOM_DEFAULTS: Record<string, { width: number; depth: number; height: numb
 // POST /api/rooms — Create a new room in a project
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    // Rate limit write operations
+    const rateLimitResponse = applyRateLimit(request, RATE_LIMITS.write);
+    if (rateLimitResponse) return rateLimitResponse;
 
-    if (!session?.user?.id) {
+    const userPlan = await getUserPlan();
+    if (!userPlan) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -43,11 +46,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (project.userId !== session.user.id) {
+    if (project.userId !== userPlan.userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Enforce room-per-project limit
+    const roomCheck = await checkRoomLimit(userPlan.userId, projectId, userPlan.plan);
+    if (!roomCheck.allowed) {
+      return planLimitResponse(roomCheck);
+    }
+
+    // Validate room type is available for this plan
     const type = roomType && ROOM_DEFAULTS[roomType] ? roomType : 'living';
+    const roomTypeCheck = checkRoomType(userPlan.plan, type);
+    if (!roomTypeCheck.allowed) {
+      return featureGateResponse(roomTypeCheck);
+    }
+
     const defaults = ROOM_DEFAULTS[type];
 
     const room = await db.room.create({

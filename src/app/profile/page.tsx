@@ -12,6 +12,13 @@ import {
   Loader2,
   Camera,
   Save,
+  CreditCard,
+  Crown,
+  Zap,
+  ChevronRight,
+  AlertTriangle,
+  CheckCircle2,
+  ExternalLink,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { type PlanKey, PLAN_CONFIG, getUpgradePlan } from '@/lib/plans';
 
 
 // ─── Wall Color Options ──────────────────────────────────────────────────────
@@ -59,12 +67,19 @@ interface ProfileData {
 // ─── Profile Content ─────────────────────────────────────────────────────────
 
 function ProfileContent() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPrefs, setIsSavingPrefs] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [subscriptionData, setSubscriptionData] = useState<{
+    status: string;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+  } | null>(null);
 
   // Profile state
   const [name, setName] = useState('');
@@ -86,6 +101,10 @@ function ProfileContent() {
     }
   }, [status, router]);
 
+  const currentPlan = (session?.user as Record<string, unknown>)?.plan as PlanKey || 'free';
+  const planConfig = PLAN_CONFIG[currentPlan];
+  const upgradePlan = getUpgradePlan(currentPlan);
+
   // Fetch profile data
   const fetchProfile = useCallback(async () => {
     try {
@@ -106,11 +125,26 @@ function ProfileContent() {
     }
   }, []);
 
+  // Fetch subscription data
+  const fetchSubscription = useCallback(async () => {
+    try {
+      // Try to find subscription record
+      const subRes = await fetch('/api/user/subscription');
+      if (subRes.ok) {
+        const subData = await subRes.json();
+        setSubscriptionData(subData);
+      }
+    } catch {
+      // Subscription data not critical
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchProfile();
+      fetchSubscription();
     }
-  }, [status, fetchProfile]);
+  }, [status, fetchProfile, fetchSubscription]);
 
   // Save profile
   const handleSaveProfile = async () => {
@@ -362,6 +396,13 @@ function ProfileContent() {
               Profile
             </TabsTrigger>
             <TabsTrigger
+              value="billing"
+              className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#8A8478]"
+            >
+              <CreditCard className="w-4 h-4 mr-1.5" />
+              Billing
+            </TabsTrigger>
+            <TabsTrigger
               value="preferences"
               className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#8A8478]"
             >
@@ -532,6 +573,218 @@ function ProfileContent() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ─── Billing Tab ──────────────────────────────────────────── */}
+          <TabsContent value="billing">
+            {/* Current Plan Card */}
+            <Card style={{ borderColor: '#E2DDD4' }}>
+              <CardHeader>
+                <CardTitle style={{ color: '#2D2D2D' }}>
+                  Current Plan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Plan Badge */}
+                <div
+                  className="flex items-center justify-between p-4 rounded-xl"
+                  style={{
+                    background: currentPlan === 'free' ? '#F0E8D8' : currentPlan === 'pro' ? '#C17F4E10' : '#C17F4E20',
+                  }}
+                >
+                  <div className="flex items-center gap-3">\n                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ background: currentPlan === 'studio' ? '#C17F4E' : 'transparent' }}
+                    >
+                      {currentPlan === 'free' ? (
+                        <Sofa className="w-6 h-6" style={{ color: '#8B7355' }} />
+                      ) : currentPlan === 'pro' ? (
+                        <Zap className="w-6 h-6" style={{ color: '#C17F4E' }} />
+                      ) : (
+                        <Crown className="w-6 h-6 text-white" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg" style={{ color: '#2D2D2D' }}>
+                        {planConfig.name} Plan
+                      </h3>
+                      <p className="text-sm" style={{ color: '#8A8478' }}>
+                        {planConfig.price === 0 ? 'Free forever' : `$${planConfig.price}/month`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold" style={{ color: '#2D2D2D' }}>
+                      {planConfig.price === 0 ? '$0' : `$${planConfig.price}`}
+                    </span>
+                    <span className="text-xs" style={{ color: '#8A8478' }}>
+                      /{planConfig.price === 0 ? 'forever' : 'month'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Plan Features Summary */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                    <span style={{ color: '#2D2D2D' }}>{planConfig.maxProjects ?? 'Unlimited'} projects</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                    <span style={{ color: '#2D2D2D' }}>{planConfig.maxRoomsPerProject ?? 'Unlimited'} rooms/project</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.shareLinks ? '#C17F4E' : '#D4CFC7' }} />
+                    <span style={{ color: planConfig.features.shareLinks ? '#2D2D2D' : '#8A8478' }}>Share links</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.exportImage ? '#C17F4E' : '#D4CFC7' }} />
+                    <span style={{ color: planConfig.features.exportImage ? '#2D2D2D' : '#8A8478' }}>Image/PDF export</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.customDimensions ? '#C17F4E' : '#D4CFC7' }} />
+                    <span style={{ color: planConfig.features.customDimensions ? '#2D2D2D' : '#8A8478' }}>Custom dimensions</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.allRoomTypes ? '#C17F4E' : '#D4CFC7' }} />
+                    <span style={{ color: planConfig.features.allRoomTypes ? '#2D2D2D' : '#8A8478' }}>All room types</span>
+                  </div>
+                </div>
+
+                {/* Upgrade or Manage */}
+                {upgradePlan ? (
+                  <Button
+                    onClick={() => router.push('/pricing')}
+                    className="w-full font-medium text-white gap-2"
+                    style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                  >
+                    <Zap className="w-4 h-4" />
+                    Upgrade to {PLAN_CONFIG[upgradePlan].name}
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/stripe/portal', { method: 'POST' });
+                          if (res.ok) {
+                            const data = await res.json();
+                            if (data.url) window.location.href = data.url;
+                          } else {
+                            toast({ title: 'Not available', description: 'Billing portal is not available in development mode.' });
+                          }
+                        } catch {
+                          toast({ title: 'Error', description: 'Failed to open billing portal.', variant: 'destructive' });
+                        }
+                      }}
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Manage Subscription
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      style={{ borderColor: '#FECACA' }}
+                      onClick={() => setShowCancelConfirm(true)}
+                    >
+                      Cancel Plan
+                    </Button>
+                  </div>
+                )}
+
+                {/* Subscription Status */}
+                {subscriptionData && currentPlan !== 'free' && (
+                  <div
+                    className="flex items-center gap-2 p-3 rounded-lg text-sm"
+                    style={{
+                      background: subscriptionData.cancelAtPeriodEnd ? '#FEF3C7' : '#F0FDF4',
+                      color: subscriptionData.cancelAtPeriodEnd ? '#92400E' : '#166534',
+                    }}
+                  >
+                    {subscriptionData.cancelAtPeriodEnd ? (
+                      <>
+                        <AlertTriangle className="w-4 h-4" />
+                        Your subscription will be canceled on {subscriptionData.currentPeriodEnd ? new Date(subscriptionData.currentPeriodEnd).toLocaleDateString() : 'your next billing date'}.
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        Your {planConfig.name} subscription is active.
+                      </>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Cancel Confirmation */}
+            {showCancelConfirm && (
+              <div
+                className="mt-4 p-5 rounded-xl border-2"
+                style={{ background: '#FFFBEB', borderColor: '#F59E0B40' }}
+              >
+                <h4 className="font-semibold text-sm" style={{ color: '#92400E' }}>
+                  Are you sure you want to cancel?
+                </h4>
+                <p className="text-xs mt-1 leading-relaxed" style={{ color: '#A16207' }}>
+                  You will lose access to {planConfig.name} features at the end of your billing period.
+                  Your projects will be preserved, but you won&apos;t be able to create new ones
+                  beyond the Free plan limits (3 projects, 1 room per project).
+                </p>
+                <div className="flex gap-3 mt-4">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={isCancelling}
+                    onClick={async () => {
+                      setIsCancelling(true);
+                      try {
+                        const res = await fetch('/api/plan/cancel', { method: 'POST' });
+                        if (res.ok) {
+                          toast({ title: 'Subscription canceled', description: 'Your plan will be downgraded at the end of the billing period.' });
+                          setShowCancelConfirm(false);
+                          updateSession(); // Refresh session
+                          fetchSubscription();
+                        } else {
+                          const data = await res.json();
+                          toast({ title: 'Error', description: data.error || 'Failed to cancel subscription.', variant: 'destructive' });
+                        }
+                      } catch {
+                        toast({ title: 'Error', description: 'Something went wrong.', variant: 'destructive' });
+                      } finally {
+                        setIsCancelling(false);
+                      }
+                    }}
+                  >
+                    {isCancelling ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Yes, Cancel Subscription'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowCancelConfirm(false)}
+                    style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }}
+                  >
+                    Keep My Plan
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Compare Plans Link */}
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => router.push('/pricing')}
+                className="text-sm font-medium inline-flex items-center gap-1 hover:opacity-80"
+                style={{ color: '#C17F4E' }}
+              >
+                Compare all plans
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </TabsContent>
 
           {/* ─── Preferences Tab ──────────────────────────────────────────── */}

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { applyRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { getUserPlan, checkProjectLimit, planLimitResponse } from '@/lib/plan-enforcement';
+import { getAvailableRoomTypes } from '@/lib/plans';
 
 // GET /api/projects — List all projects for the authenticated user
 export async function GET() {
@@ -40,10 +43,19 @@ export async function GET() {
 // POST /api/projects — Create a new project
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    // Rate limit write operations
+    const rateLimitResponse = applyRateLimit(request, RATE_LIMITS.write);
+    if (rateLimitResponse) return rateLimitResponse;
 
-    if (!session?.user?.id) {
+    const userPlan = await getUserPlan();
+    if (!userPlan) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Enforce plan limits using centralized config
+    const planCheck = await checkProjectLimit(userPlan.userId, userPlan.plan);
+    if (!planCheck.allowed) {
+      return planLimitResponse(planCheck);
     }
 
     const body = await request.json();
@@ -53,6 +65,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Project name is required' },
         { status: 400 }
+      );
+    }
+
+    // Validate room type is available for this plan
+    const availableRoomTypes = getAvailableRoomTypes(userPlan.plan);
+    const requestedType = roomType || 'living';
+    if (!availableRoomTypes.includes(requestedType as typeof availableRoomTypes[number])) {
+      return NextResponse.json(
+        {
+          error: `The "${requestedType}" room type is not available on your current plan. Upgrade to access all room types.`,
+          code: 'FEATURE_NOT_AVAILABLE',
+          availableTypes: availableRoomTypes,
+        },
+        { status: 402 },
       );
     }
 
@@ -69,11 +95,11 @@ export async function POST(request: NextRequest) {
     const project = await db.project.create({
       data: {
         name: name.trim(),
-        userId: session.user.id,
+        userId: userPlan.userId,
         rooms: {
           create: {
-            name: roomNameMap[roomType || 'living'] || 'Living Room',
-            roomType: roomType || 'living',
+            name: roomNameMap[requestedType] || 'Living Room',
+            roomType: requestedType,
             width: 8,
             depth: 6,
             height: 3,

@@ -4,8 +4,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  free
+  pro
+  studio
 }
 
 model User {
@@ -15,7 +21,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  plan          String    @default("free") // free, pro, studio
+  plan          Plan      @default(free)
   onboarding    Boolean   @default(false) // has completed onboarding
   defaultRoomW  Float     @default(8)
   defaultRoomD  Float     @default(6)
@@ -28,6 +34,7 @@ model User {
   accounts     Account[]
   sessions     Session[]
   projects     Project[]
+  subscription Subscription?
 }
 
 model Account {
@@ -64,6 +71,55 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
+  status               String   @default("active") // active, past_due, canceled, incomplete, trialing
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PlanConfig {
+  id                  String   @id @default(cuid())
+  planKey             String   @unique // "free", "pro", "studio"
+  name                String   // Display name
+  price               Float    @default(0) // Monthly price in USD
+  priceId             String   @default("") // Stripe Price ID
+  description         String   @default("")
+  highlight           Boolean  @default(false)
+  cta                 String   @default("")
+
+  // Limits (null = unlimited)
+  maxProjects         Int?
+  maxRoomsPerProject  Int?
+  maxFurniturePerRoom Int?
+  maxRevisionSnapshots Int?   // null = unlimited
+  maxMoodBoards       Int?   // null = unlimited
+
+  // Feature flags (stored as JSON string for flexibility)
+  features            String   @default("{}") // JSON: { allFurnitureItems: bool, revisionSnapshots: bool, ... }
+
+  // Free-tier restrictions (stored as JSON)
+  freeRoomTypes       String   @default("[]") // JSON array: ["living", "bedroom", ...]
+  freeLightingMoods   String   @default("[]") // JSON array: ["daylight", "evening"]
+  allRoomTypes        String   @default("[]") // JSON array of all room types
+  allLightingMoods    String   @default("[]") // JSON array of all lighting moods
+
+  // Feature comparison for pricing page (stored as JSON)
+  featureComparison   String   @default("[]") // JSON array of comparison categories
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model Project {

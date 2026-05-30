@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -13,16 +13,20 @@ import {
   Pencil,
   Trash2,
   User,
-  Settings,
   LogOut,
   LayoutGrid,
   Loader2,
   Home,
+  Crown,
+  Zap,
+  ChevronRight,
+  X,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,9 +44,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { type PlanKey, PLAN_CONFIG, getUpgradePlan } from '@/lib/plans';
 
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Room {
   id: string;
@@ -57,6 +62,14 @@ interface Project {
   createdAt: string;
   updatedAt: string;
   rooms: Room[];
+}
+
+interface UsageStats {
+  projects: { current: number; limit: number | null };
+  roomsPerProject: { current: number; limit: number | null };
+  furniturePerRoom: { current: number; limit: number | null };
+  plan: PlanKey;
+  planName: string;
 }
 
 // ─── Room type display helpers ───────────────────────────────────────────────
@@ -79,11 +92,18 @@ const ROOM_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   dining: { bg: '#F0E8E0', text: '#7A6A4A' },
 };
 
+const PLAN_STYLES: Record<PlanKey, { bg: string; text: string; icon: typeof Crown }> = {
+  free: { bg: '#F0E8D8', text: '#8B7355', icon: Sofa },
+  pro: { bg: '#C17F4E15', text: '#C17F4E', icon: Zap },
+  studio: { bg: '#C17F4E25', text: '#A86A3D', icon: Crown },
+};
+
 // ─── Dashboard Content ───────────────────────────────────────────────────────
 
 function DashboardContent() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -93,6 +113,12 @@ function DashboardContent() {
   const [renameValue, setRenameValue] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+  const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
+
+  const currentPlan = (session?.user as Record<string, unknown>)?.plan as PlanKey || 'free';
+  const planConfig = PLAN_CONFIG[currentPlan];
+  const upgradePlan = getUpgradePlan(currentPlan);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -100,6 +126,20 @@ function DashboardContent() {
       router.push('/auth/login');
     }
   }, [status, router]);
+
+  // Check for upgrade success param
+  useEffect(() => {
+    if (searchParams.get('upgraded') === 'true') {
+      // Refresh session to get new plan
+      updateSession();
+      // Show a brief success indicator
+      const timer = setTimeout(() => {
+        // Remove query param
+        window.history.replaceState({}, '', '/dashboard');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, updateSession]);
 
   // Fetch projects
   const fetchProjects = useCallback(async () => {
@@ -116,11 +156,30 @@ function DashboardContent() {
     }
   }, []);
 
+  // Fetch usage stats
+  const fetchUsageStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/plan/usage');
+      if (res.ok) {
+        const data = await res.json();
+        setUsageStats(data);
+        // Show upgrade banner for free users approaching limits
+        if (data.plan === 'free') {
+          const projectPct = data.projects.limit ? data.projects.current / data.projects.limit : 0;
+          setShowUpgradeBanner(projectPct >= 0.66); // Show at 2/3 projects used
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch usage stats:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchProjects();
+      fetchUsageStats();
     }
-  }, [status, fetchProjects]);
+  }, [status, fetchProjects, fetchUsageStats]);
 
   // Create new project
   const handleCreateProject = async () => {
@@ -132,8 +191,18 @@ function DashboardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'New Project' }),
       });
+
+      if (res.status === 403) {
+        const data = await res.json();
+        // Plan limit reached — show upgrade prompt
+        alert(data.error || 'You have reached your project limit. Please upgrade your plan.');
+        router.push('/pricing');
+        return;
+      }
+
       if (res.ok) {
         const project = await res.json();
+        fetchUsageStats(); // Refresh usage
         router.push(`/editor/${project.id}`);
       }
     } catch (error) {
@@ -157,6 +226,7 @@ function DashboardContent() {
         );
         setDeleteDialogOpen(false);
         setSelectedProject(null);
+        fetchUsageStats(); // Refresh usage
       }
     } catch (error) {
       console.error('Failed to delete project:', error);
@@ -218,6 +288,12 @@ function DashboardContent() {
       .slice(0, 2);
   };
 
+  // Usage percentage
+  const getUsagePercent = (current: number, limit: number | null) => {
+    if (!limit) return 0; // unlimited
+    return Math.min(Math.round((current / limit) * 100), 100);
+  };
+
   // Loading state
   if (status === 'loading' || (status === 'authenticated' && isLoading)) {
     return (
@@ -231,7 +307,7 @@ function DashboardContent() {
             style={{ color: '#C17F4E' }}
           />
           <p style={{ color: '#8A8478' }} className="text-sm">
-            Loading your workspace…
+            Loading your workspace...
           </p>
         </div>
       </div>
@@ -240,6 +316,8 @@ function DashboardContent() {
 
   // Not authenticated - will redirect
   if (!session) return null;
+
+  const PlanIcon = PLAN_STYLES[currentPlan].icon;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F0E8' }}>
@@ -270,6 +348,20 @@ function DashboardContent() {
 
           {/* User Menu */}
           <div className="flex items-center gap-3">
+            {/* Plan Badge */}
+            <button
+              onClick={() => currentPlan !== 'studio' ? router.push('/pricing') : undefined}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-80"
+              style={{
+                background: PLAN_STYLES[currentPlan].bg,
+                color: PLAN_STYLES[currentPlan].text,
+              }}
+            >
+              <PlanIcon className="w-3.5 h-3.5" />
+              {planConfig.name}
+              {currentPlan !== 'studio' && <ChevronRight className="w-3 h-3" />}
+            </button>
+
             <span
               className="text-sm font-medium hidden md:inline"
               style={{ color: '#2D2D2D' }}
@@ -312,13 +404,19 @@ function DashboardContent() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/profile')}
+                >
                   <User className="mr-2 h-4 w-4" />
-                  Profile
+                  Profile & Billing
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push('/pricing')}
+                >
+                  <Crown className="mr-2 h-4 w-4" />
+                  Upgrade Plan
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -336,8 +434,8 @@ function DashboardContent() {
 
       {/* ─── Main Content ────────────────────────────────────────────────── */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
+        {/* Welcome + Plan Info */}
+        <div className="mb-6">
           <h1
             className="text-2xl sm:text-3xl font-bold tracking-tight"
             style={{ color: '#2D2D2D' }}
@@ -350,6 +448,122 @@ function DashboardContent() {
               : `You have ${projects.length} design${projects.length === 1 ? '' : 's'} in your workspace`}
           </p>
         </div>
+
+        {/* Upgrade Banner (for free users approaching limits) */}
+        {showUpgradeBanner && upgradePlan && (
+          <div className="mb-6">
+            <div
+              className="flex items-center justify-between gap-4 p-4 rounded-xl border-2"
+              style={{
+                background: 'linear-gradient(135deg, #FFFAF5, #FFF5EB)',
+                borderColor: '#C17F4E40',
+              }}
+            >
+              <div className="flex items-center gap-3 flex-1">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#C17F4E15' }}
+                >
+                  <Zap className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: '#2D2D2D' }}>
+                    You&apos;re using {usageStats?.projects.current} of {usageStats?.projects.limit} free projects
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: '#8A8478' }}>
+                    Upgrade to {PLAN_CONFIG[upgradePlan].name} for {PLAN_CONFIG[upgradePlan].maxProjects ?? 'unlimited'} projects, {PLAN_CONFIG[upgradePlan].maxRoomsPerProject ?? 'unlimited'} rooms, and more features.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  className="text-white font-medium gap-1"
+                  style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                  onClick={() => router.push('/pricing')}
+                >
+                  Upgrade
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+                <button
+                  onClick={() => setShowUpgradeBanner(false)}
+                  className="p-1 rounded-md hover:bg-black/5"
+                  style={{ color: '#8A8478' }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Usage Stats Cards */}
+        {usageStats && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            {/* Projects Usage */}
+            <div
+              className="rounded-xl border p-4"
+              style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium" style={{ color: '#8A8478' }}>Projects</span>
+                <span className="text-xs font-semibold" style={{ color: '#2D2D2D' }}>
+                  {usageStats.projects.current} / {usageStats.projects.limit ?? '∞'}
+                </span>
+              </div>
+              <Progress
+                value={getUsagePercent(usageStats.projects.current, usageStats.projects.limit)}
+                className="h-2"
+                style={{
+                  // @ts-expect-error CSS custom property
+                  '--progress-foreground': getUsagePercent(usageStats.projects.current, usageStats.projects.limit) >= 90 ? '#E53E3E' : '#C17F4E',
+                }}
+              />
+            </div>
+
+            {/* Rooms per Project */}
+            <div
+              className="rounded-xl border p-4"
+              style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium" style={{ color: '#8A8478' }}>Rooms / Project</span>
+                <span className="text-xs font-semibold" style={{ color: '#2D2D2D' }}>
+                  {usageStats.roomsPerProject.current} / {usageStats.roomsPerProject.limit ?? '∞'}
+                </span>
+              </div>
+              <Progress
+                value={getUsagePercent(usageStats.roomsPerProject.current, usageStats.roomsPerProject.limit)}
+                className="h-2"
+                style={{
+                  // @ts-expect-error CSS custom property
+                  '--progress-foreground': getUsagePercent(usageStats.roomsPerProject.current, usageStats.roomsPerProject.limit) >= 90 ? '#E53E3E' : '#C17F4E',
+                }}
+              />
+            </div>
+
+            {/* Furniture per Room */}
+            <div
+              className="rounded-xl border p-4"
+              style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium" style={{ color: '#8A8478' }}>Furniture / Room</span>
+                <span className="text-xs font-semibold" style={{ color: '#2D2D2D' }}>
+                  {usageStats.furniturePerRoom.current} / {usageStats.furniturePerRoom.limit ?? '∞'}
+                </span>
+              </div>
+              <Progress
+                value={getUsagePercent(usageStats.furniturePerRoom.current, usageStats.furniturePerRoom.limit)}
+                className="h-2"
+                style={{
+                  // @ts-expect-error CSS custom property
+                  '--progress-foreground': getUsagePercent(usageStats.furniturePerRoom.current, usageStats.furniturePerRoom.limit) >= 90 ? '#E53E3E' : '#C17F4E',
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -563,7 +777,7 @@ function DashboardContent() {
               {isCreating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Creating…
+                  Creating...
                 </>
               ) : (
                 <>
@@ -606,7 +820,7 @@ function DashboardContent() {
               {isDeleting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Deleting…
+                  Deleting...
                 </>
               ) : (
                 'Delete Project'
@@ -657,7 +871,7 @@ function DashboardContent() {
               {isRenaming ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving…
+                  Saving...
                 </>
               ) : (
                 'Save'

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { isBetaMode } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
+  // Rate limit registration attempts
+  const rateLimitResponse = applyRateLimit(req, RATE_LIMITS.register);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await req.json();
     const { name, email, password } = body;
@@ -48,11 +54,13 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create the user
+    // During beta, new users get Pro plan automatically
     const user = await db.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
+        ...(isBetaMode() ? { plan: 'pro' } : {}),
       },
     });
 

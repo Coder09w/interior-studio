@@ -30,11 +30,27 @@ export default function ForgotPasswordPage() {
 
     setIsLoading(true);
 
-    // Placeholder: simulate a brief delay then show success message
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-    setIsLoading(false);
-    setIsSubmitted(true);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+
+      setIsSubmitted(true);
+    } catch {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -144,13 +160,16 @@ export default function ForgotPasswordPage() {
               Check your email
             </h2>
             <p className="text-sm mb-1" style={{ color: '#8A8478' }}>
-              We&apos;ve sent a password reset link to
+              If an account exists for
             </p>
             <p
-              className="text-sm font-medium mb-6"
+              className="text-sm font-medium mb-1"
               style={{ color: '#2D2D2D' }}
             >
               {email}
+            </p>
+            <p className="text-sm mb-6" style={{ color: '#8A8478' }}>
+              you&apos;ll receive a reset link shortly.
             </p>
             <div
               className="rounded-lg p-4 mb-6"
@@ -159,10 +178,20 @@ export default function ForgotPasswordPage() {
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#C17F4E' }} />
                 <p className="text-xs text-left" style={{ color: '#8A8478' }}>
-                  If you don&apos;t see the email, check your spam folder. The link will expire in 24 hours.
+                  If you don&apos;t see the email, check your spam folder. The link will expire in 1 hour.
                 </p>
               </div>
             </div>
+            {process.env.NODE_ENV === 'development' && (
+              <div
+                className="rounded-lg p-3 mb-4"
+                style={{ backgroundColor: '#FFF7ED', borderColor: '#FDBA74', borderWidth: '1px' }}
+              >
+                <p className="text-xs text-left" style={{ color: '#92400E' }}>
+                  In development, check the server console for the reset link.
+                </p>
+              </div>
+            )}
             <Button
               variant="outline"
               className="w-full h-11 cursor-pointer"

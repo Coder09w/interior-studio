@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { applyRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 // GET /api/rooms/[roomId] — Get a single room by ID
 export async function GET(
@@ -48,6 +49,10 @@ export async function PUT(
   { params }: { params: Promise<{ roomId: string }> }
 ) {
   try {
+    // Rate limit write operations
+    const rateLimitResponse = applyRateLimit(request, RATE_LIMITS.write);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
