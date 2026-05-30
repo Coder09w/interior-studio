@@ -61,6 +61,12 @@ function Navbar() {
             >
               Interior Studio
             </span>
+            <span
+              className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              BETA
+            </span>
           </Link>
 
           {/* Desktop nav */}

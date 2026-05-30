@@ -344,6 +344,12 @@ function DashboardContent() {
             >
               Interior Studio
             </span>
+            <span
+              className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded-full text-white hidden sm:inline"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              BETA
+            </span>
           </div>
 
           {/* User Menu */}

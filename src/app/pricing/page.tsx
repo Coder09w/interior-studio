@@ -172,6 +172,12 @@ export default function PricingPage() {
             <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               Interior Studio
             </span>
+            <span
+              className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              BETA
+            </span>
           </Link>
           <Link href="/" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: '#8A8478' }}>
             <ArrowLeft className="w-4 h-4" />
