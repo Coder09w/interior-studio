@@ -141,3 +141,31 @@ Stage Summary:
 - Hybrid AI renderer pipeline complete: Three.js layout → AI photorealistic render
 - Addresses UX audit #1 critical issue: photorealism bait-and-switch
 - Users can now transform their 3D layout drafts into photorealistic visualizations
+---
+Task ID: 1
+Agent: Main Agent
+Task: Implement Skeleton & Skin System, fix bottom tab bug, replace AI Render
+
+Work Log:
+- Read full InteriorStudio.tsx (2836 lines), furniture-builders.ts, furniture-data.ts
+- Identified bug: line 1938 had `setMobilePanel(null)` after addFurniture, closing panel on mobile
+- Created /src/lib/skin-system.ts with 6 design themes and applySkinToSkeleton engine
+- Fixed TypeScript error with `as unknown as Record<string, unknown>` for _isStruct/_isLeg checks
+- Modified InteriorStudio.tsx:
+  - Removed all AI Render state, functions, and modal (~200+ lines removed)
+  - Added activeSkin state and applySkin callback
+  - Added 'skin' to mobilePanel type union
+  - Added Skin panel content in renderMobilePanel()
+  - Replaced AI Render mobile tab with Skins tab
+  - Replaced AI Render desktop button with Design Skins section
+  - Fixed furniture add bug (removed setMobilePanel(null))
+  - Added activeSkin persistence in saveRoom/loadRoom
+- Build verified: ✓ Compiled successfully
+
+Stage Summary:
+- Bug fixed: mobile panel no longer closes when adding furniture
+- AI Render completely replaced with Skin System (pure WebGL, no API needed)
+- 6 skins available: Default, Matte Black, Nordic Light, Luxury Marble, Industrial Loft, Japandi Zen
+- Skin system applies materials by traversing scene graph and matching mesh names/types
+- Desktop: 2-column skin grid in sidebar; Mobile: skin tab in bottom panel
+- activeSkin persisted in localStorage with room data
