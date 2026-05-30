@@ -224,6 +224,14 @@ export default function InteriorStudio() {
   const [showSnapshots, setShowSnapshots] = useState(false);
   const [snapshotName, setSnapshotName] = useState('');
 
+  // AI Render state
+  const [aiRenderOpen, setAiRenderOpen] = useState(false);
+  const [aiRendering, setAiRendering] = useState(false);
+  const [aiRenderStyle, setAiRenderStyle] = useState<'standard' | 'luxury' | 'cozy' | 'minimal'>('standard');
+  const [aiRenderResult, setAiRenderResult] = useState<string | null>(null);
+  const [aiRenderError, setAiRenderError] = useState<string | null>(null);
+  const [aiRenderSource, setAiRenderSource] = useState<string | null>(null);
+
   // Refs for Three.js callbacks
   const roomWRef = useRef(8); const roomDRef = useRef(6); const roomHRef = useRef(3);
   const wallColRef = useRef('#FAF8F4'); const floorTypeRef = useRef('hardwood');
@@ -1619,6 +1627,67 @@ export default function InteriorStudio() {
     r.render(s, c); const link = document.createElement('a'); link.download = `${designName.replace(/\s+/g, '_')}.png`; link.href = r.domElement.toDataURL('image/png'); link.click(); showToast('Screenshot saved');
   }, [showToast, designName]);
 
+  /* ===== AI RENDER ===== */
+  const buildAiRenderPrompt = useCallback(() => {
+    // Build a descriptive prompt from the current room state
+    const roomTypeName: Record<string, string> = { living: 'living room', bedroom: 'bedroom', kitchen: 'kitchen', bathroom: 'bathroom', office: 'home office', dining: 'dining room' };
+    const currentRoom = rooms.find(r => r.id === currentRoomId);
+    const rType = currentRoom ? (roomTypeName[currentRoom.roomType] || 'room') : 'room';
+    const moodLabel: Record<string, string> = { daylight: 'bright natural daylight', golden: 'warm golden hour sunlight', evening: 'soft evening ambient light', night: 'moody night lighting with lamps' };
+    const floorLabel: Record<string, string> = { hardwood: 'hardwood floor', marble: 'marble floor', concrete: 'polished concrete floor', carpet: 'carpeted floor', tile: 'ceramic tile floor' };
+    const furnitureNames = placedItemsRef.current
+      .map(obj => obj.userData.name || obj.userData.fn || '')
+      .filter(Boolean);
+    const uniqueFurniture = [...new Set(furnitureNames)];
+
+    const parts = [
+      `A beautiful ${rType}`,
+      `${roomW}m wide by ${roomD}m deep, ceiling height ${roomH}m`,
+      `with ${moodLabel[lightMood] || 'natural lighting'}`,
+      `${floorLabel[floorType] || 'wooden floor'}`,
+      `wall color ${colorNames[wallCol] || wallCol}`,
+    ];
+    if (uniqueFurniture.length > 0) {
+      parts.push(`furnished with ${uniqueFurniture.join(', ')}`);
+    }
+    return parts.join(', ');
+  }, [rooms, currentRoomId, roomW, roomD, roomH, lightMood, floorType, wallCol]);
+
+  const handleAiRender = useCallback(async () => {
+    if (aiRendering) return;
+    const r = rendererRef.current, s = sceneRef.current, c = cameraRef.current;
+    if (!r || !s || !c) { setAiRenderError('3D scene not ready'); return; }
+
+    // Capture the 3D canvas screenshot as source
+    r.render(s, c);
+    const sourceImage = r.domElement.toDataURL('image/jpeg', 0.9);
+    setAiRenderSource(sourceImage);
+    setAiRenderResult(null);
+    setAiRenderError(null);
+    setAiRendering(true);
+    setAiRenderOpen(true);
+
+    try {
+      const prompt = buildAiRenderPrompt();
+      const res = await fetch('/api/ai-render', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, style: aiRenderStyle }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Rendering failed');
+      if (data.image) {
+        setAiRenderResult(data.image);
+      } else {
+        throw new Error('No image returned from AI');
+      }
+    } catch (err: any) {
+      setAiRenderError(err.message || 'AI rendering failed. Please try again.');
+    } finally {
+      setAiRendering(false);
+    }
+  }, [aiRendering, aiRenderStyle, buildAiRenderPrompt]);
+
   const rotateSelected = useCallback((dir: 'left' | 'right') => { if (selectedObjRef.current) { pushHistory(); selectedObjRef.current.rotation.y += dir === 'left' ? Math.PI / 12 : -Math.PI / 12; markUnsaved(); markSceneDirty(); } }, [pushHistory, markUnsaved, markSceneDirty]);
 
   const shareRoom = useCallback(() => { if (currentRoomId) { navigator.clipboard.writeText(`${window.location.origin}/view/${currentRoomId}`); showToast('Share link copied!'); } }, [currentRoomId, showToast]);
@@ -2202,6 +2271,9 @@ export default function InteriorStudio() {
         <p className="text-[10px] font-bold uppercase tracking-[1.8px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#8A8478' }}>Actions</p>
         <div className="flex flex-col gap-1.5">
           <button onClick={saveRoom} className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer border-none" style={{ background: '#7A8B6F', color: '#fff' }}><i className="fas fa-save text-[10px]" />Save Room</button>
+          <button onClick={handleAiRender} disabled={aiRendering} className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer border-none transition-all" style={{ background: aiRendering ? '#A0845E' : 'linear-gradient(135deg, #C17F4E, #A86A3D)', color: '#fff', opacity: aiRendering ? 0.7 : 1 }}>
+            <i className={`fas ${aiRendering ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'} text-[10px]`} />{aiRendering ? 'Generating...' : 'AI Photorealistic Render'}
+          </button>
           <div className="flex gap-1.5">
             <button onClick={() => setShowSnapshots(true)} className="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#C17F4E', border: '1px solid #E2DDD4' }}><i className="fas fa-camera-retro text-[10px]" />Snapshots</button>
             <button onClick={takeScreenshot} className="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#2D2D2D', border: '1px solid #E2DDD4' }}><i className="fas fa-camera text-[10px]" />Screenshot</button>
@@ -2346,6 +2418,116 @@ export default function InteriorStudio() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* AI Render Modal */}
+      {aiRenderOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={() => { if (!aiRendering) setAiRenderOpen(false); }}>
+          <div className="bg-white rounded-2xl max-w-3xl w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: '#E2DDD4' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                  <i className="fas fa-wand-magic-sparkles text-white text-sm" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>AI Photorealistic Render</h3>
+                  <p className="text-[10px]" style={{ color: '#8A8478' }}>Transform your 3D layout into a photorealistic visualization</p>
+                </div>
+              </div>
+              <button onClick={() => { if (!aiRendering) { setAiRenderOpen(false); setAiRenderResult(null); setAiRenderSource(null); } }} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }} disabled={aiRendering}>
+                <i className="fas fa-times text-xs" />
+              </button>
+            </div>
+
+            {/* Style selector */}
+            {!aiRenderResult && !aiRendering && (
+              <div className="p-4 border-b" style={{ borderColor: '#E2DDD4' }}>
+                <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#8A8478' }}>Render Style</p>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'standard' as const, label: 'Standard', icon: 'fa-house', desc: 'Clean & balanced' },
+                    { id: 'luxury' as const, label: 'Luxury', icon: 'fa-gem', desc: 'High-end finish' },
+                    { id: 'cozy' as const, label: 'Cozy', icon: 'fa-fire', desc: 'Warm & inviting' },
+                    { id: 'minimal' as const, label: 'Minimal', icon: 'fa-minus', desc: 'Scandinavian' },
+                  ].map(style => (
+                    <button key={style.id} onClick={() => setAiRenderStyle(style.id)} className="flex-1 p-2.5 rounded-xl border-2 cursor-pointer transition-all text-center"
+                      style={{ borderColor: aiRenderStyle === style.id ? '#C17F4E' : '#E2DDD4', background: aiRenderStyle === style.id ? 'rgba(193,127,78,0.08)' : '#FAF8F4' }}>
+                      <i className={`fas ${style.icon} text-sm mb-1`} style={{ color: aiRenderStyle === style.id ? '#C17F4E' : '#8A8478' }} />
+                      <p className="text-[10px] font-semibold" style={{ color: aiRenderStyle === style.id ? '#C17F4E' : '#2D2D2D' }}>{style.label}</p>
+                      <p className="text-[8px]" style={{ color: '#8A8478' }}>{style.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="p-4">
+              {aiRendering && !aiRenderResult && (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                    <i className="fas fa-wand-magic-sparkles text-white text-2xl animate-pulse" />
+                  </div>
+                  <h4 className="text-lg font-bold mb-1" style={{ fontFamily: "'Outfit', sans-serif" }}>Generating Your Render...</h4>
+                  <p className="text-sm mb-4" style={{ color: '#8A8478' }}>Our AI is transforming your 3D layout into a photorealistic image.<br />This usually takes 15-30 seconds.</p>
+                  <div className="w-48 h-1.5 rounded-full mx-auto overflow-hidden" style={{ background: '#E2DDD4' }}>
+                    <div className="h-full rounded-full animate-pulse" style={{ background: 'linear-gradient(90deg, #C17F4E, #D4A76A)', width: '60%' }} />
+                  </div>
+                  {aiRenderSource && (
+                    <div className="mt-6">
+                      <p className="text-[9px] uppercase tracking-wider mb-2" style={{ color: '#8A8478' }}>Your 3D Layout</p>
+                      <img src={aiRenderSource} alt="Source" className="w-64 h-auto rounded-xl mx-auto border" style={{ borderColor: '#E2DDD4' }} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {aiRenderResult && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(122,139,111,0.15)', color: '#7A8B6F' }}>
+                      <i className="fas fa-check mr-1" />Render Complete
+                    </span>
+                  </div>
+                  {/* Before / After comparison */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-wider mb-1.5 font-semibold" style={{ color: '#8A8478' }}>3D Layout (Draft)</p>
+                      {aiRenderSource && <img src={aiRenderSource} alt="Draft" className="w-full rounded-xl border" style={{ borderColor: '#E2DDD4' }} />}
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase tracking-wider mb-1.5 font-semibold" style={{ color: '#C17F4E' }}>AI Render (Final)</p>
+                      <img src={aiRenderResult} alt="AI Render" className="w-full rounded-xl border-2" style={{ borderColor: '#C17F4E' }} />
+                    </div>
+                  </div>
+                  {/* Download button */}
+                  <div className="flex gap-2">
+                    <a download={`AI_Render_${designName.replace(/\s+/g, '_')}.png`} href={aiRenderResult} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white text-center cursor-pointer border-none no-underline" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                      <i className="fas fa-download mr-1.5" />Download Render
+                    </a>
+                    <button onClick={() => { setAiRenderResult(null); setAiRenderSource(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
+                      <i className="fas fa-redo mr-1.5" />Render Again
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {aiRenderError && (
+                <div className="text-center py-8">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#FDE8E8' }}>
+                    <i className="fas fa-exclamation-triangle text-xl" style={{ color: '#C0392B' }} />
+                  </div>
+                  <h4 className="text-base font-bold mb-1" style={{ color: '#C0392B' }}>Rendering Failed</h4>
+                  <p className="text-sm mb-4" style={{ color: '#8A8478' }}>{aiRenderError}</p>
+                  <button onClick={handleAiRender} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer border-none" style={{ background: '#C17F4E' }}>
+                    <i className="fas fa-redo mr-1.5" />Try Again
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -2542,6 +2724,11 @@ export default function InteriorStudio() {
               style={{ color: '#8A8478' }}>
               <i className="fas fa-camera" />Capture
             </button>
+            <button onClick={handleAiRender} disabled={aiRendering}
+              className="flex-1 min-h-[44px] py-2.5 text-[10px] font-semibold flex items-center justify-center gap-1"
+              style={{ color: '#C17F4E' }}>
+              <i className={`fas ${aiRendering ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'}`} />{aiRendering ? 'AI...' : 'AI Render'}
+            </button>
           </div>
 
           {/* Panel content */}
@@ -2557,6 +2744,9 @@ export default function InteriorStudio() {
                 <div className="mt-3 flex gap-2">
                   <button onClick={saveRoom} className="px-4 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border-none" style={{ background: '#7A8B6F', color: '#fff' }}>
                     <i className="fas fa-save mr-1" />Save
+                  </button>
+                  <button onClick={handleAiRender} disabled={aiRendering} className="px-4 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border-none" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', color: '#fff' }}>
+                    <i className={`fas ${aiRendering ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'} mr-1`} />AI Render
                   </button>
                   <button onClick={undo} className="px-3 py-2 rounded-lg text-[10px] font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }}>
                     <i className="fas fa-undo" />
