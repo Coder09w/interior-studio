@@ -8,6 +8,15 @@ import type { MatType } from '@/lib/furniture-builders';
 import { categories, furnitureItems, matColors, wallColorOptions, roomTypeDefaults, colorNames } from '@/lib/furniture-data';
 import type { CategoryId } from '@/lib/furniture-data';
 import { SKINS_DICTIONARY, applySkinToSkeleton, SKINS_LIST } from '@/lib/skin-system';
+import { DESIGN_PRESETS, getPresetsForRoom, getPresetById } from '@/lib/design-presets';
+import type { DesignPreset, RoomType as PresetRoomType } from '@/lib/design-presets';
+
+// Guest mode restrictions
+const GUEST_ALLOWED_FURNITURE = new Set(['createSofa', 'createCoffeeTable', 'createBed', 'createDiningTable', 'createDiningChair', 'createKitchenCounter', 'createDesk', 'createOfficeChair']);
+const GUEST_ALLOWED_CATEGORIES = new Set<CategoryId>(['seating', 'tables', 'bedroom']);
+const GUEST_MAX_ROOMS = 2;
+const GUEST_MAX_ITEMS = 8;
+const GUEST_COLORS_PER_TYPE = 4;
 
 /* ===== TYPES ===== */
 interface FurnitureData {
@@ -216,7 +225,7 @@ export default function InteriorStudio() {
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomType, setNewRoomType] = useState('bedroom');
   const [isMobile, setIsMobile] = useState(false);
-  const [mobilePanel, setMobilePanel] = useState<'furniture' | 'room' | 'material' | 'skin' | 'skeleton' | null>(null);
+  const [mobilePanel, setMobilePanel] = useState<'furniture' | 'room' | 'material' | 'skin' | 'skeleton' | 'presets' | null>(null);
   const [roomManagerOpen, setRoomManagerOpen] = useState(false);
   const [editingRoomName, setEditingRoomName] = useState<string | null>(null);
   const [editingRoomNameValue, setEditingRoomNameValue] = useState('');
@@ -227,6 +236,15 @@ export default function InteriorStudio() {
 
   // Skin System state
   const [activeSkin, setActiveSkin] = useState<string>('default');
+
+  // Onboarding / Preset selection state
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [onboardingStep, setOnboardingStep] = useState<'room' | 'preset' | 'blank'>('room');
+  const [selectedRoomType, setSelectedRoomType] = useState<PresetRoomType>('living');
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+
+  // Guest mode state
+  const [isGuest, setIsGuest] = useState(true); // default to guest until we verify auth
 
   // Refs for Three.js callbacks
   const roomWRef = useRef(8); const roomDRef = useRef(6); const roomHRef = useRef(3);
@@ -1067,6 +1085,17 @@ export default function InteriorStudio() {
 
   /* ===== ADD / DELETE / DUPLICATE ===== */
   const addFurniture = useCallback((fnName: string, col: string, mtype: MatType) => {
+    // Guest mode restrictions
+    if (isGuest) {
+      if (!GUEST_ALLOWED_FURNITURE.has(fnName)) {
+        showToast('Sign in to unlock all furniture');
+        return null;
+      }
+      if (placedItemsRef.current.length >= GUEST_MAX_ITEMS) {
+        showToast(`Guest limit: ${GUEST_MAX_ITEMS} items. Sign in for more!`);
+        return null;
+      }
+    }
     const fn = builders[fnName]; if (!fn) return null;
     pushHistory();
     const item = fn(col, mtype, roomHRef.current);
@@ -1081,7 +1110,7 @@ export default function InteriorStudio() {
     markSceneDirty();
     showToast(`Added ${item.userData.name}`);
     return item;
-  }, [pushHistory, selectItem, showToast, markUnsaved, markSceneDirty]);
+  }, [pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, isGuest]);
 
   const deleteSelected = useCallback(() => {
     const selected = selectedObjRef.current; if (!selected) return;
@@ -1201,7 +1230,7 @@ export default function InteriorStudio() {
     if (!defaults) return;
     defaults.defaultFurniture.forEach(f => {
       const fn = builders[f.fn]; if (!fn) return;
-      const item = fn(f.color, f.mat, roomHRef.current);
+      const item = fn(f.color, f.mat as MatType, roomHRef.current);
       item.position.set(f.pos[0], f.pos[1], f.pos[2]);
       if (f.rot) item.rotation.y = f.rot;
       item.userData.fn = f.fn;
@@ -1209,6 +1238,64 @@ export default function InteriorStudio() {
     });
     setItemCount(placedItemsRef.current.length); deselectAll(); markSceneDirty();
   }, [deselectAll, markSceneDirty]);
+
+  /* ===== LOAD DESIGN PRESET ===== */
+  const loadPreset = useCallback((preset: DesignPreset) => {
+    // Clear existing furniture
+    placedItemsRef.current.forEach(item => {
+      sceneRef.current?.remove(item);
+      item.traverse(c => {
+        if (c instanceof THREE.Mesh) { c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material?.dispose(); }
+      });
+    });
+    placedItemsRef.current = [];
+    selectedObjRef.current = null;
+    setItemPanelVisible(false);
+
+    // Apply room settings from preset
+    roomWRef.current = preset.roomWidth; setRoomW(preset.roomWidth);
+    roomDRef.current = preset.roomDepth; setRoomD(preset.roomDepth);
+    roomHRef.current = preset.roomHeight; setRoomH(preset.roomHeight);
+    wallColRef.current = preset.wallColor; setWallCol(preset.wallColor);
+    floorTypeRef.current = preset.floorType; setFloorType(preset.floorType);
+    floorColorRef.current = preset.floorColor; setFloorColor(preset.floorColor);
+    lightMoodRef.current = preset.lightMood; setLightMood(preset.lightMood);
+    setDesignName(preset.name);
+
+    // Rebuild room
+    buildRoom();
+
+    // Add preset furniture
+    setTimeout(() => {
+      preset.furniture.forEach(f => {
+        const fn = builders[f.fn]; if (!fn) return;
+        const item = fn(f.color, f.mat as MatType, roomHRef.current);
+        item.position.set(f.pos[0], f.pos[1], f.pos[2]);
+        if (f.rot) item.rotation.y = f.rot;
+        item.userData.fn = f.fn;
+        item.userData.isFurniture = true;
+        item.name = f.fn;
+        sceneRef.current?.add(item); placedItemsRef.current.push(item);
+      });
+      setItemCount(placedItemsRef.current.length);
+
+      // Apply skin if specified
+      if (preset.skin && preset.skin !== 'default') {
+        const skin = SKINS_DICTIONARY[preset.skin];
+        if (skin) {
+          setActiveSkin(preset.skin);
+          const sc = sceneRef.current, rg = roomGroupRef.current;
+          if (sc && rg) applySkinToSkeleton(sc, rg, placedItemsRef.current, skin, ambientLightRef.current, dirLightRef.current, rendererRef.current);
+        }
+      }
+
+      markSceneDirty();
+      historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+    }, 200);
+
+    setShowOnboarding(false);
+    markUnsaved();
+  }, [buildRoom, deselectAll, markSceneDirty, markUnsaved, serializeFurniture]);
 
   /* ===== THREE.JS INIT ===== */
   useEffect(() => {
@@ -1255,10 +1342,16 @@ export default function InteriorStudio() {
       // Try to load saved room state from localStorage
       let loadedFromStorage = false;
       try {
+        // Check if user is authenticated (has session)
+        fetch('/api/auth/session').then(r => r.json()).then(session => {
+          if (session?.user) setIsGuest(false);
+        }).catch(() => { /* guest mode */ });
+
         const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
         const savedRoom = savedRooms['default'];
         if (savedRoom) {
           loadedFromStorage = true;
+          setShowOnboarding(false); // Skip onboarding if there's saved data
           if (savedRoom.width) { roomWRef.current = savedRoom.width; setRoomW(savedRoom.width); }
           if (savedRoom.depth) { roomDRef.current = savedRoom.depth; setRoomD(savedRoom.depth); }
           if (savedRoom.height) { roomHRef.current = savedRoom.height; setRoomH(savedRoom.height); }
@@ -1501,7 +1594,14 @@ export default function InteriorStudio() {
       raycasterRef.current.setFromCamera(pointerRef.current, camera);
       if (raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current)) {
         const np = intersectionRef.current.sub(dragOffsetRef.current);
-        const hw = roomWRef.current / 2 - 0.3, hd = roomDRef.current / 2 - 0.3;
+        // Calculate furniture bounding box for wall constraint
+        const bbox = new THREE.Box3().setFromObject(dragItemRef.current);
+        const size = new THREE.Vector3();
+        bbox.getSize(size);
+        const halfFurnW = size.x / 2;
+        const halfFurnD = size.z / 2;
+        const hw = roomWRef.current / 2 - halfFurnW - 0.05;
+        const hd = roomDRef.current / 2 - halfFurnD - 0.05;
         let nx = Math.max(-hw, Math.min(hw, np.x)), nz = Math.max(-hd, Math.min(hd, np.z));
         if (snapToGridRef.current) { nx = Math.round(nx * 2) / 2; nz = Math.round(nz * 2) / 2; }
         dragItemRef.current.position.x = nx; dragItemRef.current.position.z = nz;
@@ -2167,6 +2267,54 @@ export default function InteriorStudio() {
           </div>
         </div>
       ),
+      presets: (
+        <div className="h-full overflow-y-auto int-scrollbar p-3">
+          <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#8A8478' }}>Design Presets</p>
+          <p className="text-[9px] mb-3" style={{ color: '#8A8478' }}>Tap a preset to instantly load a curated room design</p>
+          {/* Room type filter */}
+          <div className="flex gap-1.5 mb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => (
+              <button key={type} onClick={() => setSelectedRoomType(type)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#8A8478] bg-[#FAF8F4]'}`}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+          {/* Preset cards */}
+          <div className="grid grid-cols-1 gap-2">
+            {getPresetsForRoom(selectedRoomType).map(preset => (
+              <button key={preset.id} onClick={() => loadPreset(preset)}
+                className="p-3 rounded-xl border-2 cursor-pointer transition-all text-left hover:shadow-sm"
+                style={{ borderColor: preset.accent + '40', background: '#FAF8F4' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
+                    <i className={`fas ${preset.icon} text-sm`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
+                    <p className="text-[9px]" style={{ color: '#8A8478' }}>{preset.description}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[8px]" style={{ color: '#8A8478' }}>{preset.furniture.length} pieces</span>
+                      <div className="flex gap-0.5">
+                        {Object.values(SKINS_DICTIONARY[preset.skin || 'default']?.slots || {}).filter(Boolean).slice(0, 4).map((slot, i) => (
+                          <div key={i} className="w-2.5 h-2.5 rounded-full border" style={{ background: (slot as any).color, borderColor: '#E2DDD4' }} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <i className="fas fa-chevron-right text-[10px]" style={{ color: '#C4A882' }} />
+                </div>
+              </button>
+            ))}
+          </div>
+          {isGuest && (
+            <div className="mt-3 p-2.5 rounded-lg border" style={{ background: 'rgba(193,127,78,0.06)', borderColor: 'rgba(193,127,78,0.15)' }}>
+              <p className="text-[9px]" style={{ color: '#8A8478' }}><i className="fas fa-lock text-[7px] mr-1" style={{ color: '#C17F4E' }} />Sign in to save presets and unlock more designs</p>
+              <a href="/auth/signup" className="text-[10px] font-bold no-underline" style={{ color: '#C17F4E' }}>Sign Up Free →</a>
+            </div>
+          )}
+        </div>
+      ),
     };
     return panelContent[mobilePanel];
   };
@@ -2356,6 +2504,36 @@ export default function InteriorStudio() {
         </div>
       </div>
 
+      {/* Design Presets */}
+      <div className="p-4 border-t" style={{ borderColor: '#E2DDD4' }}>
+        <p className="text-[10px] font-bold uppercase tracking-[1.8px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#8A8478' }}>Design Presets</p>
+        <div className="flex gap-1.5 mb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => (
+            <button key={type} onClick={() => setSelectedRoomType(type)}
+              className={`px-2 py-1 rounded-md text-[9px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#8A8478] bg-[#FAF8F4]'}`}>
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-1.5 max-h-40 overflow-y-auto int-scrollbar">
+          {getPresetsForRoom(selectedRoomType).map(preset => (
+            <button key={preset.id} onClick={() => loadPreset(preset)}
+              className="w-full p-2 rounded-lg border cursor-pointer transition-all text-left hover:shadow-sm"
+              style={{ borderColor: preset.accent + '30', background: '#FAF8F4' }}>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
+                  <i className={`fas ${preset.icon} text-[9px]`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
+                  <p className="text-[8px] truncate" style={{ color: '#8A8478' }}>{preset.description}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Design Skins */}
       <div className="p-4 border-t" style={{ borderColor: '#E2DDD4' }}>
         <p className="text-[10px] font-bold uppercase tracking-[1.8px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#8A8478' }}>Design Skins</p>
@@ -2439,6 +2617,189 @@ export default function InteriorStudio() {
   return (
     <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-screen overflow-hidden`} style={{ background: '#F5F0E8', color: '#2D2D2D', fontFamily: "'DM Sans', sans-serif" }}>
       {/* FontAwesome loaded globally via layout.tsx */}
+
+      {/* ===== ONBOARDING OVERLAY ===== */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(45,45,45,0.85)', backdropFilter: 'blur(8px)' }}>
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto" style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+            {/* Step 1: Room Type */}
+            {onboardingStep === 'room' && (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                    <i className="fas fa-home text-white text-xl" />
+                  </div>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>What would you like to design?</h2>
+                  <p className="text-sm mt-1" style={{ color: '#8A8478' }}>Choose a room type to get started</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {([
+                    { type: 'living' as PresetRoomType, label: 'Living Room', icon: 'fa-couch', color: '#7A8B6F' },
+                    { type: 'bedroom' as PresetRoomType, label: 'Bedroom', icon: 'fa-bed', color: '#C49898' },
+                    { type: 'kitchen' as PresetRoomType, label: 'Kitchen', icon: 'fa-utensils', color: '#C17F59' },
+                    { type: 'dining' as PresetRoomType, label: 'Dining Room', icon: 'fa-utensils', color: '#B8956A' },
+                    { type: 'office' as PresetRoomType, label: 'Office', icon: 'fa-laptop', color: '#3D4F5F' },
+                    { type: 'bathroom' as PresetRoomType, label: 'Bathroom', icon: 'fa-bath', color: '#7B8EA0' },
+                  ]).map(room => (
+                    <button key={room.type} onClick={() => { setSelectedRoomType(room.type); setOnboardingStep('preset'); }}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center hover:shadow-md ${selectedRoomType === room.type ? 'border-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] bg-[#FAF8F4]'}`}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: room.color + '18', color: room.color }}>
+                        <i className={`fas ${room.icon} text-lg`} />
+                      </div>
+                      <p className="text-xs font-bold">{room.label}</p>
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => { setOnboardingStep('blank'); }}
+                  className="w-full mt-4 py-3 rounded-xl text-sm font-semibold cursor-pointer border-2 flex items-center justify-center gap-2"
+                  style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
+                  <i className="fas fa-pen" /> Start from Scratch
+                </button>
+              </>
+            )}
+
+            {/* Step 2: Preset Selection */}
+            {onboardingStep === 'preset' && (
+              <>
+                <div className="text-center mb-5">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                    <i className="fas fa-palette text-white text-xl" />
+                  </div>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Choose a Style</h2>
+                  <p className="text-sm mt-1" style={{ color: '#8A8478' }}>Pick a preset or start from scratch</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {getPresetsForRoom(selectedRoomType).map(preset => (
+                    <button key={preset.id} onClick={() => loadPreset(preset)}
+                      className="p-4 rounded-xl border-2 cursor-pointer transition-all text-left hover:shadow-md"
+                      style={{ borderColor: preset.accent + '40', background: '#FAF8F4' }}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: preset.accent + '18', color: preset.accent }}>
+                          <i className={`fas ${preset.icon}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{preset.name}</p>
+                          <p className="text-[10px]" style={{ color: '#8A8478' }}>{preset.furniture.length} pieces</p>
+                        </div>
+                      </div>
+                      <p className="text-[10px] leading-relaxed" style={{ color: '#8A8478' }}>{preset.description}</p>
+                      <div className="flex gap-1 mt-2">
+                        {Object.values(SKINS_DICTIONARY[preset.skin || 'default']?.slots || {}).filter(Boolean).slice(0, 5).map((slot, i) => (
+                          <div key={i} className="w-3 h-3 rounded-full border" style={{ background: (slot as any).color, borderColor: '#E2DDD4' }} />
+                        ))}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button onClick={() => setOnboardingStep('room')}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold cursor-pointer border-2 flex items-center justify-center gap-2"
+                    style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
+                    <i className="fas fa-arrow-left" /> Back
+                  </button>
+                  <button onClick={() => { setOnboardingStep('blank'); }}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold cursor-pointer border-2 flex items-center justify-center gap-2"
+                    style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
+                    <i className="fas fa-pen" /> Start from Scratch
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Step 3: Blank / Guest Warning */}
+            {onboardingStep === 'blank' && (
+              <>
+                <div className="text-center mb-5">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                    <i className="fas fa-drafting-compass text-white text-xl" />
+                  </div>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Start from Scratch</h2>
+                  <p className="text-sm mt-1" style={{ color: '#8A8478' }}>Build your room from the ground up</p>
+                </div>
+
+                {/* Room type selection */}
+                <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#8A8478' }}>Room Type</p>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => (
+                    <button key={type} onClick={() => setSelectedRoomType(type)}
+                      className={`py-2 px-3 rounded-lg text-[11px] font-semibold cursor-pointer transition-all border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#8A8478] bg-[#FAF8F4]'}`}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Guest mode notice */}
+                {isGuest && (
+                  <div className="p-3 rounded-xl mb-4 border" style={{ background: 'rgba(193,127,78,0.06)', borderColor: 'rgba(193,127,78,0.2)' }}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <i className="fas fa-info-circle text-xs" style={{ color: '#C17F4E' }} />
+                      <p className="text-[11px] font-bold" style={{ color: '#C17F4E' }}>Guest Mode</p>
+                    </div>
+                    <p className="text-[10px] mb-2" style={{ color: '#8A8478' }}>You're using the free editor with limited options. Sign in for the full experience.</p>
+                    <div className="flex gap-3 text-[9px]" style={{ color: '#8A8478' }}>
+                      <span><i className="fas fa-couch mr-0.5" style={{ color: '#C17F4E' }} /> {GUEST_ALLOWED_FURNITURE.size} items</span>
+                      <span><i className="fas fa-door-open mr-0.5" style={{ color: '#C17F4E' }} /> {GUEST_MAX_ROOMS} rooms</span>
+                      <span><i className="fas fa-palette mr-0.5" style={{ color: '#C17F4E' }} /> Fewer colors</span>
+                    </div>
+                    <a href="/auth/signup" className="mt-2 block w-full py-2 rounded-lg text-[11px] font-bold text-center no-underline" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', color: '#fff' }}>
+                      <i className="fas fa-sign-in-alt mr-1" />Sign Up for Full Access
+                    </a>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button onClick={() => setOnboardingStep(selectedRoomType ? 'preset' : 'room')}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold cursor-pointer border-2 flex items-center justify-center gap-2"
+                    style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
+                    <i className="fas fa-arrow-left" /> Back
+                  </button>
+                  <button onClick={() => {
+                    // Apply the room type defaults
+                    const defaults = roomTypeDefaults[selectedRoomType];
+                    if (defaults) {
+                      roomWRef.current = defaults.width; setRoomW(defaults.width);
+                      roomDRef.current = defaults.depth; setRoomD(defaults.depth);
+                      roomHRef.current = defaults.height; setRoomH(defaults.height);
+                      buildRoom();
+                      setTimeout(() => {
+                        defaults.defaultFurniture.forEach(f => {
+                          const fn = builders[f.fn]; if (!fn) return;
+                          const item = fn(f.color, f.mat as MatType, roomHRef.current);
+                          item.position.set(f.pos[0], f.pos[1], f.pos[2]);
+                          if (f.rot) item.rotation.y = f.rot;
+                          item.userData.fn = f.fn; item.userData.isFurniture = true; item.name = f.fn;
+                          sceneRef.current?.add(item); placedItemsRef.current.push(item);
+                        });
+                        setItemCount(placedItemsRef.current.length);
+                        markSceneDirty();
+                        historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+                      }, 200);
+                    }
+                    setShowOnboarding(false);
+                  }}
+                    className="flex-1 py-3 rounded-xl text-sm font-bold text-white cursor-pointer border-none flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                    <i className="fas fa-arrow-right" /> Start Designing
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Guest Upsell Banner */}
+      {isGuest && !showOnboarding && (
+        <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-center py-1.5" style={{ background: 'linear-gradient(90deg, #C17F4E, #A86A3D)', color: '#fff', fontSize: 11 }}>
+          <i className="fas fa-lock mr-1.5 text-[9px]" />
+          <span className="font-semibold">Guest Mode</span>
+          <span className="mx-1.5 opacity-50">—</span>
+          <span>Limited features</span>
+          <a href="/auth/signup" className="ml-2 px-3 py-0.5 rounded-full text-[10px] font-bold no-underline" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+            Sign Up Free
+          </a>
+        </div>
+      )}
 
       {/* Shortcuts Modal */}
       {showShortcuts && (
@@ -2575,7 +2936,7 @@ export default function InteriorStudio() {
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className={`flex-1 relative ${isMobile ? 'h-[60vh]' : ''}`} style={{ background: '#FAF8F4' }}>
+      <main className={`flex-1 relative ${isMobile ? 'h-[65vh]' : ''}`} style={{ background: '#FAF8F4' }}>
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #E2DDD4' }}>
           {!isMobile && (
@@ -2606,10 +2967,10 @@ export default function InteriorStudio() {
 
           {/* Mobile right actions */}
           {isMobile && (
-            <div className="flex items-center gap-2">
-              <button onClick={saveRoom} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#7A8B6F', color: '#7A8B6F', background: 'rgba(122,139,111,0.06)' }} title="Save"><i className="fas fa-save text-sm" /></button>
-              <button onClick={undo} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.15)' }} title="Undo"><i className="fas fa-undo text-sm" /></button>
-              <button onClick={redo} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.15)' }} title="Redo"><i className="fas fa-redo text-sm" /></button>
+            <div className="flex items-center gap-2.5">
+              <button onClick={saveRoom} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#7A8B6F', color: '#7A8B6F', background: 'rgba(122,139,111,0.08)' }} title="Save"><i className="fas fa-save text-base" /></button>
+              <button onClick={undo} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.2)' }} title="Undo"><i className="fas fa-undo text-base" /></button>
+              <button onClick={redo} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.2)' }} title="Redo"><i className="fas fa-redo text-base" /></button>
             </div>
           )}
 
@@ -2748,7 +3109,7 @@ export default function InteriorStudio() {
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '40vh' : '28vh' }}>
+        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '38vh' : '22vh', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
           {/* Tab bar */}
           <div className="flex border-b" style={{ borderColor: '#E2DDD4' }}>
             <button onClick={() => setMobilePanel(mobilePanel === 'skeleton' ? null : 'skeleton')}
@@ -2756,20 +3117,25 @@ export default function InteriorStudio() {
               style={{ color: mobilePanel === 'skeleton' ? '#5C4033' : '#8A8478', borderColor: mobilePanel === 'skeleton' ? '#5C4033' : 'transparent', background: mobilePanel === 'skeleton' ? 'rgba(92,64,51,0.06)' : 'transparent' }}>
               <i className="fas fa-bone" />Skeleton
             </button>
+            <button onClick={() => setMobilePanel(mobilePanel === 'presets' ? null : 'presets')}
+              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'presets' ? 'border-b-3' : ''}`}
+              style={{ color: mobilePanel === 'presets' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'presets' ? '#C17F4E' : 'transparent', background: mobilePanel === 'presets' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
+              <i className="fas fa-magic" />Presets
+            </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'furniture' ? null : 'furniture')}
-              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'furniture' ? 'border-b-3' : ''}`}
+              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'furniture' ? 'border-b-3' : ''}`}
               style={{ color: mobilePanel === 'furniture' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'furniture' ? '#C17F4E' : 'transparent', background: mobilePanel === 'furniture' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
-              <i className="fas fa-couch" />Furniture
+              <i className="fas fa-couch" />Items
             </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'material' ? null : 'material')}
-              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'material' ? 'border-b-3' : ''}`}
+              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'material' ? 'border-b-3' : ''}`}
               style={{ color: mobilePanel === 'material' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'material' ? '#C17F4E' : 'transparent', background: mobilePanel === 'material' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
-              <i className="fas fa-palette" />Colors
-            </button>
-            <button onClick={() => setMobilePanel(mobilePanel === 'skin' ? null : 'skin')}
-              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'skin' ? 'border-b-3' : ''}`}
-              style={{ color: mobilePanel === 'skin' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'skin' ? '#C17F4E' : 'transparent', background: mobilePanel === 'skin' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-palette" />Skins
+            </button>
+            <button onClick={() => setMobilePanel(mobilePanel === 'room' ? null : 'room')}
+              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'room' ? 'border-b-3' : ''}`}
+              style={{ color: mobilePanel === 'room' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'room' ? '#C17F4E' : 'transparent', background: mobilePanel === 'room' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
+              <i className="fas fa-sliders-h" />Room
             </button>
             <button onClick={takeScreenshot}
               className="flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5"
@@ -2804,7 +3170,7 @@ export default function InteriorStudio() {
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? '30vh' : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? '24vh' : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff' }}>{toastMsg}</div>
       </div>
     </div>

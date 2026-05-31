@@ -626,16 +626,123 @@ export function createShower(_col: string, _mtype: MatType): THREE.Group {
   return g;
 }
 
+/* ===== NEW FURNITURE ===== */
+export function createLoveSeat(col: string, mtype: MatType): THREE.Group {
+  const g = new THREE.Group();
+  const m = makeMat(col, mtype);
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.2, 0.75), m);
+  seat.position.y = 0.32; seat.castShadow = true; seat.receiveShadow = true; g.add(seat);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 0.12), m.clone());
+  back.position.set(0, 0.65, -0.32); back.castShadow = true; g.add(back);
+  [-0.62, 0.62].forEach(x => {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.75), m.clone());
+    arm.position.set(x, 0.48, 0); arm.castShadow = true; g.add(arm);
+  });
+  [[-0.58, 0.1, 0.28], [0.58, 0.1, 0.28], [-0.58, 0.1, -0.28], [0.58, 0.1, -0.28]].forEach(p => {
+    const l = new THREE.Mesh(legGeo(), getLegMat()); l.position.set(...p as [number, number, number]); l.castShadow = true; g.add(l);
+  });
+  [-0.35, 0.35].forEach(x => {
+    const c = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.07, 0.58), makeMat(col, mtype));
+    c.position.set(x, 0.48, 0.02); c.castShadow = true; g.add(c);
+  });
+  g.userData = { isFurniture: true, name: 'Love Seat', desc: '2-seat sofa, 140×75cm', matType: mtype, matColor: col };
+  return g;
+}
+
+export function createCredenza(col: string, _mtype: MatType): THREE.Group {
+  const g = new THREE.Group();
+  const m = makeMat(col || '#B8956A', 'wood');
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.7, 0.42), m);
+  body.position.y = 0.4; body.castShadow = true; g.add(body);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.025, 0.44), m.clone());
+  top.position.y = 0.76; top.castShadow = true; g.add(top);
+  // Door lines
+  [-0.38, 0.38].forEach(x => {
+    const line = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.58, 0.01), new THREE.MeshStandardMaterial({ color: 0x8a7a6a }));
+    line.position.set(x, 0.4, 0.21); g.add(line);
+  });
+  // Handles
+  [-0.2, 0.2].forEach(x => {
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8), new THREE.MeshStandardMaterial({ color: 0xc4a882, metalness: 0.5 }));
+    handle.position.set(x, 0.5, 0.22); g.add(handle);
+  });
+  // Legs
+  [[-0.72, 0.04, 0.16], [0.72, 0.04, 0.16], [-0.72, 0.04, -0.16], [0.72, 0.04, -0.16]].forEach(p => {
+    const l = new THREE.Mesh(legGeo(0.08, 0.02), getLegMat()); l.position.set(...p as [number, number, number]); g.add(l);
+  });
+  g.userData = { isFurniture: true, name: 'Credenza', desc: 'Sideboard, 160×42cm', matType: 'wood' as MatType, matColor: col || '#B8956A' };
+  return g;
+}
+
+export function createWallArt(col: string, _mtype: MatType): THREE.Group {
+  const g = new THREE.Group();
+  const frameMat = makeMat(col || '#5C4033', 'wood');
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.03), frameMat);
+  frame.position.y = 1.5; frame.castShadow = true; g.add(frame);
+  // Canvas
+  const canvasColors = [0x3D4F5F, 0x7A8B6F, 0xC17F4E, 0xC49898, 0x8A8478];
+  const canvasMat = new THREE.MeshStandardMaterial({ color: canvasColors[Math.floor(Math.random() * canvasColors.length)], roughness: 0.8 });
+  (canvasMat as any)._isStruct = true;
+  const canvas = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.52), canvasMat);
+  canvas.position.set(0, 1.5, 0.017); g.add(canvas);
+  g.userData = { isFurniture: true, name: 'Wall Art', desc: 'Framed painting, 80×60cm', matType: 'wood' as MatType, matColor: col || '#5C4033' };
+  return g;
+}
+
+export function createKitchenCart(col: string, _mtype: MatType): THREE.Group {
+  const g = new THREE.Group();
+  const m = makeMat(col || '#E0C8A0', 'wood');
+  const metalFrame = structMat('#333333', 0.3, 0.7);
+  // Top shelf
+  const top = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.03, 0.45), m);
+  top.position.y = 0.78; top.castShadow = true; g.add(top);
+  // Middle shelf
+  const mid = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.025, 0.42), m.clone());
+  mid.position.y = 0.42; g.add(mid);
+  // Bottom shelf
+  const bot = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.025, 0.42), m.clone());
+  bot.position.y = 0.12; g.add(bot);
+  // Legs (metal)
+  [[-0.35, 0.39, 0.18], [0.35, 0.39, 0.18], [-0.35, 0.39, -0.18], [0.35, 0.39, -0.18]].forEach(p => {
+    const l = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.78, 6), metalFrame.clone()); (l.material as any)._isStruct = true;
+    l.position.set(...p as [number, number, number]); g.add(l);
+  });
+  // Towel bar
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.5, 6), metalFrame.clone()); (bar.material as any)._isStruct = true;
+  bar.position.set(0, 0.55, 0.22); bar.rotation.z = Math.PI / 2; g.add(bar);
+  g.userData = { isFurniture: true, name: 'Kitchen Cart', desc: 'Rolling cart, 80×45cm', matType: 'wood' as MatType, matColor: col || '#E0C8A0' };
+  return g;
+}
+
+export function createFloorMirror(col: string, _mtype: MatType): THREE.Group {
+  const g = new THREE.Group();
+  const m = makeMat(col || '#B8956A', 'wood');
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.6, 0.05), m);
+  frame.position.y = 0.8; frame.castShadow = true; g.add(frame);
+  // Mirror glass
+  const mirrorMat = new THREE.MeshStandardMaterial({ color: 0xc8d8e0, roughness: 0.1, metalness: 0.7 });
+  (mirrorMat as any)._isStruct = true;
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 1.5), mirrorMat);
+  glass.position.set(0, 0.8, 0.03); g.add(glass);
+  // Base feet
+  [-0.15, 0.15].forEach(x => {
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 0.06), m.clone());
+    foot.position.set(x, 0.015, 0.03); g.add(foot);
+  });
+  g.userData = { isFurniture: true, name: 'Floor Mirror', desc: 'Standing mirror, h160cm', matType: 'wood' as MatType, matColor: col || '#B8956A' };
+  return g;
+}
+
 /* ===== FURNITURE FACTORY ===== */
 export type BuilderFn = (col: string, mtype: MatType, roomH?: number) => THREE.Group;
 
 export const builders: Record<string, BuilderFn> = {
-  createSofa, createArmchair, createOttoman,
-  createCoffeeTable, createSideTable, createConsole,
+  createSofa, createArmchair, createOttoman, createLoveSeat,
+  createCoffeeTable, createSideTable, createConsole, createCredenza,
   createFloorLamp, createPendant, createTableLamp,
-  createBookshelf, createPlant, createRug, createTVStand,
+  createBookshelf, createPlant, createRug, createTVStand, createWallArt, createFloorMirror,
   createBed, createNightstand, createWardrobe, createDresser, createVanityTable,
-  createKitchenIsland, createBarStool, createDiningTable, createDiningChair, createKitchenCounter,
+  createKitchenIsland, createBarStool, createDiningTable, createDiningChair, createKitchenCounter, createKitchenCart,
   createDesk, createOfficeChair, createFilingCabinet, createMonitorStand,
   createBathtub, createToilet, createPedestalSink, createShower,
 };

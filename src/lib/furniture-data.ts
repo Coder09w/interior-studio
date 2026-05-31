@@ -23,6 +23,7 @@ export const categories = [
 export const furnitureItems: Record<CategoryId, FurnitureItemDef[]> = {
   seating: [
     { name: 'Modern Sofa', desc: '3-seat sofa, 210×90cm', icon: 'fa-couch', fn: 'createSofa', thumb: '🛋️' },
+    { name: 'Love Seat', desc: '2-seat sofa, 140×75cm', icon: 'fa-couch', fn: 'createLoveSeat', thumb: '💕' },
     { name: 'Armchair', desc: 'Accent chair, 75×80cm', icon: 'fa-chair', fn: 'createArmchair', thumb: '💺' },
     { name: 'Ottoman', desc: 'Round ottoman, ⌀60cm', icon: 'fa-circle', fn: 'createOttoman', thumb: '⭕' },
   ],
@@ -30,6 +31,7 @@ export const furnitureItems: Record<CategoryId, FurnitureItemDef[]> = {
     { name: 'Coffee Table', desc: 'Low table, 120×60cm', icon: 'fa-table', fn: 'createCoffeeTable', thumb: '☐' },
     { name: 'Side Table', desc: 'Round side table, ⌀45cm', icon: 'fa-border-all', fn: 'createSideTable', thumb: '◯' },
     { name: 'Console', desc: 'Console table, 130×35cm', icon: 'fa-minus', fn: 'createConsole', thumb: '▬' },
+    { name: 'Credenza', desc: 'Sideboard, 160×42cm', icon: 'fa-archive', fn: 'createCredenza', thumb: '🗄️' },
   ],
   lighting: [
     { name: 'Floor Lamp', desc: 'Arc floor lamp, h160cm', icon: 'fa-lightbulb', fn: 'createFloorLamp', thumb: '💡' },
@@ -41,6 +43,8 @@ export const furnitureItems: Record<CategoryId, FurnitureItemDef[]> = {
     { name: 'Plant', desc: 'Potted plant, h90cm', icon: 'fa-leaf', fn: 'createPlant', thumb: '🪴' },
     { name: 'Rug', desc: 'Area rug, 200×140cm', icon: 'fa-square', fn: 'createRug', thumb: '🟫' },
     { name: 'TV Stand', desc: 'Media console, 150×50cm', icon: 'fa-tv', fn: 'createTVStand', thumb: '📺' },
+    { name: 'Wall Art', desc: 'Framed painting, 80×60cm', icon: 'fa-image', fn: 'createWallArt', thumb: '🎨' },
+    { name: 'Floor Mirror', desc: 'Standing mirror, h160cm', icon: 'fa-clone', fn: 'createFloorMirror', thumb: '🪞' },
   ],
   bedroom: [
     { name: 'King Bed', desc: 'King bed, 200×180cm', icon: 'fa-bed', fn: 'createBed', thumb: '🛏️' },
@@ -55,6 +59,7 @@ export const furnitureItems: Record<CategoryId, FurnitureItemDef[]> = {
     { name: 'Dining Table', desc: 'Dining table, 160×90cm', icon: 'fa-table', fn: 'createDiningTable', thumb: '🍽️' },
     { name: 'Dining Chair', desc: 'Wooden chair, 42×42cm', icon: 'fa-chair', fn: 'createDiningChair', thumb: '🪑' },
     { name: 'Kitchen Counter', desc: 'L-shaped counter', icon: 'fa-sink', fn: 'createKitchenCounter', thumb: '🍳' },
+    { name: 'Kitchen Cart', desc: 'Rolling cart, 80×45cm', icon: 'fa-dolly', fn: 'createKitchenCart', thumb: '🛒' },
   ],
   office: [
     { name: 'Desk', desc: 'Office desk, 140×70cm', icon: 'fa-laptop', fn: 'createDesk', thumb: '🖥️' },
