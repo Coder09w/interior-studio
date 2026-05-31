@@ -216,7 +216,7 @@ export default function InteriorStudio() {
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomType, setNewRoomType] = useState('bedroom');
   const [isMobile, setIsMobile] = useState(false);
-  const [mobilePanel, setMobilePanel] = useState<'furniture' | 'room' | 'material' | 'skin' | null>(null);
+  const [mobilePanel, setMobilePanel] = useState<'furniture' | 'room' | 'material' | 'skin' | 'skeleton' | null>(null);
   const [roomManagerOpen, setRoomManagerOpen] = useState(false);
   const [editingRoomName, setEditingRoomName] = useState<string | null>(null);
   const [editingRoomNameValue, setEditingRoomNameValue] = useState('');
@@ -1962,7 +1962,7 @@ export default function InteriorStudio() {
         <div className="h-full overflow-y-auto int-scrollbar p-3">
           <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-3" style={{ color: '#8A8478' }}>Design Themes</p>
           <div className="grid grid-cols-2 gap-2">
-            {SKINS_LIST.map(skin => (
+            {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
               <button key={skin.id} onClick={() => applySkin(skin.id)}
                 className="p-3 rounded-xl border-2 cursor-pointer transition-all text-left"
                 style={{
@@ -1988,28 +1988,10 @@ export default function InteriorStudio() {
             ))}
           </div>
           {activeSkin !== 'default' && (
-            <button onClick={() => applySkin('default')} className="w-full mt-3 py-2 rounded-lg text-xs font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>
-              <i className="fas fa-undo mr-1" />Reset Skin to Default
+            <button onClick={() => applySkin('default')} className="w-full mt-3 py-2.5 rounded-xl text-[12px] font-bold cursor-pointer border flex items-center justify-center gap-1.5" style={{ borderColor: '#5C4033', color: '#5C4033', background: 'rgba(92,64,51,0.06)' }}>
+              <i className="fas fa-bone" />Reset to Skeleton
             </button>
           )}
-
-          {/* Clear Skeleton Section */}
-          <div className="mt-4 pt-3 border-t" style={{ borderColor: '#E2DDD4' }}>
-            <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#8A8478' }}>Skeleton</p>
-            <p className="text-[9px] mb-2" style={{ color: '#8A8478' }}>The skeleton is your room structure — walls, floor, furniture layout. Clear it to start fresh.</p>
-            <div className="flex gap-2">
-              <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
-                className="flex-1 py-2 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
-                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
-                <i className="fas fa-eraser text-[9px]" />Clear Furniture
-              </button>
-              <button onClick={() => { if (confirm('Reset the entire room? This will remove all furniture and reset room settings.')) resetRoom(); }}
-                className="flex-1 py-2 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
-                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
-                <i className="fas fa-trash-alt text-[9px]" />Reset Room
-              </button>
-            </div>
-          </div>
         </div>
       ),
       room: (
@@ -2102,6 +2084,86 @@ export default function InteriorStudio() {
               style={{ borderColor: ceilingEditMode ? '#C17F4E' : '#E2DDD4', color: ceilingEditMode ? '#C17F4E' : '#8A8478', background: ceilingEditMode ? 'rgba(193,127,78,0.1)' : 'transparent' }}>
               <i className="fas fa-lightbulb text-[9px]" />{ceilingEditMode ? 'Exit Light Editor' : 'Edit Ceiling Lights'}
             </button>
+          </div>
+        </div>
+      ),
+      skeleton: (
+        <div className="h-full overflow-y-auto int-scrollbar p-3">
+          {/* Skeleton header */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(92,64,51,0.1)' }}>
+              <i className="fas fa-bone text-sm" style={{ color: '#5C4033' }} />
+            </div>
+            <div>
+              <p className="text-[13px] font-bold" style={{ color: '#2D2D2D' }}>Skeleton Mode</p>
+              <p className="text-[10px]" style={{ color: '#8A8478' }}>Original bare structure</p>
+            </div>
+          </div>
+
+          {/* Current skin status */}
+          <div className="p-3 rounded-xl mb-3" style={{ background: activeSkin === 'default' ? 'rgba(92,64,51,0.06)' : 'rgba(193,127,78,0.06)', border: `1px solid ${activeSkin === 'default' ? '#5C4033' : '#C17F4E'}` }}>
+            <div className="flex items-center gap-2 mb-1">
+              <i className={`fas ${activeSkin === 'default' ? 'fa-check-circle' : 'fa-paint-brush'} text-xs`} style={{ color: activeSkin === 'default' ? '#5C4033' : '#C17F4E' }} />
+              <p className="text-[11px] font-bold" style={{ color: activeSkin === 'default' ? '#5C4033' : '#C17F4E' }}>
+                {activeSkin === 'default' ? 'Skeleton Active' : `Skin: ${SKINS_DICTIONARY[activeSkin]?.name || activeSkin}`}
+              </p>
+            </div>
+            <p className="text-[9px]" style={{ color: '#8A8478' }}>
+              {activeSkin === 'default'
+                ? 'Your room is in its original skeleton state — no theme skin applied.'
+                : 'A design skin is currently applied. Reset to skeleton to remove it.'}
+            </p>
+          </div>
+
+          {/* Reset to Skeleton button */}
+          {activeSkin !== 'default' && (
+            <button onClick={() => applySkin('default')}
+              className="w-full py-3 rounded-xl text-[13px] font-bold cursor-pointer border-none mb-3 flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, #5C4033, #3B2F28)', color: '#fff' }}>
+              <i className="fas fa-bone" />Reset to Skeleton
+            </button>
+          )}
+
+          {/* Quick skin preview strip */}
+          <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#8A8478' }}>Quick Apply Skin</p>
+          <div className="grid grid-cols-2 gap-2">
+            {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
+              <button key={skin.id} onClick={() => applySkin(skin.id)}
+                className="p-2.5 rounded-xl border-2 cursor-pointer transition-all text-left"
+                style={{
+                  borderColor: activeSkin === skin.id ? skin.accent : '#E2DDD4',
+                  background: activeSkin === skin.id ? `${skin.accent}10` : '#FAF8F4',
+                }}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: activeSkin === skin.id ? skin.accent : '#F0E8D8', color: activeSkin === skin.id ? '#fff' : '#8A8478' }}>
+                    <i className={`fas ${skin.icon} text-[10px]`} />
+                  </div>
+                  <span className="text-[11px] font-bold" style={{ color: activeSkin === skin.id ? skin.accent : '#2D2D2D' }}>{skin.name}</span>
+                </div>
+                <div className="flex gap-0.5">
+                  {Object.values(skin.slots).filter(Boolean).slice(0, 4).map((slot, i) => (
+                    <div key={i} className="w-3 h-3 rounded-full border" style={{ background: (slot as any).color, borderColor: '#E2DDD4' }} />
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Destructive actions */}
+          <div className="mt-4 pt-3 border-t" style={{ borderColor: '#E2DDD4' }}>
+            <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#8A8478' }}>Clear & Reset</p>
+            <div className="flex gap-2">
+              <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
+                className="flex-1 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
+                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
+                <i className="fas fa-eraser text-[9px]" />Clear Furniture
+              </button>
+              <button onClick={() => { if (confirm('Reset the entire room? This will remove all furniture and reset room settings.')) resetRoom(); }}
+                className="flex-1 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
+                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
+                <i className="fas fa-trash-alt text-[9px]" />Reset Room
+              </button>
+            </div>
           </div>
         </div>
       ),
@@ -2297,8 +2359,28 @@ export default function InteriorStudio() {
       {/* Design Skins */}
       <div className="p-4 border-t" style={{ borderColor: '#E2DDD4' }}>
         <p className="text-[10px] font-bold uppercase tracking-[1.8px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#8A8478' }}>Design Skins</p>
+        {/* Skeleton button - always prominent at top */}
+        <button onClick={() => applySkin('default')}
+          className="w-full p-2.5 rounded-lg border-2 cursor-pointer transition-all text-left mb-2"
+          style={{
+            borderColor: activeSkin === 'default' ? '#5C4033' : '#E2DDD4',
+            background: activeSkin === 'default' ? 'rgba(92,64,51,0.08)' : '#FAF8F4',
+          }}>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: activeSkin === 'default' ? '#5C4033' : '#F0E8D8', color: activeSkin === 'default' ? '#fff' : '#8A8478' }}>
+              <i className="fas fa-bone text-[10px]" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold" style={{ color: activeSkin === 'default' ? '#5C4033' : '#2D2D2D' }}>Skeleton</span>
+              <p className="text-[8px]" style={{ color: '#8A8478' }}>Original bare structure</p>
+            </div>
+            {activeSkin === 'default' && (
+              <i className="fas fa-check-circle text-[10px] ml-auto" style={{ color: '#5C4033' }} />
+            )}
+          </div>
+        </button>
         <div className="grid grid-cols-2 gap-1.5">
-          {SKINS_LIST.map(skin => (
+          {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
             <button key={skin.id} onClick={() => applySkin(skin.id)}
               className="p-2 rounded-lg border-2 cursor-pointer transition-all text-left"
               style={{
@@ -2317,9 +2399,9 @@ export default function InteriorStudio() {
             </button>
           ))}
         </div>
-        {/* Clear Skeleton */}
+        {/* Clear & Reset */}
         <div className="mt-3 pt-2 border-t" style={{ borderColor: '#F0E8D8' }}>
-          <p className="text-[9px] font-bold uppercase tracking-[1.5px] mb-1.5" style={{ color: '#8A8478' }}>Skeleton</p>
+          <p className="text-[9px] font-bold uppercase tracking-[1.5px] mb-1.5" style={{ color: '#8A8478' }}>Clear & Reset</p>
           <div className="flex gap-1.5">
             <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
               className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
@@ -2493,7 +2575,7 @@ export default function InteriorStudio() {
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className={`flex-1 relative ${isMobile ? 'h-[55vh]' : ''}`} style={{ background: '#FAF8F4' }}>
+      <main className={`flex-1 relative ${isMobile ? 'h-[60vh]' : ''}`} style={{ background: '#FAF8F4' }}>
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #E2DDD4' }}>
           {!isMobile && (
@@ -2524,10 +2606,10 @@ export default function InteriorStudio() {
 
           {/* Mobile right actions */}
           {isMobile && (
-            <div className="flex items-center gap-1.5">
-              <button onClick={saveRoom} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#7A8B6F', color: '#7A8B6F' }} title="Save"><i className="fas fa-save text-[11px]" /></button>
-              <button onClick={undo} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Undo"><i className="fas fa-undo text-[11px]" /></button>
-              <button onClick={redo} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478' }} title="Redo"><i className="fas fa-redo text-[11px]" /></button>
+            <div className="flex items-center gap-2">
+              <button onClick={saveRoom} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#7A8B6F', color: '#7A8B6F', background: 'rgba(122,139,111,0.06)' }} title="Save"><i className="fas fa-save text-sm" /></button>
+              <button onClick={undo} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.15)' }} title="Undo"><i className="fas fa-undo text-sm" /></button>
+              <button onClick={redo} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.15)' }} title="Redo"><i className="fas fa-redo text-sm" /></button>
             </div>
           )}
 
@@ -2666,31 +2748,31 @@ export default function InteriorStudio() {
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '45vh' : '38vh' }}>
+        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '40vh' : '28vh' }}>
           {/* Tab bar */}
           <div className="flex border-b" style={{ borderColor: '#E2DDD4' }}>
+            <button onClick={() => setMobilePanel(mobilePanel === 'skeleton' ? null : 'skeleton')}
+              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'skeleton' ? 'border-b-3' : ''}`}
+              style={{ color: mobilePanel === 'skeleton' ? '#5C4033' : '#8A8478', borderColor: mobilePanel === 'skeleton' ? '#5C4033' : 'transparent', background: mobilePanel === 'skeleton' ? 'rgba(92,64,51,0.06)' : 'transparent' }}>
+              <i className="fas fa-bone" />Skeleton
+            </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'furniture' ? null : 'furniture')}
-              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'furniture' ? 'border-b-2' : ''}`}
+              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'furniture' ? 'border-b-3' : ''}`}
               style={{ color: mobilePanel === 'furniture' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'furniture' ? '#C17F4E' : 'transparent', background: mobilePanel === 'furniture' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-couch" />Furniture
             </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'material' ? null : 'material')}
-              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'material' ? 'border-b-2' : ''}`}
+              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'material' ? 'border-b-3' : ''}`}
               style={{ color: mobilePanel === 'material' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'material' ? '#C17F4E' : 'transparent', background: mobilePanel === 'material' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-palette" />Colors
             </button>
-            <button onClick={() => setMobilePanel(mobilePanel === 'room' ? null : 'room')}
-              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'room' ? 'border-b-2' : ''}`}
-              style={{ color: mobilePanel === 'room' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'room' ? '#C17F4E' : 'transparent', background: mobilePanel === 'room' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
-              <i className="fas fa-sliders-h" />Room
-            </button>
             <button onClick={() => setMobilePanel(mobilePanel === 'skin' ? null : 'skin')}
-              className={`flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'skin' ? 'border-b-2' : ''}`}
+              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'skin' ? 'border-b-3' : ''}`}
               style={{ color: mobilePanel === 'skin' ? '#C17F4E' : '#8A8478', borderColor: mobilePanel === 'skin' ? '#C17F4E' : 'transparent', background: mobilePanel === 'skin' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
               <i className="fas fa-palette" />Skins
             </button>
             <button onClick={takeScreenshot}
-              className="flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1"
+              className="flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5"
               style={{ color: '#8A8478' }}>
               <i className="fas fa-camera" />Capture
             </button>
@@ -2722,7 +2804,7 @@ export default function InteriorStudio() {
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? '40vh' : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? '30vh' : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff' }}>{toastMsg}</div>
       </div>
     </div>
