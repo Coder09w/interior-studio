@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import {
   Sofa,
   Box,
@@ -103,6 +104,8 @@ function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: strin
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = useSession();
+  const editorHref = session ? '/dashboard' : '/editor';
 
   useEffect(() => {
     let ticking = false;
@@ -171,21 +174,21 @@ function Navbar() {
               Pricing
             </Link>
             <Link
-              href="/auth/login"
+              href={session ? '/dashboard' : '/auth/login'}
               className="text-sm font-medium px-5 py-2.5 rounded-lg border transition-all hover:shadow-sm"
               style={{
                 borderColor: '#E2DDD4',
                 color: '#2D2D2D',
               }}
             >
-              Sign In
+              {session ? 'Dashboard' : 'Sign In'}
             </Link>
             <Link
-              href="/editor"
+              href={editorHref}
               className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
               style={{ background: '#C17F4E' }}
             >
-              Open Editor
+              {session ? 'Dashboard' : 'Open Editor'}
             </Link>
           </div>
 
@@ -214,8 +217,8 @@ function Navbar() {
             <a href="#features" className="block text-sm font-medium py-2" style={{ color: '#8A8478' }} onClick={() => setMobileOpen(false)}>Features</a>
             <Link href="/pricing" className="block text-sm font-medium py-2" style={{ color: '#8A8478' }} onClick={() => setMobileOpen(false)}>Pricing</Link>
             <div className="pt-2 flex flex-col gap-2">
-              <Link href="/auth/login" className="text-sm font-medium px-5 py-2.5 rounded-lg border text-center" style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }} onClick={() => setMobileOpen(false)}>Sign In</Link>
-              <Link href="/editor" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Open Editor</Link>
+              <Link href={session ? '/dashboard' : '/auth/login'} className="text-sm font-medium px-5 py-2.5 rounded-lg border text-center" style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }} onClick={() => setMobileOpen(false)}>{session ? 'Dashboard' : 'Sign In'}</Link>
+              <Link href={editorHref} className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>{session ? 'Dashboard' : 'Open Editor'}</Link>
             </div>
           </div>
         </motion.div>
@@ -310,7 +313,7 @@ function HeroSection() {
                   className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/20 hover:-translate-y-0.5"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
                 >
-                  Start Designing Free
+                  Start Designing
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <a

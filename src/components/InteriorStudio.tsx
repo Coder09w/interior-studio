@@ -2600,6 +2600,9 @@ export default function InteriorStudio() {
         <p className="text-[10px] font-bold uppercase tracking-[1.8px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#8A8478' }}>Actions</p>
         <div className="flex flex-col gap-1.5">
           <button onClick={saveRoom} className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer border-none" style={{ background: '#7A8B6F', color: '#fff' }}><i className="fas fa-save text-[10px]" />Save Room</button>
+          {!isGuest && (
+            <button onClick={() => window.location.href = '/dashboard'} className="w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer" style={{ background: '#FAF8F4', color: '#C17F4E', border: '1px solid #E2DDD4' }}><i className="fas fa-th-large text-[10px]" />Go to Dashboard</button>
+          )}
           <div className="flex gap-1.5">
             <button onClick={() => setShowSnapshots(true)} className="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#C17F4E', border: '1px solid #E2DDD4' }}><i className="fas fa-camera-retro text-[10px]" />Snapshots</button>
             <button onClick={takeScreenshot} className="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#2D2D2D', border: '1px solid #E2DDD4' }}><i className="fas fa-camera text-[10px]" />Screenshot</button>
@@ -2968,6 +2971,9 @@ export default function InteriorStudio() {
           {/* Mobile right actions */}
           {isMobile && (
             <div className="flex items-center gap-2.5">
+              {!isGuest && (
+                <button onClick={() => window.location.href = '/dashboard'} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.08)' }} title="Dashboard"><i className="fas fa-th-large text-base" /></button>
+              )}
               <button onClick={saveRoom} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#7A8B6F', color: '#7A8B6F', background: 'rgba(122,139,111,0.08)' }} title="Save"><i className="fas fa-save text-base" /></button>
               <button onClick={undo} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.2)' }} title="Undo"><i className="fas fa-undo text-base" /></button>
               <button onClick={redo} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: 'rgba(226,221,212,0.2)' }} title="Redo"><i className="fas fa-redo text-base" /></button>
@@ -2977,6 +2983,9 @@ export default function InteriorStudio() {
           {/* Desktop right actions */}
           {!isMobile && (
             <div className="flex items-center gap-1">
+              {!isGuest && (
+                <button onClick={() => window.location.href = '/dashboard'} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.06)' }} title="Dashboard"><i className="fas fa-th-large text-[9px]" /></button>
+              )}
               <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: snapToGrid ? '#C17F4E' : '#E2DDD4', color: snapToGrid ? '#C17F4E' : '#8A8478' }} title="Snap to Grid"><i className="fas fa-th text-[9px]" /></button>
               <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: shadowsEnabled ? '#C17F4E' : '#E2DDD4', color: shadowsEnabled ? '#C17F4E' : '#8A8478' }} title="Toggle Shadows"><i className="fas fa-cloud-sun text-[9px]" /></button>
               <button onClick={shareRoom} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }} title="Share"><i className="fas fa-share-alt text-[9px]" /></button>
