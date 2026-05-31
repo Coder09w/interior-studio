@@ -1,3 +1,7 @@
+# PROJECT INFO
+# Website URL: https://interior-studio-k4jollxhu-codingdanger-3722s-projects.vercel.app
+# GitHub: https://github.com/Coder09w/interior-studio
+
 ---
 Task ID: 1
 Agent: Main Agent
@@ -169,3 +173,28 @@ Stage Summary:
 - Skin system applies materials by traversing scene graph and matching mesh names/types
 - Desktop: 2-column skin grid in sidebar; Mobile: skin tab in bottom panel
 - activeSkin persisted in localStorage with room data
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Smart homepage routing, dashboard navigation in editor, replace all homepage images with AI-generated snapshots
+
+Work Log:
+- Fixed homepage CTA routing: logged-in users see "Dashboard" button → /dashboard, guests see "Open Editor" → /editor
+- Updated Navbar to use useSession() for auth-aware links (both desktop and mobile)
+- Updated Sign In link to show "Dashboard" when logged in
+- Added "Go to Dashboard" button in InteriorStudio desktop sidebar (Actions section, logged-in only)
+- Added Dashboard icon button in editor top bar (both mobile and desktop, logged-in only)
+- Generated 15 AI interior design snapshots for all homepage images:
+  - Room types: living, bedroom, kitchen, bathroom, office, dining
+  - Feature images: 3D preview, furniture, rooms, materials, share, settings
+  - Theme images: bohemian, art deco, scandinavian, industrial, japandi
+  - Hero image: breathtaking open concept living room
+- All images are 1344x768, photorealistic, professional interior photography style
+- Build passes, pushed to git (commit d9fff5a)
+
+Stage Summary:
+- Homepage now smart-routes based on auth status (guest → editor, logged-in → dashboard)
+- Dashboard accessible from editor sidebar, top bar (mobile & desktop) for logged-in users
+- All homepage images replaced with high-quality AI-generated interior design snapshots
+- Saved project URL: https://interior-studio-k4jollxhu-codingdanger-3722s-projects.vercel.app
