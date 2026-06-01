@@ -142,7 +142,7 @@ export default function SignupPage() {
           >
             Interior Studio
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6B6358' }}>
+          <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>
             Create your account
           </p>
         </div>
@@ -235,7 +235,7 @@ export default function SignupPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                style={{ color: '#6B6358' }}
+                style={{ color: '#5A4E42' }}
                 tabIndex={0}
                 aria-label="Toggle password visibility"
               >
@@ -251,7 +251,7 @@ export default function SignupPage() {
                 {errors.password}
               </p>
             ) : (
-              <p className="text-xs" style={{ color: '#6B6358' }}>
+              <p className="text-xs" style={{ color: '#5A4E42' }}>
                 Must be at least 8 characters
               </p>
             )}
@@ -282,7 +282,7 @@ export default function SignupPage() {
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                style={{ color: '#6B6358' }}
+                style={{ color: '#5A4E42' }}
                 tabIndex={0}
                 aria-label="Toggle confirm password visibility"
               >
@@ -303,12 +303,12 @@ export default function SignupPage() {
           {/* Referral Source */}
           <div className="space-y-2">
             <Label style={{ color: '#2D2D2D' }}>
-              How did you hear about us? <span style={{ color: '#6B6358', fontWeight: 400 }}>(optional)</span>
+              How did you hear about us? <span style={{ color: '#5A4E42', fontWeight: 400 }}>(optional)</span>
             </Label>
             <Select value={referralSource} onValueChange={setReferralSource}>
               <SelectTrigger
                 className="w-full h-11"
-                style={{ borderColor: '#E2DDD4', color: referralSource ? '#2D2D2D' : '#6B6358' }}
+                style={{ borderColor: '#E2DDD4', color: referralSource ? '#2D2D2D' : '#5A4E42' }}
               >
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
@@ -345,7 +345,7 @@ export default function SignupPage() {
         {/* Sign In Link */}
         <p
           className="text-center text-sm mt-6"
-          style={{ color: '#6B6358' }}
+          style={{ color: '#5A4E42' }}
         >
           Already have an account?{' '}
           <Link

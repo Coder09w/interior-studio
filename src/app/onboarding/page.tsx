@@ -195,7 +195,7 @@ function OnboardingContent() {
               className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300"
               style={{
                 backgroundColor: s <= step ? '#C17F4E' : '#E2DDD4',
-                color: s <= step ? '#FFFFFF' : '#6B6358',
+                color: s <= step ? '#FFFFFF' : '#5A4E42',
               }}
             >
               {s < step ? (
@@ -235,7 +235,7 @@ function OnboardingContent() {
             </h1>
             <p
               className="text-lg mb-8"
-              style={{ color: '#6B6358' }}
+              style={{ color: '#5A4E42' }}
             >
               What are you designing first?
             </p>
@@ -261,7 +261,7 @@ function OnboardingContent() {
                         backgroundColor:
                           selectedRoom === room.id ? '#C17F4E15' : '#F0E8D8',
                         color:
-                          selectedRoom === room.id ? '#C17F4E' : '#6B6358',
+                          selectedRoom === room.id ? '#C17F4E' : '#5A4E42',
                       }}
                     >
                       {room.icon}
@@ -274,7 +274,7 @@ function OnboardingContent() {
                     </h3>
                     <p
                       className="text-xs"
-                      style={{ color: '#6B6358' }}
+                      style={{ color: '#5A4E42' }}
                     >
                       {room.description}
                     </p>
@@ -307,7 +307,7 @@ function OnboardingContent() {
             </h1>
             <p
               className="text-lg mb-8"
-              style={{ color: '#6B6358' }}
+              style={{ color: '#5A4E42' }}
             >
               Choose the aesthetic that inspires you
             </p>
@@ -334,7 +334,7 @@ function OnboardingContent() {
                           backgroundColor:
                             selectedStyle === style.id ? '#C17F4E15' : '#F0E8D8',
                           color:
-                            selectedStyle === style.id ? '#C17F4E' : '#6B6358',
+                            selectedStyle === style.id ? '#C17F4E' : '#5A4E42',
                         }}
                       >
                         {style.icon}
@@ -348,7 +348,7 @@ function OnboardingContent() {
                         </h3>
                         <p
                           className="text-xs mb-3"
-                          style={{ color: '#6B6358' }}
+                          style={{ color: '#5A4E42' }}
                         >
                           {style.description}
                         </p>
@@ -414,7 +414,7 @@ function OnboardingContent() {
             </h1>
             <p
               className="text-lg mb-2"
-              style={{ color: '#6B6358' }}
+              style={{ color: '#5A4E42' }}
             >
               You&apos;re all set!
             </p>
@@ -460,7 +460,7 @@ function OnboardingContent() {
                       {selectedStyle ? STYLE_MAP[selectedStyle] : ''}{' '}
                       {selectedRoom ? ROOM_TYPE_MAP[selectedRoom] : ''}
                     </p>
-                    <p className="text-xs" style={{ color: '#6B6358' }}>
+                    <p className="text-xs" style={{ color: '#5A4E42' }}>
                       Your first project
                     </p>
                   </div>

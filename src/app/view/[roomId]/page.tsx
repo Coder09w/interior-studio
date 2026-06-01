@@ -242,11 +242,11 @@ function createPlant(col: string, _mtype: MatType): THREE.Group {
 
 function createRug(col: string, _mtype: MatType): THREE.Group {
   const g = new THREE.Group();
-  const m = makeMat(col || '#6B6358', 'fabric');
+  const m = makeMat(col || '#5A4E42', 'fabric');
   m.opacity = 0.92; m.transparent = true;
   const rug = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.015, 1.4), m);
   rug.position.y = 0.008; rug.receiveShadow = true; g.add(rug);
-  const borderMat = makeMat(col || '#6B6358', 'fabric'); borderMat.color.offsetHSL(0, -0.1, -0.1);
+  const borderMat = makeMat(col || '#5A4E42', 'fabric'); borderMat.color.offsetHSL(0, -0.1, -0.1);
   [[0, 0.01, 0.68, 2.02, 0.01, 0.04], [0, 0.01, -0.68, 2.02, 0.01, 0.04], [1.0, 0.01, 0, 0.02, 0.01, 1.42], [-1.0, 0.01, 0, 0.02, 0.01, 1.42]].forEach(([x, y, z, w, , dd]) => {
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, 0.012, dd), borderMat);
     b.position.set(x, y, z); g.add(b);
@@ -594,7 +594,7 @@ export default function ViewRoomPage() {
             className="w-8 h-8 animate-spin"
             style={{ color: '#C17F4E' }}
           />
-          <p style={{ color: '#6B6358' }} className="text-sm">
+          <p style={{ color: '#5A4E42' }} className="text-sm">
             Loading room…
           </p>
         </div>
@@ -612,7 +612,7 @@ export default function ViewRoomPage() {
         <div className="flex flex-col items-center gap-4 text-center px-4">
           <AlertCircle
             className="w-12 h-12"
-            style={{ color: '#6B6358' }}
+            style={{ color: '#5A4E42' }}
           />
           <h2
             className="text-xl font-semibold"
@@ -620,7 +620,7 @@ export default function ViewRoomPage() {
           >
             {error || 'Room not found'}
           </h2>
-          <p style={{ color: '#6B6358' }} className="text-sm">
+          <p style={{ color: '#5A4E42' }} className="text-sm">
             This room may have been removed or the link is invalid.
           </p>
         </div>
@@ -646,7 +646,7 @@ export default function ViewRoomPage() {
             >
               {roomData.name}
             </h1>
-            <p className="text-xs" style={{ color: '#6B6358' }}>
+            <p className="text-xs" style={{ color: '#5A4E42' }}>
               {roomData.width}m × {roomData.depth}m × {roomData.height}m
             </p>
           </div>
@@ -666,7 +666,7 @@ export default function ViewRoomPage() {
             </div>
             <span
               className="text-xs font-medium"
-              style={{ color: '#6B6358' }}
+              style={{ color: '#5A4E42' }}
             >
               Interior Studio
             </span>

@@ -109,7 +109,7 @@ export default function ContactPage() {
         variant="solid"
         showBeta={false}
         rightContent={
-          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#6B6358' }}>
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#5A4E42' }}>
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
@@ -118,7 +118,7 @@ export default function ContactPage() {
 
       {/* Breadcrumb */}
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm" style={{ color: '#6B6358' }}>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm" style={{ color: '#5A4E42' }}>
           <Link href="/" className="hover:opacity-80 transition-opacity">Home</Link>
           <span>/</span>
           <span style={{ color: '#2D2D2D' }} className="font-medium">Contact Us</span>
@@ -133,7 +133,7 @@ export default function ContactPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           Get in Touch
         </h1>
-        <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: '#6B6358' }}>
+        <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: '#5A4E42' }}>
           Have a question, suggestion, or need help? We are here for you. Reach out and our team will respond promptly.
         </p>
       </div>
@@ -151,7 +151,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Email Support</h3>
-                  <p className="text-xs" style={{ color: '#6B6358' }}>We respond within 24-48 hours</p>
+                  <p className="text-xs" style={{ color: '#5A4E42' }}>We respond within 24-48 hours</p>
                 </div>
               </div>
               <a
@@ -176,7 +176,7 @@ export default function ContactPage() {
               <p className="text-sm" style={{ color: '#555' }}>
                 We typically respond within 24–48 hours, 7 days a week.
               </p>
-              <p className="text-xs mt-1" style={{ color: '#6B6358' }}>
+              <p className="text-xs mt-1" style={{ color: '#5A4E42' }}>
                 Urgent issues get priority handling
               </p>
             </div>
@@ -204,7 +204,7 @@ export default function ContactPage() {
                 <Phone className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#C17F4E' }} />
                 <div>
                   <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Priority Support</h3>
-                  <p className="text-xs mt-1 leading-relaxed" style={{ color: '#6B6358' }}>
+                  <p className="text-xs mt-1 leading-relaxed" style={{ color: '#5A4E42' }}>
                     Pro and Studio subscribers receive priority support with guaranteed response times. Upgrade your plan for faster assistance.
                   </p>
                 </div>
@@ -219,7 +219,7 @@ export default function ContactPage() {
                 <CardTitle className="text-xl" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
                   Send Us a Message
                 </CardTitle>
-                <CardDescription style={{ color: '#6B6358' }}>
+                <CardDescription style={{ color: '#5A4E42' }}>
                   Fill out the form below and we will get back to you as soon as possible.
                 </CardDescription>
               </CardHeader>
@@ -263,7 +263,7 @@ export default function ContactPage() {
                       <SelectTrigger
                         id="subject"
                         className="w-full rounded-xl border bg-white"
-                        style={{ borderColor: '#E2DDD4', color: formData.subject ? '#2D2D2D' : '#6B6358' }}
+                        style={{ borderColor: '#E2DDD4', color: formData.subject ? '#2D2D2D' : '#5A4E42' }}
                       >
                         <SelectValue placeholder="Select a subject" />
                       </SelectTrigger>
@@ -327,7 +327,7 @@ export default function ContactPage() {
             <h2 className="text-3xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               Frequently Asked Questions
             </h2>
-            <p className="mt-3 text-base max-w-lg mx-auto" style={{ color: '#6B6358' }}>
+            <p className="mt-3 text-base max-w-lg mx-auto" style={{ color: '#5A4E42' }}>
               Find quick answers to common questions about Interior Studio.
             </p>
           </div>
@@ -374,12 +374,12 @@ export default function ContactPage() {
                 Interior Studio
               </span>
             </div>
-            <div className="flex items-center gap-6 text-sm" style={{ color: '#6B6358' }}>
+            <div className="flex items-center gap-6 text-sm" style={{ color: '#5A4E42' }}>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy Policy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms of Service</Link>
               <Link href="/contact" className="font-medium" style={{ color: '#C17F4E' }}>Contact Us</Link>
             </div>
-            <p className="text-xs" style={{ color: '#6B6358' }}>
+            <p className="text-xs" style={{ color: '#5A4E42' }}>
               &copy; {new Date().getFullYear()} Interior Studio. All rights reserved.
             </p>
           </div>

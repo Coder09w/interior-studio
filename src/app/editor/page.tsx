@@ -34,10 +34,10 @@ function WebGLUnsupported() {
         <h2 className="text-xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           3D Editor Not Available
         </h2>
-        <p className="text-sm mt-3" style={{ color: '#6B6358' }}>
+        <p className="text-sm mt-3" style={{ color: '#5A4E42' }}>
           Your browser or device does not support WebGL, which is required for the 3D room editor. This could be because:
         </p>
-        <ul className="text-sm mt-3 space-y-1.5 text-left max-w-xs mx-auto" style={{ color: '#6B6358' }}>
+        <ul className="text-sm mt-3 space-y-1.5 text-left max-w-xs mx-auto" style={{ color: '#5A4E42' }}>
           <li className="flex items-start gap-2">
             <span style={{ color: '#C17F4E' }}>•</span>
             WebGL is disabled in your browser settings
@@ -54,7 +54,7 @@ function WebGLUnsupported() {
 
         <div className="mt-6 p-4 rounded-xl text-left" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid rgba(193,127,78,0.15)' }}>
           <p className="text-xs font-semibold mb-2" style={{ color: '#C17F4E' }}>How to fix this:</p>
-          <ul className="text-xs space-y-1" style={{ color: '#6B6358' }}>
+          <ul className="text-xs space-y-1" style={{ color: '#5A4E42' }}>
             <li>1. Update to the latest version of Chrome, Firefox, Safari, or Edge</li>
             <li>2. Enable hardware acceleration in your browser settings</li>
             <li>3. Update your graphics card drivers</li>
@@ -132,21 +132,21 @@ function EditorLoadingScreen() {
           />
         </div>
 
-        <p className="text-sm font-medium" style={{ color: '#6B6358' }}>
+        <p className="text-sm font-medium" style={{ color: '#5A4E42' }}>
           {statusText}
         </p>
-        <p className="text-xs mt-2" style={{ color: '#6B6358' }}>
+        <p className="text-xs mt-2" style={{ color: '#5A4E42' }}>
           {progress}%
         </p>
 
         {/* Helpful tip */}
         <div className="mt-6 p-3 rounded-xl text-left" style={{ background: 'rgba(193,127,78,0.06)', borderColor: 'rgba(193,127,78,0.15)', border: '1px solid rgba(193,127,78,0.15)' }}>
-          <p className="text-xs" style={{ color: '#6B6358' }}>
+          <p className="text-xs" style={{ color: '#5A4E42' }}>
             <span className="font-semibold" style={{ color: '#C17F4E' }}>Tip:</span> Use Orbit controls to rotate the view — click &amp; drag to orbit, scroll to zoom, and right-click to pan.
           </p>
         </div>
 
-        <p className="text-[10px] mt-6" style={{ color: '#6B6358' }}>
+        <p className="text-[10px] mt-6" style={{ color: '#5A4E42' }}>
           Taking too long? Make sure WebGL is enabled in your browser.
         </p>
       </div>

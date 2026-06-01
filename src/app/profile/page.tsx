@@ -263,7 +263,7 @@ function ProfileContent() {
             className="w-8 h-8 animate-spin"
             style={{ color: '#C17F4E' }}
           />
-          <p style={{ color: '#6B6358' }} className="text-sm">
+          <p style={{ color: '#5A4E42' }} className="text-sm">
             Loading profile…
           </p>
         </div>
@@ -379,7 +379,7 @@ function ProfileContent() {
         >
           Profile & Settings
         </h1>
-        <p className="text-sm mb-8" style={{ color: '#6B6358' }}>
+        <p className="text-sm mb-8" style={{ color: '#5A4E42' }}>
           Manage your account and design preferences
         </p>
 
@@ -390,21 +390,21 @@ function ProfileContent() {
           >
             <TabsTrigger
               value="profile"
-              className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#6B6358]"
+              className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#5A4E42]"
             >
               <User className="w-4 h-4 mr-1.5" />
               Profile
             </TabsTrigger>
             <TabsTrigger
               value="billing"
-              className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#6B6358]"
+              className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#5A4E42]"
             >
               <CreditCard className="w-4 h-4 mr-1.5" />
               Billing
             </TabsTrigger>
             <TabsTrigger
               value="preferences"
-              className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#6B6358]"
+              className="data-[state=active]:bg-white data-[state=active]:text-[#2D2D2D] text-[#5A4E42]"
             >
               <Settings className="w-4 h-4 mr-1.5" />
               Preferences
@@ -444,7 +444,7 @@ function ProfileContent() {
                       <Camera className="w-4 h-4 mr-1.5" />
                       Change Photo
                     </Button>
-                    <p className="text-xs mt-1.5" style={{ color: '#6B6358' }}>
+                    <p className="text-xs mt-1.5" style={{ color: '#5A4E42' }}>
                       JPG, PNG or GIF. Max 2MB.
                     </p>
                   </div>
@@ -477,7 +477,7 @@ function ProfileContent() {
                     className="h-11 bg-muted"
                     style={{ borderColor: '#E2DDD4' }}
                   />
-                  <p className="text-xs" style={{ color: '#6B6358' }}>
+                  <p className="text-xs" style={{ color: '#5A4E42' }}>
                     Email cannot be changed.
                   </p>
                 </div>
@@ -608,7 +608,7 @@ function ProfileContent() {
                       <h3 className="font-bold text-lg" style={{ color: '#2D2D2D' }}>
                         {planConfig.name} Plan
                       </h3>
-                      <p className="text-sm" style={{ color: '#6B6358' }}>
+                      <p className="text-sm" style={{ color: '#5A4E42' }}>
                         {planConfig.price === 0 ? 'Free forever' : `$${planConfig.price}/month`}
                       </p>
                     </div>
@@ -617,7 +617,7 @@ function ProfileContent() {
                     <span className="text-2xl font-bold" style={{ color: '#2D2D2D' }}>
                       {planConfig.price === 0 ? '$0' : `$${planConfig.price}`}
                     </span>
-                    <span className="text-xs" style={{ color: '#6B6358' }}>
+                    <span className="text-xs" style={{ color: '#5A4E42' }}>
                       /{planConfig.price === 0 ? 'forever' : 'month'}
                     </span>
                   </div>
@@ -635,19 +635,19 @@ function ProfileContent() {
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.shareLinks ? '#C17F4E' : '#D4CFC7' }} />
-                    <span style={{ color: planConfig.features.shareLinks ? '#2D2D2D' : '#6B6358' }}>Share links</span>
+                    <span style={{ color: planConfig.features.shareLinks ? '#2D2D2D' : '#5A4E42' }}>Share links</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.exportImage ? '#C17F4E' : '#D4CFC7' }} />
-                    <span style={{ color: planConfig.features.exportImage ? '#2D2D2D' : '#6B6358' }}>Image/PDF export</span>
+                    <span style={{ color: planConfig.features.exportImage ? '#2D2D2D' : '#5A4E42' }}>Image/PDF export</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.customDimensions ? '#C17F4E' : '#D4CFC7' }} />
-                    <span style={{ color: planConfig.features.customDimensions ? '#2D2D2D' : '#6B6358' }}>Custom dimensions</span>
+                    <span style={{ color: planConfig.features.customDimensions ? '#2D2D2D' : '#5A4E42' }}>Custom dimensions</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.allRoomTypes ? '#C17F4E' : '#D4CFC7' }} />
-                    <span style={{ color: planConfig.features.allRoomTypes ? '#2D2D2D' : '#6B6358' }}>All room types</span>
+                    <span style={{ color: planConfig.features.allRoomTypes ? '#2D2D2D' : '#5A4E42' }}>All room types</span>
                   </div>
                 </div>
 
@@ -822,7 +822,7 @@ function ProfileContent() {
                   />
                   <div
                     className="flex justify-between text-xs"
-                    style={{ color: '#6B6358' }}
+                    style={{ color: '#5A4E42' }}
                   >
                     <span>4m</span>
                     <span>14m</span>
@@ -855,7 +855,7 @@ function ProfileContent() {
                   />
                   <div
                     className="flex justify-between text-xs"
-                    style={{ color: '#6B6358' }}
+                    style={{ color: '#5A4E42' }}
                   >
                     <span>4m</span>
                     <span>12m</span>
@@ -888,7 +888,7 @@ function ProfileContent() {
                   />
                   <div
                     className="flex justify-between text-xs"
-                    style={{ color: '#6B6358' }}
+                    style={{ color: '#5A4E42' }}
                   >
                     <span>2.5m</span>
                     <span>5m</span>
@@ -925,7 +925,7 @@ function ProfileContent() {
                           className="text-xs"
                           style={{
                             color:
-                              wallColor === opt.color ? '#C17F4E' : '#6B6358',
+                              wallColor === opt.color ? '#C17F4E' : '#5A4E42',
                             fontWeight:
                               wallColor === opt.color ? 600 : 400,
                           }}
@@ -946,7 +946,7 @@ function ProfileContent() {
                     <Label style={{ color: '#2D2D2D' }} className="text-base">
                       Auto-save
                     </Label>
-                    <p className="text-xs mt-0.5" style={{ color: '#6B6358' }}>
+                    <p className="text-xs mt-0.5" style={{ color: '#5A4E42' }}>
                       Automatically save changes as you design
                     </p>
                   </div>

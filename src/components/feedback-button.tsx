@@ -121,7 +121,7 @@ export function FeedbackButton() {
                 <h3 className="font-bold text-sm" style={{ color: '#2D2D2D' }}>
                   Share Your Feedback
                 </h3>
-                <p className="text-[11px]" style={{ color: '#6B6358' }}>
+                <p className="text-[11px]" style={{ color: '#5A4E42' }}>
                   Help us improve Interior Studio
                 </p>
               </div>
@@ -135,7 +135,7 @@ export function FeedbackButton() {
               <p className="font-semibold text-sm" style={{ color: '#2D2D2D' }}>
                 Thanks for your feedback!
               </p>
-              <p className="text-xs" style={{ color: '#6B6358' }}>
+              <p className="text-xs" style={{ color: '#5A4E42' }}>
                 Your input helps us build a better product.
               </p>
             </div>
@@ -154,7 +154,7 @@ export function FeedbackButton() {
                     className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
                       background: category === key ? '#C17F4E15' : '#FAF8F4',
-                      color: category === key ? '#C17F4E' : '#6B6358',
+                      color: category === key ? '#C17F4E' : '#5A4E42',
                       border: category === key ? '1.5px solid #C17F4E40' : '1.5px solid #E2DDD4',
                     }}
                   >

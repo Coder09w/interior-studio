@@ -172,14 +172,14 @@ function Navbar() {
             <a
               href="#features"
               className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
-              style={{ color: '#6B6358' }}
+              style={{ color: '#5A4E42' }}
             >
               Features
             </a>
             <Link
               href="/pricing"
               className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
-              style={{ color: '#6B6358' }}
+              style={{ color: '#5A4E42' }}
             >
               Pricing
             </Link>
@@ -233,8 +233,8 @@ function Navbar() {
           style={{ borderColor: '#E2DDD4' }}
         >
           <div className="px-4 py-4 space-y-3">
-            <a href="#features" className="block text-sm font-medium py-2" style={{ color: '#6B6358' }} onClick={() => setMobileOpen(false)}>Features</a>
-            <Link href="/pricing" className="block text-sm font-medium py-2" style={{ color: '#6B6358' }} onClick={() => setMobileOpen(false)}>Pricing</Link>
+            <a href="#features" className="block text-sm font-medium py-2" style={{ color: '#5A4E42' }} onClick={() => setMobileOpen(false)}>Features</a>
+            <Link href="/pricing" className="block text-sm font-medium py-2" style={{ color: '#5A4E42' }} onClick={() => setMobileOpen(false)}>Pricing</Link>
             <div className="pt-2 flex flex-col gap-2">
               {session ? (
                 <Link href="/dashboard" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
@@ -323,7 +323,7 @@ function HeroSection() {
             <FadeInWhenVisible delay={0.3}>
               <p
                 className="mt-5 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed"
-                style={{ color: '#6B6358' }}
+                style={{ color: '#5A4E42' }}
               >
                 Design and explore your rooms in an interactive 3D editor.
                 Place furniture, swap materials, adjust lighting, and iterate on your
@@ -376,7 +376,7 @@ function HeroSection() {
                     </div>
                   ))}
                 </div>
-                <p className="text-sm" style={{ color: '#6B6358' }}>
+                <p className="text-sm" style={{ color: '#5A4E42' }}>
                   <span className="font-semibold" style={{ color: '#2D2D2D' }}>
                     Early Access Beta
                   </span>{' '}
@@ -407,7 +407,7 @@ function HeroSection() {
                 </div>
                 <div
                   className="flex-1 text-center text-xs font-medium rounded-md py-1 mx-8"
-                  style={{ background: '#F5F0E8', color: '#6B6358' }}
+                  style={{ background: '#F5F0E8', color: '#5A4E42' }}
                 >
                   Interior Studio — Living Room
                 </div>
@@ -462,7 +462,7 @@ function HeroSection() {
                       </motion.div>
                       <span
                         className="text-[10px] font-medium px-2 py-0.5 rounded"
-                        style={{ background: 'rgba(255,255,255,0.9)', color: '#6B6358' }}
+                        style={{ background: 'rgba(255,255,255,0.9)', color: '#5A4E42' }}
                       >
                         Modern Sofa
                       </span>
@@ -494,7 +494,7 @@ function HeroSection() {
                       </div>
                       <span
                         className="text-[10px] font-medium px-2 py-0.5 rounded"
-                        style={{ background: 'rgba(255,255,255,0.9)', color: '#6B6358' }}
+                        style={{ background: 'rgba(255,255,255,0.9)', color: '#5A4E42' }}
                       >
                         Coffee Table
                       </span>
@@ -516,7 +516,7 @@ function HeroSection() {
                       </div>
                       <span
                         className="text-[10px] font-medium px-2 py-0.5 rounded"
-                        style={{ background: 'rgba(255,255,255,0.9)', color: '#6B6358' }}
+                        style={{ background: 'rgba(255,255,255,0.9)', color: '#5A4E42' }}
                       >
                         Floor Lamp
                       </span>
@@ -561,10 +561,10 @@ function HeroSection() {
                       aria-label={label}
                       title={label}
                     >
-                      <Icon className="w-4 h-4" style={{ color: '#6B6358' }} />
+                      <Icon className="w-4 h-4" style={{ color: '#5A4E42' }} />
                       <span
                         className="text-[9px] font-medium"
-                        style={{ color: '#6B6358' }}
+                        style={{ color: '#5A4E42' }}
                       >
                         {label}
                       </span>
@@ -598,7 +598,7 @@ function HeroSection() {
                   >
                     Furniture Library
                   </p>
-                  <p className="text-[10px]" style={{ color: '#6B6358' }}>
+                  <p className="text-[10px]" style={{ color: '#5A4E42' }}>
                     30+ items available
                   </p>
                 </div>
@@ -629,7 +629,7 @@ function HeroSection() {
                   >
                     Material Swap
                   </p>
-                  <p className="text-[10px]" style={{ color: '#6B6358' }}>
+                  <p className="text-[10px]" style={{ color: '#5A4E42' }}>
                     Change in real-time
                   </p>
                 </div>
@@ -706,7 +706,7 @@ function FeaturesSection() {
             >
               Everything You Need to Design Beautiful Spaces
             </h2>
-            <p className="mt-4 text-base" style={{ color: '#6B6358' }}>
+            <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
               Powerful tools to bring your interior design vision to life.
             </p>
           </div>
@@ -753,7 +753,7 @@ function FeaturesSection() {
                 >
                   {title}
                 </h3>
-                <p className="text-sm leading-relaxed" style={{ color: '#6B6358' }}>
+                <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>
                   {description}
                 </p>
               </div>
@@ -791,7 +791,7 @@ function RoomShowcase() {
             >
               Design Every Room in Your Home
             </h2>
-            <p className="mt-3 text-sm" style={{ color: '#6B6358' }}>
+            <p className="mt-3 text-sm" style={{ color: '#5A4E42' }}>
               Dedicated templates and furniture for every space. Click any room to start designing.
             </p>
           </div>
@@ -891,7 +891,7 @@ function HowItWorksSection() {
             >
               How It Works
             </h2>
-            <p className="mt-4 text-base" style={{ color: '#6B6358' }}>
+            <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
               From blank canvas to dream home in three simple steps.
             </p>
           </div>
@@ -920,7 +920,7 @@ function HowItWorksSection() {
               </h3>
               <p
                 className="text-sm leading-relaxed max-w-xs"
-                style={{ color: '#6B6358' }}
+                style={{ color: '#5A4E42' }}
               >
                 {description}
               </p>
@@ -963,7 +963,7 @@ function StatsSection() {
               <p className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#C17F4E' }}>
                 <AnimatedCounter value={value} suffix={suffix} />
               </p>
-              <p className="text-sm mt-1 font-medium" style={{ color: '#6B6358' }}>{label}</p>
+              <p className="text-sm mt-1 font-medium" style={{ color: '#5A4E42' }}>{label}</p>
             </motion.div>
           ))}
         </StaggerContainer>

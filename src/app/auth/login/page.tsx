@@ -77,7 +77,7 @@ export default function LoginPage() {
           >
             Interior Studio
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6B6358' }}>
+          <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>
             Sign in to your account
           </p>
         </div>
@@ -137,7 +137,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                style={{ color: '#6B6358' }}
+                style={{ color: '#5A4E42' }}
                 tabIndex={0}
                 aria-label="Toggle password visibility"
               >
@@ -167,7 +167,7 @@ export default function LoginPage() {
               <Label
                 htmlFor="remember"
                 className="text-sm font-normal cursor-pointer"
-                style={{ color: '#6B6358' }}
+                style={{ color: '#5A4E42' }}
               >
                 Remember me
               </Label>
@@ -202,7 +202,7 @@ export default function LoginPage() {
         {/* Sign Up Link */}
         <p
           className="text-center text-sm mt-6"
-          style={{ color: '#6B6358' }}
+          style={{ color: '#5A4E42' }}
         >
           Don&apos;t have an account?{' '}
           <Link

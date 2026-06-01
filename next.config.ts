@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
     ".space.chatglm.site",
   ],
   // Explicitly tell Next.js that 'three' should not be bundled on the server
-  serverExternalPackages: ['three', 'z-ai-web-dev-sdk'],
+  serverExternalPackages: ['three'],
   // Provide empty turbopack config to suppress warnings
   turbopack: {},
   // Security headers applied to all responses

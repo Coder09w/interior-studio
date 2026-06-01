@@ -21,7 +21,7 @@ export default function NotFound() {
         >
           Page Not Found
         </h1>
-        <p className="text-sm mb-8" style={{ color: "#6B6358" }}>
+        <p className="text-sm mb-8" style={{ color: "#5A4E42" }}>
           The page you are looking for does not exist or has been moved. Try
           heading back to the homepage or opening the editor to start designing.
         </p>

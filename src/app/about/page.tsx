@@ -10,7 +10,7 @@ export default function AboutPage() {
       <SiteNav
         variant="solid"
         rightContent={
-          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#6B6358' }}>
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#5A4E42' }}>
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
@@ -27,7 +27,7 @@ export default function AboutPage() {
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
             Making Interior Design <span style={{ color: '#C17F4E' }}>Accessible to Everyone</span>
           </h1>
-          <p className="mt-5 text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#6B6358' }}>
+          <p className="mt-5 text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#5A4E42' }}>
             Interior Studio was born from a simple idea: everyone deserves to visualize their dream space before committing to it. We believe great design shouldn't require expensive software or a professional degree.
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function AboutPage() {
                 <Icon className="w-5 h-5" style={{ color }} />
               </div>
               <h3 className="font-bold text-base mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>{title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#6B6358' }}>{description}</p>
+              <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>{description}</p>
             </div>
           ))}
         </div>
@@ -67,7 +67,7 @@ export default function AboutPage() {
         {/* Built With */}
         <div className="rounded-2xl border p-8 mb-16" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
           <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Built With Modern Technology</h2>
-          <p className="text-sm leading-relaxed mb-6" style={{ color: '#6B6358' }}>
+          <p className="text-sm leading-relaxed mb-6" style={{ color: '#5A4E42' }}>
             Interior Studio leverages the latest web technologies to deliver a desktop-class 3D design experience directly in your browser. Our real-time rendering engine uses PBR (Physically Based Rendering) materials and dynamic lighting to create stunningly realistic room previews.
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -83,7 +83,7 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: '#2D2D2D' }}>{label}</p>
-                  <p className="text-xs" style={{ color: '#6B6358' }}>{desc}</p>
+                  <p className="text-xs" style={{ color: '#5A4E42' }}>{desc}</p>
                 </div>
               </div>
             ))}
@@ -96,7 +96,7 @@ export default function AboutPage() {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>We're in Early Access Beta</h2>
-          <p className="text-sm leading-relaxed max-w-lg mx-auto" style={{ color: '#6B6358' }}>
+          <p className="text-sm leading-relaxed max-w-lg mx-auto" style={{ color: '#5A4E42' }}>
             Interior Studio is actively being developed and improved. During this beta phase, all premium features are completely free. We're building this with our community — your feedback shapes the product.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -120,7 +120,7 @@ export default function AboutPage() {
 
       {/* Footer */}
       <footer className="py-8 text-center border-t" style={{ borderColor: '#E2DDD4' }}>
-        <p className="text-sm" style={{ color: '#6B6358' }}>
+        <p className="text-sm" style={{ color: '#5A4E42' }}>
           &copy; {new Date().getFullYear()} Interior Studio. All rights reserved.
         </p>
       </footer>

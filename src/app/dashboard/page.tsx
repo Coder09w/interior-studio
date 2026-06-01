@@ -306,7 +306,7 @@ function DashboardContent() {
             className="w-8 h-8 animate-spin"
             style={{ color: '#C17F4E' }}
           />
-          <p style={{ color: '#6B6358' }} className="text-sm">
+          <p style={{ color: '#5A4E42' }} className="text-sm">
             Loading your workspace...
           </p>
         </div>
@@ -448,7 +448,7 @@ function DashboardContent() {
           >
             {session.user?.name ? `Welcome back, ${session.user.name.split(' ')[0]}!` : 'Welcome to your Studio!'}
           </h1>
-          <p className="mt-1 text-sm" style={{ color: '#6B6358' }}>
+          <p className="mt-1 text-sm" style={{ color: '#5A4E42' }}>
             {projects.length === 0
               ? 'Start creating your dream spaces'
               : `You have ${projects.length} design${projects.length === 1 ? '' : 's'} in your workspace`}
@@ -476,7 +476,7 @@ function DashboardContent() {
                   <p className="text-sm font-semibold" style={{ color: '#2D2D2D' }}>
                     You&apos;re using {usageStats?.projects.current} of {usageStats?.projects.limit} free projects
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: '#6B6358' }}>
+                  <p className="text-xs mt-0.5" style={{ color: '#5A4E42' }}>
                     Upgrade to {PLAN_CONFIG[upgradePlan].name} for {PLAN_CONFIG[upgradePlan].maxProjects ?? 'unlimited'} projects, {PLAN_CONFIG[upgradePlan].maxRoomsPerProject ?? 'unlimited'} rooms, and more features.
                   </p>
                 </div>
@@ -494,7 +494,7 @@ function DashboardContent() {
                 <button
                   onClick={() => setShowUpgradeBanner(false)}
                   className="p-1 rounded-md hover:bg-black/5"
-                  style={{ color: '#6B6358' }}
+                  style={{ color: '#5A4E42' }}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -512,7 +512,7 @@ function DashboardContent() {
               style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium" style={{ color: '#6B6358' }}>Projects</span>
+                <span className="text-xs font-medium" style={{ color: '#5A4E42' }}>Projects</span>
                 <span className="text-xs font-semibold" style={{ color: '#2D2D2D' }}>
                   {usageStats.projects.current} / {usageStats.projects.limit ?? '∞'}
                 </span>
@@ -533,7 +533,7 @@ function DashboardContent() {
               style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium" style={{ color: '#6B6358' }}>Rooms / Project</span>
+                <span className="text-xs font-medium" style={{ color: '#5A4E42' }}>Rooms / Project</span>
                 <span className="text-xs font-semibold" style={{ color: '#2D2D2D' }}>
                   {usageStats.roomsPerProject.current} / {usageStats.roomsPerProject.limit ?? '∞'}
                 </span>
@@ -554,7 +554,7 @@ function DashboardContent() {
               style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium" style={{ color: '#6B6358' }}>Furniture / Room</span>
+                <span className="text-xs font-medium" style={{ color: '#5A4E42' }}>Furniture / Room</span>
                 <span className="text-xs font-semibold" style={{ color: '#2D2D2D' }}>
                   {usageStats.furniturePerRoom.current} / {usageStats.furniturePerRoom.limit ?? '∞'}
                 </span>
@@ -602,7 +602,7 @@ function DashboardContent() {
                 </p>
                 <p
                   className="text-xs mt-1"
-                  style={{ color: '#6B6358' }}
+                  style={{ color: '#5A4E42' }}
                 >
                   Start designing a new space
                 </p>
@@ -648,14 +648,14 @@ function DashboardContent() {
                   <div className="flex items-center gap-2 mb-3">
                     <span
                       className="text-xs"
-                      style={{ color: '#6B6358' }}
+                      style={{ color: '#5A4E42' }}
                     >
                       {project.rooms.length} room{project.rooms.length !== 1 ? 's' : ''}
                     </span>
                     <span style={{ color: '#E2DDD4' }}>·</span>
                     <span
                       className="text-xs"
-                      style={{ color: '#6B6358' }}
+                      style={{ color: '#5A4E42' }}
                     >
                       {formatRelativeTime(project.updatedAt)}
                     </span>
@@ -683,7 +683,7 @@ function DashboardContent() {
                           className="text-xs font-medium px-2 py-0.5 rounded-md border-0"
                           style={{
                             backgroundColor: '#F0E8D8',
-                            color: '#6B6358',
+                            color: '#5A4E42',
                           }}
                         >
                           +{project.rooms.length - 3}
@@ -701,7 +701,7 @@ function DashboardContent() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                        style={{ color: '#6B6358' }}
+                        style={{ color: '#5A4E42' }}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <MoreHorizontal className="h-4 w-4" />
@@ -770,7 +770,7 @@ function DashboardContent() {
             </h2>
             <p
               className="text-sm text-center max-w-sm mb-6"
-              style={{ color: '#6B6358' }}
+              style={{ color: '#5A4E42' }}
             >
               Create your first design and start visualizing your dream spaces in 3D.
             </p>
@@ -801,7 +801,7 @@ function DashboardContent() {
         <DialogContent style={{ backgroundColor: '#FFFFFF', borderColor: '#E2DDD4' }}>
           <DialogHeader>
             <DialogTitle style={{ color: '#2D2D2D' }}>Delete Project</DialogTitle>
-            <DialogDescription style={{ color: '#6B6358' }}>
+            <DialogDescription style={{ color: '#5A4E42' }}>
               Are you sure you want to delete &quot;{selectedProject?.name}&quot;? This action cannot be undone. All rooms and furniture data will be permanently removed.
             </DialogDescription>
           </DialogHeader>
@@ -841,7 +841,7 @@ function DashboardContent() {
         <DialogContent style={{ backgroundColor: '#FFFFFF', borderColor: '#E2DDD4' }}>
           <DialogHeader>
             <DialogTitle style={{ color: '#2D2D2D' }}>Rename Project</DialogTitle>
-            <DialogDescription style={{ color: '#6B6358' }}>
+            <DialogDescription style={{ color: '#5A4E42' }}>
               Enter a new name for your project.
             </DialogDescription>
           </DialogHeader>
