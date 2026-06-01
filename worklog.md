@@ -198,3 +198,30 @@ Stage Summary:
 - Dashboard accessible from editor sidebar, top bar (mobile & desktop) for logged-in users
 - All homepage images replaced with high-quality AI-generated interior design snapshots
 - Saved project URL: https://interior-studio-k4jollxhu-codingdanger-3722s-projects.vercel.app
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix Claude's 5 Critical UX Audit Issues + Comprehensive Self-Audit
+
+Work Log:
+- Fixed Stats section counter animation (useInView with margin, hasAnimated guard, cleanup, better visual cards with icons)
+- Replaced "Loading 3D Engine..." with full progress bar UI (staged progress, helpful tips, WebGL fallback message)
+- Differentiated pricing cards: Free (plain white), Pro (warm gradient + glow ring + scale), Studio (dark theme with gold accents)
+- Fixed all dead footer links: Added /about page, /contact for Company links, #rooms anchor, #feedback id on feedback button
+- Added 4-step interactive tutorial overlay in InteriorStudio (navigate, add furniture, move/rotate, customize materials) with localStorage persistence
+- Enhanced hero section: animated material swap demo (sofa color cycles), LIVE badge, Play icon on "See How It Works" CTA
+- Fixed fake contact form: wired to /api/feedback endpoint with proper error handling
+- Replaced fake office address with "Remote-first team / Worldwide"
+- Replaced fake testimonials with "Be a Founding Member" section (honest beta positioning)
+- Replaced fake social proof avatars with honest "Early Access Beta — Your feedback shapes the product"
+- Fixed "Free forever" → "Free during beta" to match pricing/terms pages
+- Fixed duplicate Dashboard buttons when logged in (proper conditional rendering)
+- Made room showcase cards clickable (Link to /editor)
+- Fixed dashboard 3-dot menu invisible on mobile (always visible on mobile, hover-reveal on desktop)
+
+Stage Summary:
+- All 5 of Claude's critical issues resolved
+- 7 additional critical trust-breaking issues found and fixed via self-audit
+- Multiple high/medium priority issues addressed
+- Build passes successfully

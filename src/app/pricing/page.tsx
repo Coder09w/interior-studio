@@ -104,6 +104,8 @@ const PLAN_CARDS = [
     accentColor: '#8B7355',
     borderColor: '#E2DDD4',
     bg: '#FFFFFF',
+    icon: Sofa,
+    iconBg: '#8B735515',
   },
   {
     key: 'pro' as PlanKey,
@@ -122,8 +124,11 @@ const PLAN_CARDS = [
     ],
     accentColor: '#C17F4E',
     borderColor: '#C17F4E',
-    bg: '#FFFFFF',
+    bg: 'linear-gradient(180deg, #FFFBF5 0%, #FFF8F0 100%)',
     scale: true,
+    icon: Zap,
+    iconBg: '#C17F4E15',
+    featured: true,
   },
   {
     key: 'studio' as PlanKey,
@@ -140,9 +145,12 @@ const PLAN_CARDS = [
       'Presentation mode',
       'API access & priority support',
     ],
-    accentColor: '#8B7355',
-    borderColor: '#8B7355',
-    bg: 'linear-gradient(180deg, #FFFFFF 0%, #FDF9F3 100%)',
+    accentColor: '#2D2D2D',
+    borderColor: '#2D2D2D',
+    bg: 'linear-gradient(180deg, #2D2D2D 0%, #1A1A1A 100%)',
+    dark: true,
+    icon: Crown,
+    iconBg: 'rgba(255,255,255,0.1)',
   },
 ];
 
@@ -219,68 +227,94 @@ export default function PricingPage() {
 
       {/* Plan Cards with Beta Overlay */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {PLAN_CARDS.map((plan) => (
-            <div
-              key={plan.key}
-              className="relative rounded-2xl border-2 p-8 transition-all duration-200 hover:shadow-lg flex flex-col"
-              style={{
-                background: plan.bg,
-                borderColor: plan.borderColor,
-                transform: plan.scale ? 'scale(1.02)' : 'none',
-              }}
-            >
-              {/* Badge */}
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold text-white" style={{ background: plan.accentColor }}>
-                  {plan.badge}
-                </div>
-              )}
-
-              {/* Beta Price Override */}
-              <div className="mb-1">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-                    $0
-                  </span>
-                  <span className="text-sm" style={{ color: '#8A8478' }}>/beta</span>
-                </div>
-                {plan.price > 0 && (
-                  <span className="inline-block mt-1 text-xs line-through" style={{ color: '#B8A898' }}>
-                    ${plan.price}/month after beta
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-sm" style={{ color: '#8A8478' }}>{plan.description}</p>
-
-              {/* Feature list */}
-              <div className="mt-5 space-y-3 flex-1">
-                {plan.features.map((feat, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: plan.accentColor }} />
-                    <span className="text-sm" style={{ color: '#2D2D2D' }}>{feat}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTA Button */}
-              <button
-                onClick={() => handleCtaClick(plan.key)}
-                className="mt-8 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
+          {PLAN_CARDS.map((plan) => {
+            const isDark = (plan as any).dark;
+            const PlanIcon = plan.icon;
+            return (
+              <div
+                key={plan.key}
+                className="relative rounded-2xl border-2 p-8 transition-all duration-200 hover:shadow-lg flex flex-col"
                 style={{
-                  background: plan.key === 'free'
-                    ? 'transparent'
-                    : `linear-gradient(135deg, ${plan.accentColor}, ${plan.accentColor}CC)`,
-                  color: plan.key === 'free' ? plan.accentColor : '#FFFFFF',
-                  border: plan.key === 'free' ? `2px solid ${plan.accentColor}` : 'none',
-                  cursor: 'pointer',
+                  background: plan.bg,
+                  borderColor: plan.borderColor,
+                  transform: plan.scale ? 'scale(1.04)' : 'none',
+                  zIndex: plan.scale ? 10 : 1,
+                  color: isDark ? '#FFFFFF' : '#2D2D2D',
                 }}
               >
-                {plan.cta}
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
+                {/* Featured glow ring for Pro */}
+                {(plan as any).featured && (
+                  <div className="absolute -inset-[2px] rounded-2xl pointer-events-none" style={{ boxShadow: '0 0 30px rgba(193,127,78,0.15), 0 0 60px rgba(193,127,78,0.05)' }} />
+                )}
+
+                {/* Badge */}
+                {plan.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold text-white" style={{ background: plan.accentColor }}>
+                    {plan.badge}
+                  </div>
+                )}
+
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: (plan as any).iconBg }}>
+                  <PlanIcon className="w-6 h-6" style={{ color: isDark ? '#D4A76A' : plan.accentColor }} />
+                </div>
+
+                {/* Plan name */}
+                <h3 className="text-lg font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: isDark ? '#FFFFFF' : '#2D2D2D' }}>
+                  {plan.name}
+                </h3>
+
+                {/* Beta Price Override */}
+                <div className="mb-1 mt-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: isDark ? '#FFFFFF' : '#2D2D2D' }}>
+                      $0
+                    </span>
+                    <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : '#8A8478' }}>/beta</span>
+                  </div>
+                  {plan.price > 0 && (
+                    <span className="inline-block mt-1 text-xs line-through" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#B8A898' }}>
+                      ${plan.price}/month after beta
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#8A8478' }}>{plan.description}</p>
+
+                {/* Divider */}
+                <div className="my-5 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2DDD4' }} />
+
+                {/* Feature list */}
+                <div className="space-y-3 flex-1">
+                  {plan.features.map((feat, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: isDark ? '#D4A76A' : plan.accentColor }} />
+                      <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : '#2D2D2D' }}>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  onClick={() => handleCtaClick(plan.key)}
+                  className="mt-8 w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
+                  style={{
+                    background: plan.key === 'free'
+                      ? 'transparent'
+                      : isDark
+                        ? 'linear-gradient(135deg, #D4A76A, #C17F4E)'
+                        : `linear-gradient(135deg, ${plan.accentColor}, ${plan.accentColor}CC)`,
+                    color: plan.key === 'free' ? plan.accentColor : '#FFFFFF',
+                    border: plan.key === 'free' ? `2px solid ${plan.accentColor}` : 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {plan.cta}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 

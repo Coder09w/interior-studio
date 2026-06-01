@@ -240,6 +240,8 @@ export default function InteriorStudio() {
   // Onboarding / Preset selection state
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [onboardingStep, setOnboardingStep] = useState<'room' | 'preset' | 'blank'>('room');
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const [selectedRoomType, setSelectedRoomType] = useState<PresetRoomType>('living');
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
@@ -1294,6 +1296,10 @@ export default function InteriorStudio() {
     }, 200);
 
     setShowOnboarding(false);
+    // Show tutorial for first-time users
+    if (!localStorage.getItem('instod_tutorial_seen')) {
+      setTimeout(() => setShowTutorial(true), 600);
+    }
     markUnsaved();
   }, [buildRoom, deselectAll, markSceneDirty, markUnsaved, serializeFurniture]);
 
@@ -1351,7 +1357,7 @@ export default function InteriorStudio() {
         const savedRoom = savedRooms['default'];
         if (savedRoom) {
           loadedFromStorage = true;
-          setShowOnboarding(false); // Skip onboarding if there's saved data
+          setShowOnboarding(false); // Skip onboarding if there's saved data — also skip tutorial
           if (savedRoom.width) { roomWRef.current = savedRoom.width; setRoomW(savedRoom.width); }
           if (savedRoom.depth) { roomDRef.current = savedRoom.depth; setRoomD(savedRoom.depth); }
           if (savedRoom.height) { roomHRef.current = savedRoom.height; setRoomH(savedRoom.height); }
@@ -2779,6 +2785,10 @@ export default function InteriorStudio() {
                       }, 200);
                     }
                     setShowOnboarding(false);
+                    // Show tutorial for first-time users
+                    if (!localStorage.getItem('instod_tutorial_seen')) {
+                      setTimeout(() => setShowTutorial(true), 600);
+                    }
                   }}
                     className="flex-1 py-3 rounded-xl text-sm font-bold text-white cursor-pointer border-none flex items-center justify-center gap-2"
                     style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
@@ -2787,6 +2797,100 @@ export default function InteriorStudio() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ===== TUTORIAL OVERLAY ===== */}
+      {showTutorial && !showOnboarding && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto bg-white rounded-2xl p-5 max-w-sm w-full mx-4 shadow-2xl border" style={{ borderColor: '#E2DDD4' }}>
+            {tutorialStep === 0 && (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
+                    <i className="fas fa-mouse-pointer" style={{ color: '#C17F4E' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Navigate Your Room</h3>
+                    <p className="text-[10px]" style={{ color: '#8A8478' }}>Step 1 of 4</p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: '#8A8478' }}>
+                  <b>Click &amp; drag</b> to orbit around the room. <b>Scroll</b> to zoom in/out. <b>Right-click &amp; drag</b> to pan the camera.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => { setShowTutorial(false); localStorage.setItem('instod_tutorial_seen', '1'); }} className="flex-1 py-2 rounded-lg text-xs font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}>Skip Tour</button>
+                  <button onClick={() => setTutorialStep(1)} className="flex-1 py-2 rounded-lg text-xs font-bold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>Next <i className="fas fa-arrow-right ml-1" /></button>
+                </div>
+              </>
+            )}
+            {tutorialStep === 1 && (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
+                    <i className="fas fa-couch" style={{ color: '#C17F4E' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Add Furniture</h3>
+                    <p className="text-[10px]" style={{ color: '#8A8478' }}>Step 2 of 4</p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: '#8A8478' }}>
+                  Use the <b>Furniture tab</b> in the left sidebar to browse items. Click any furniture piece to add it to your room instantly.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setTutorialStep(0)} className="flex-1 py-2 rounded-lg text-xs font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}><i className="fas fa-arrow-left mr-1" /> Back</button>
+                  <button onClick={() => setTutorialStep(2)} className="flex-1 py-2 rounded-lg text-xs font-bold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>Next <i className="fas fa-arrow-right ml-1" /></button>
+                </div>
+              </>
+            )}
+            {tutorialStep === 2 && (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
+                    <i className="fas fa-arrows-alt" style={{ color: '#C17F4E' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Move &amp; Rotate</h3>
+                    <p className="text-[10px]" style={{ color: '#8A8478' }}>Step 3 of 4</p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: '#8A8478' }}>
+                  <b>Click</b> any furniture to select it. <b>Drag</b> to reposition. Use the <b>rotate slider</b> or press <b>R</b> to rotate. Press <b>Delete</b> to remove.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setTutorialStep(1)} className="flex-1 py-2 rounded-lg text-xs font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}><i className="fas fa-arrow-left mr-1" /> Back</button>
+                  <button onClick={() => setTutorialStep(3)} className="flex-1 py-2 rounded-lg text-xs font-bold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>Next <i className="fas fa-arrow-right ml-1" /></button>
+                </div>
+              </>
+            )}
+            {tutorialStep === 3 && (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
+                    <i className="fas fa-palette" style={{ color: '#C17F4E' }} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Customize Materials</h3>
+                    <p className="text-[10px]" style={{ color: '#8A8478' }}>Step 4 of 4</p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: '#8A8478' }}>
+                  Select a furniture item, then use the <b>Colors tab</b> to change materials. Try different fabrics, wood tones, and metals. Explore <b>Skins</b> for whole-room themes.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setTutorialStep(2)} className="flex-1 py-2 rounded-lg text-xs font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#8A8478', background: '#FAF8F4' }}><i className="fas fa-arrow-left mr-1" /> Back</button>
+                  <button onClick={() => { setShowTutorial(false); localStorage.setItem('instod_tutorial_seen', '1'); }} className="flex-1 py-2 rounded-lg text-xs font-bold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>Start Designing! <i className="fas fa-check ml-1" /></button>
+                </div>
+              </>
+            )}
+            {/* Progress dots */}
+            <div className="flex items-center justify-center gap-1.5 mt-3">
+              {[0,1,2,3].map(s => (
+                <div key={s} className="w-1.5 h-1.5 rounded-full transition-all" style={{ background: s === tutorialStep ? '#C17F4E' : '#E2DDD4', transform: s === tutorialStep ? 'scale(1.3)' : 'none' }} />
+              ))}
+            </div>
           </div>
         </div>
       )}

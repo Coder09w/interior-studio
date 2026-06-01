@@ -66,15 +66,39 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate a brief delay for UX
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: formData.subject || 'general',
+          message: formData.message,
+          email: formData.email,
+          name: formData.name,
+        }),
+      });
 
-    toast({
-      title: 'Message sent successfully!',
-      description: 'Thank you for reaching out. Our team will get back to you within 24-48 hours.',
-    });
+      if (res.ok) {
+        toast({
+          title: 'Message sent successfully!',
+          description: 'Thank you for reaching out. Our team will get back to you within 24-48 hours.',
+        });
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        toast({
+          title: 'Something went wrong',
+          description: 'Could not send your message. Please try again or email us directly.',
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({
+        title: 'Network error',
+        description: 'Please check your connection and try again.',
+        variant: 'destructive',
+      });
+    }
 
-    setFormData({ name: '', email: '', subject: '', message: '' });
     setIsSubmitting(false);
   };
 
@@ -169,9 +193,9 @@ export default function ContactPage() {
                 </div>
               </div>
               <p className="text-sm" style={{ color: '#555' }}>
-                Interior Studio Inc.<br />
-                123 Design Avenue, Suite 400<br />
-                San Francisco, CA 94105
+                Interior Studio<br />
+                Remote-first team<br />
+                Worldwide
               </p>
             </div>
 
@@ -357,7 +381,7 @@ export default function ContactPage() {
               <Link href="/contact" className="font-medium" style={{ color: '#C17F4E' }}>Contact Us</Link>
             </div>
             <p className="text-xs" style={{ color: '#8A8478' }}>
-              &copy; 2026 Interior Studio. All rights reserved.
+              &copy; {new Date().getFullYear()} Interior Studio. All rights reserved.
             </p>
           </div>
         </div>

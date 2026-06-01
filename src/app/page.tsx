@@ -77,25 +77,32 @@ const staggerItem = {
 /* ─── Counter Animation ─── */
 function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
   const [display, setDisplay] = useState('0');
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (!inView) return;
-    const num = parseInt(value.replace(/\D/g, ''));
-    if (isNaN(num)) return;
-    const duration = 1500;
+    if (!isInView || hasAnimated.current) return;
+    hasAnimated.current = true;
+    const num = parseInt(value.replace(/\D/g, ''), 10);
+    if (isNaN(num) || num === 0) { setDisplay(value + suffix); return; }
+    const duration = 1800;
     const startTime = performance.now();
+    let rafId: number;
     function tick() {
       const elapsed = performance.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       const current = Math.round(eased * num);
       setDisplay(current.toString() + suffix);
-      if (progress < 1) requestAnimationFrame(tick);
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      }
     }
-    requestAnimationFrame(tick);
-  }, [inView, value, suffix]);
+    rafId = requestAnimationFrame(tick);
+    return () => { if (rafId) cancelAnimationFrame(rafId); };
+  }, [isInView, value, suffix]);
 
   return <span ref={ref}>{display}</span>;
 }
@@ -173,23 +180,32 @@ function Navbar() {
             >
               Pricing
             </Link>
-            <Link
-              href={session ? '/dashboard' : '/auth/login'}
-              className="text-sm font-medium px-5 py-2.5 rounded-lg border transition-all hover:shadow-sm"
-              style={{
-                borderColor: '#E2DDD4',
-                color: '#2D2D2D',
-              }}
-            >
-              {session ? 'Dashboard' : 'Sign In'}
-            </Link>
-            <Link
-              href={editorHref}
-              className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
-              style={{ background: '#C17F4E' }}
-            >
-              {session ? 'Dashboard' : 'Open Editor'}
-            </Link>
+            {session ? (
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
+                style={{ background: '#C17F4E' }}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="text-sm font-medium px-5 py-2.5 rounded-lg border transition-all hover:shadow-sm"
+                  style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/editor"
+                  className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
+                  style={{ background: '#C17F4E' }}
+                >
+                  Open Editor
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -217,8 +233,14 @@ function Navbar() {
             <a href="#features" className="block text-sm font-medium py-2" style={{ color: '#8A8478' }} onClick={() => setMobileOpen(false)}>Features</a>
             <Link href="/pricing" className="block text-sm font-medium py-2" style={{ color: '#8A8478' }} onClick={() => setMobileOpen(false)}>Pricing</Link>
             <div className="pt-2 flex flex-col gap-2">
-              <Link href={session ? '/dashboard' : '/auth/login'} className="text-sm font-medium px-5 py-2.5 rounded-lg border text-center" style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }} onClick={() => setMobileOpen(false)}>{session ? 'Dashboard' : 'Sign In'}</Link>
-              <Link href={editorHref} className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>{session ? 'Dashboard' : 'Open Editor'}</Link>
+              {session ? (
+                <Link href="/dashboard" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="text-sm font-medium px-5 py-2.5 rounded-lg border text-center" style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }} onClick={() => setMobileOpen(false)}>Sign In</Link>
+                  <Link href="/editor" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Open Editor</Link>
+                </>
+              )}
             </div>
           </div>
         </motion.div>
@@ -324,6 +346,7 @@ function HeroSection() {
                     color: '#2D2D2D',
                   }}
                 >
+                  <Play className="w-4 h-4" style={{ color: '#C17F4E' }} />
                   See How It Works
                 </a>
               </div>
@@ -344,16 +367,16 @@ function HeroSection() {
                       className={`w-8 h-8 rounded-full border-2 border-white ${bg} flex items-center justify-center`}
                     >
                       <span className="text-white text-[10px] font-bold">
-                        {['JD', 'AK', 'ML', 'SR'][i]}
+                        {['🛋', '🏠', '✨', '🎨'][i]}
                       </span>
                     </div>
                   ))}
                 </div>
                 <p className="text-sm" style={{ color: '#8A8478' }}>
                   <span className="font-semibold" style={{ color: '#2D2D2D' }}>
-                    Join our
+                    Early Access Beta
                   </span>{' '}
-                  beta community
+                  — Your feedback shapes the product
                 </p>
               </div>
             </FadeInWhenVisible>
@@ -407,14 +430,17 @@ function HeroSection() {
                 />
 
                 {/* Beta Preview badge */}
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-[10px] font-semibold" style={{ background: 'rgba(193,127,78,0.9)', color: '#fff' }}>
-                  BETA PREVIEW
+                <div className="absolute top-3 right-3 flex items-center gap-2">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold" style={{ background: 'rgba(193,127,78,0.9)', color: '#fff' }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    LIVE
+                  </div>
                 </div>
 
-                {/* Animated furniture items */}
+                {/* Animated furniture items with material swap demo */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative w-full h-full">
-                    {/* Sofa */}
+                    {/* Sofa — color cycles to show material swap */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 0.85, scale: 1 }}
@@ -422,18 +448,30 @@ function HeroSection() {
                       className="absolute flex flex-col items-center gap-1"
                       style={{ top: '40%', left: '25%' }}
                     >
-                      <div
+                      <motion.div
+                        animate={{ background: ['#C17F4E', '#8B7355', '#6B8E6B', '#7B8FA1', '#C17F4E'] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
                         className="w-24 h-12 rounded-lg shadow-md flex items-center justify-center"
-                        style={{ background: '#C17F4E', opacity: 0.85 }}
+                        style={{ opacity: 0.85 }}
                       >
                         <Sofa className="w-6 h-6 text-white" />
-                      </div>
+                      </motion.div>
                       <span
                         className="text-[10px] font-medium px-2 py-0.5 rounded"
                         style={{ background: 'rgba(255,255,255,0.9)', color: '#8A8478' }}
                       >
                         Modern Sofa
                       </span>
+                      {/* Material swap indicator */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 1, 1, 0] }}
+                        transition={{ duration: 8, repeat: Infinity, times: [0, 0.05, 0.9, 1] }}
+                        className="absolute -top-5 px-1.5 py-0.5 rounded text-[8px] font-bold text-white"
+                        style={{ background: 'rgba(193,127,78,0.8)' }}
+                      >
+                        SWAP
+                      </motion.div>
                     </motion.div>
 
                     {/* Table */}
@@ -735,6 +773,7 @@ const roomTypes = [
 function RoomShowcase() {
   return (
     <section
+      id="rooms"
       className="py-16 sm:py-20"
       style={{ background: '#FAF8F4' }}
     >
@@ -754,12 +793,12 @@ function RoomShowcase() {
         </FadeInWhenVisible>
         <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
           {roomTypes.map(({ icon: Icon, label, color, image }) => (
-            <motion.div
-              key={label}
-              variants={staggerItem}
-              whileHover={{ y: -6, scale: 1.03 }}
-              className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-xl"
-            >
+            <Link key={label} href="/editor" className="block">
+              <motion.div
+                variants={staggerItem}
+                whileHover={{ y: -6, scale: 1.03 }}
+                className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-xl"
+              >
               {/* Room image background */}
               <img
                 src={image}
@@ -791,6 +830,7 @@ function RoomShowcase() {
                 </div>
               </div>
             </motion.div>
+            </Link>
           ))}
         </StaggerContainer>
       </div>
@@ -1033,22 +1073,33 @@ function DesignInspirationCarousel() {
 /* ─── Stats ─── */
 function StatsSection() {
   const stats = [
-    { value: '30', suffix: '+', label: 'Furniture Items' },
-    { value: '5', suffix: '', label: 'Room Types' },
-    { value: '4', suffix: '', label: 'Lighting Moods' },
-    { value: '100', suffix: '%', label: 'Free to Use' },
+    { value: '30', suffix: '+', label: 'Furniture Items', icon: Armchair },
+    { value: '6', suffix: '', label: 'Room Types', icon: LayoutGrid },
+    { value: '4', suffix: '', label: 'Lighting Moods', icon: Lamp },
+    { value: '100', suffix: '%', label: 'Free During Beta', icon: Zap },
   ];
 
   return (
-    <section className="py-12" style={{ background: '#FFFFFF' }}>
+    <section className="py-16 sm:py-20" style={{ background: '#FAF8F4' }}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map(({ value, suffix, label }) => (
-            <motion.div key={label} variants={staggerItem} className="text-center">
+        <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {stats.map(({ value, suffix, label, icon: Icon }) => (
+            <motion.div
+              key={label}
+              variants={staggerItem}
+              className="text-center p-6 rounded-2xl border transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
+                style={{ background: 'rgba(193,127,78,0.1)' }}
+              >
+                <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+              </div>
               <p className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#C17F4E' }}>
                 <AnimatedCounter value={value} suffix={suffix} />
               </p>
-              <p className="text-sm mt-1" style={{ color: '#8A8478' }}>{label}</p>
+              <p className="text-sm mt-1 font-medium" style={{ color: '#8A8478' }}>{label}</p>
             </motion.div>
           ))}
         </StaggerContainer>
@@ -1193,12 +1244,6 @@ function ShowcaseBannerSection() {
 
 /* ─── Testimonials ─── */
 function TestimonialsSection() {
-  const testimonials = [
-    { name: 'Sarah K.', role: 'Interior Designer', text: 'This tool has completely transformed how I present concepts to clients. The 3D preview is incredibly realistic.', avatar: 'SK' },
-    { name: 'James M.', role: 'Homeowner', text: 'I was able to plan my entire living room renovation before buying a single piece of furniture. Saved me thousands!', avatar: 'JM' },
-    { name: 'Priya R.', role: 'Architecture Student', text: 'Perfect for quick prototyping. The material system and lighting moods make iterations so fast and intuitive.', avatar: 'PR' },
-  ];
-
   return (
     <section
       className="py-20 sm:py-28 relative overflow-hidden"
@@ -1214,72 +1259,63 @@ function TestimonialsSection() {
         }}
       />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <FadeInWhenVisible>
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
-              <Quote className="w-4 h-4" style={{ color: '#C17F4E' }} />
-              <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>TESTIMONIALS</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              Loved by Designers & <span style={{ color: '#C17F4E' }}>Homeowners</span>
-            </h2>
-            <p className="mt-4 text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              See what people are building with Interior Studio.
-            </p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
+            <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
+            <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>EARLY ACCESS</span>
           </div>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            Be a <span style={{ color: '#C17F4E' }}>Founding Member</span>
+          </h2>
+          <p className="mt-4 text-base max-w-2xl mx-auto" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            Interior Studio is in Early Access Beta. As one of our first users, your feedback directly shapes the product.
+            Join now and get full premium access for free while we build the future of interior design.
+          </p>
         </FadeInWhenVisible>
 
-        <StaggerContainer className="grid md:grid-cols-3 gap-6">
-          {testimonials.map((t, idx) => (
-            <motion.div
-              key={t.name}
-              variants={staggerItem}
-              className="group relative p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                borderColor: 'rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(10px)',
-              }}
-            >
-              {/* Accent glow border on hover */}
+        <FadeInWhenVisible delay={0.2}>
+          <div className="grid sm:grid-cols-3 gap-6 mt-12">
+            {[
+              {
+                icon: Globe,
+                title: 'Your Voice Matters',
+                description: 'Every piece of feedback shapes new features. We build what our community asks for first.',
+              },
+              {
+                icon: Zap,
+                title: 'Full Access, Free',
+                description: 'During beta, all premium features are unlocked at no cost. No credit card, no time limit.',
+              },
+              {
+                icon: Star,
+                title: 'Early Adopter Perks',
+                description: 'Founding members get exclusive discounts and extended free access when premium launches.',
+              },
+            ].map(({ icon: Icon, title, description }) => (
               <div
-                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{ boxShadow: 'inset 0 0 0 1px rgba(193,127,78,0.3), 0 0 20px rgba(193,127,78,0.05)' }}
-              />
-
-              {/* Star rating */}
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 fill-current"
-                    style={{ color: '#C17F4E' }}
-                  />
-                ))}
-              </div>
-
-              {/* Quote text */}
-              <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                &ldquo;{t.text}&rdquo;
-              </p>
-
-              {/* Person info */}
-              <div className="flex items-center gap-3">
+                key={title}
+                className="p-6 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  borderColor: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(10px)',
+                }}
+              >
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                  style={{ background: 'rgba(193,127,78,0.15)' }}
                 >
-                  {t.avatar}
+                  <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">{t.name}</p>
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{t.role}</p>
-                </div>
+                <h3 className="text-sm font-semibold text-white mb-2">{title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {description}
+                </p>
               </div>
-            </motion.div>
-          ))}
-        </StaggerContainer>
+            ))}
+          </div>
+        </FadeInWhenVisible>
       </div>
     </section>
   );
@@ -1337,7 +1373,7 @@ function CTASection() {
           <div className="mt-6 flex items-center justify-center gap-6 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
             <div className="flex items-center gap-1.5">
               <Check className="w-4 h-4" style={{ color: '#C17F4E' }} />
-              Free forever
+              Free during beta
             </div>
             <div className="flex items-center gap-1.5">
               <Check className="w-4 h-4" style={{ color: '#C17F4E' }} />
@@ -1390,6 +1426,7 @@ function Footer() {
                 { label: '3D Editor', href: '/editor' },
                 { label: 'Pricing', href: '/pricing' },
                 { label: 'Features', href: '#features' },
+                { label: 'Room Gallery', href: '#rooms' },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link
@@ -1407,13 +1444,17 @@ function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-sm">Company</h4>
             <ul className="space-y-2.5">
-              {['About', 'Blog', 'Contact'].map((item) => (
-                <li key={item}>
+              {[
+                { label: 'About', href: '/about' },
+                { label: 'Contact', href: '/contact' },
+                { label: 'Feedback', href: '#feedback' },
+              ].map(({ label, href }) => (
+                <li key={label}>
                   <Link
-                    href="#"
+                    href={href}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
-                    {item}
+                    {label}
                   </Link>
                 </li>
               ))}
@@ -1425,16 +1466,16 @@ function Footer() {
             <h4 className="font-semibold mb-4 text-sm">Legal</h4>
             <ul className="space-y-2.5">
               {[
-                { label: 'Privacy', href: '/privacy' },
-                { label: 'Terms', href: '/terms' },
-                { label: 'Contact', href: '/contact' },
-              ].map((item) => (
-                <li key={item.label}>
+                { label: 'Privacy Policy', href: '/privacy' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Contact Support', href: '/contact' },
+              ].map(({ label, href }) => (
+                <li key={label}>
                   <Link
-                    href={item.href}
+                    href={href}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
-                    {item.label}
+                    {label}
                   </Link>
                 </li>
               ))}

@@ -82,6 +82,7 @@ export function FeedbackButton() {
     <>
       {/* Floating trigger button */}
       <button
+        id="feedback"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-2xl group"
         style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
