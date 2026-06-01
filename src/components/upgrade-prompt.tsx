@@ -91,7 +91,7 @@ export function UpgradePrompt({
         <button
           onClick={handleDismiss}
           className="absolute top-3 right-3"
-          style={{ color: '#8A8478' }}
+          style={{ color: '#6B6358' }}
         >
           <X className="w-4 h-4" />
         </button>
@@ -108,7 +108,7 @@ export function UpgradePrompt({
           <h4 className="font-semibold text-sm" style={{ color: '#2D2D2D' }}>
             {feature} requires {upgradePlan.name}
           </h4>
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: '#8A8478' }}>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: '#6B6358' }}>
             {message || `Upgrade to ${upgradePlan.name} (${upgradePlan.price === 0 ? 'Free' : `$${upgradePlan.price}/mo`}) to unlock ${feature.toLowerCase()} and more premium features.`}
           </p>
           <Button

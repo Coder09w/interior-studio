@@ -44,7 +44,7 @@ export default function Error({
         >
           Something Went Wrong
         </h1>
-        <p className="text-sm mb-8" style={{ color: "#8A8478" }}>
+        <p className="text-sm mb-8" style={{ color: "#6B6358" }}>
           An unexpected error occurred. This has been logged and our team will
           investigate. You can try again or go back to the homepage.
         </p>

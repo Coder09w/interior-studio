@@ -24,7 +24,7 @@ const InteriorStudio = dynamic(() => import('@/components/InteriorStudio'), {
         <div className="mt-5 mb-3 w-full h-2 rounded-full overflow-hidden" style={{ background: '#E2DDD4' }}>
           <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }} />
         </div>
-        <p className="text-sm" style={{ color: '#8A8478' }}>Loading 3D Editor...</p>
+        <p className="text-sm" style={{ color: '#6B6358' }}>Loading 3D Editor...</p>
       </div>
     </div>
   ),
@@ -105,7 +105,7 @@ export default function EditorProjectPage() {
       <div className="flex items-center justify-center h-screen" style={{ background: '#F5F0E8' }}>
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#C17F4E' }} />
-          <p style={{ color: '#8A8478' }} className="text-sm">
+          <p style={{ color: '#6B6358' }} className="text-sm">
             Loading project…
           </p>
         </div>
@@ -121,7 +121,7 @@ export default function EditorProjectPage() {
           <h2 className="text-xl font-semibold mb-2" style={{ color: '#2D2D2D' }}>
             {error || 'Project not found'}
           </h2>
-          <p className="text-sm mb-4" style={{ color: '#8A8478' }}>
+          <p className="text-sm mb-4" style={{ color: '#6B6358' }}>
             The project you&apos;re looking for doesn&apos;t exist or you don&apos;t have access.
           </p>
           <button

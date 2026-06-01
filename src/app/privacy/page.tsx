@@ -68,7 +68,7 @@ export default function PrivacyPolicyPage() {
         variant="solid"
         showBeta={false}
         rightContent={
-          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#8A8478' }}>
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#6B6358' }}>
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
@@ -77,7 +77,7 @@ export default function PrivacyPolicyPage() {
 
       {/* Breadcrumb */}
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm" style={{ color: '#8A8478' }}>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm" style={{ color: '#6B6358' }}>
           <Link href="/" className="hover:opacity-80 transition-opacity">Home</Link>
           <span>/</span>
           <span style={{ color: '#2D2D2D' }} className="font-medium">Privacy Policy</span>
@@ -92,10 +92,10 @@ export default function PrivacyPolicyPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           Privacy Policy
         </h1>
-        <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: '#8A8478' }}>
+        <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: '#6B6358' }}>
           Your privacy matters to us. This policy explains how Interior Studio collects, uses, and protects your personal information.
         </p>
-        <p className="mt-3 text-sm" style={{ color: '#8A8478' }}>
+        <p className="mt-3 text-sm" style={{ color: '#6B6358' }}>
           Last updated: March 4, 2026
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function PrivacyPolicyPage() {
       {/* Table of Contents */}
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-8">
         <div className="rounded-2xl border p-6" style={{ background: '#FAF8F4', borderColor: '#E2DDD4' }}>
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Outfit', sans-serif", color: '#8A8478' }}>
+          <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Outfit', sans-serif", color: '#6B6358' }}>
             Table of Contents
           </h2>
           <nav className="grid sm:grid-cols-2 gap-2">
@@ -162,12 +162,12 @@ export default function PrivacyPolicyPage() {
                 Interior Studio
               </span>
             </div>
-            <div className="flex items-center gap-6 text-sm" style={{ color: '#8A8478' }}>
+            <div className="flex items-center gap-6 text-sm" style={{ color: '#6B6358' }}>
               <Link href="/privacy" className="font-medium" style={{ color: '#C17F4E' }}>Privacy Policy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms of Service</Link>
               <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact Us</Link>
             </div>
-            <p className="text-xs" style={{ color: '#8A8478' }}>
+            <p className="text-xs" style={{ color: '#6B6358' }}>
               &copy; 2026 Interior Studio. All rights reserved.
             </p>
           </div>

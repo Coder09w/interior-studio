@@ -74,14 +74,14 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
                 <a
                   href="#features"
                   className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
-                  style={{ color: '#8A8478' }}
+                  style={{ color: '#6B6358' }}
                 >
                   Features
                 </a>
                 <Link
                   href="/pricing"
                   className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
-                  style={{ color: '#8A8478' }}
+                  style={{ color: '#6B6358' }}
                 >
                   Pricing
                 </Link>
@@ -119,9 +119,9 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
       {mobileOpen && !rightContent && (
         <div className="md:hidden border-t" style={{ borderColor: '#E2DDD4', background: '#FFFFFF' }}>
           <div className="px-4 py-4 space-y-3">
-            <a href="#features" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#8A8478' }}>Features</a>
-            <Link href="/pricing" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#8A8478' }}>Pricing</Link>
-            <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#8A8478' }}>Sign In</Link>
+            <a href="#features" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#6B6358' }}>Features</a>
+            <Link href="/pricing" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#6B6358' }}>Pricing</Link>
+            <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#6B6358' }}>Sign In</Link>
             <Link href="/editor" onClick={() => setMobileOpen(false)} className="block text-sm font-medium px-4 py-2 rounded-lg text-white text-center" style={{ background: '#C17F4E' }}>Open Editor</Link>
           </div>
         </div>

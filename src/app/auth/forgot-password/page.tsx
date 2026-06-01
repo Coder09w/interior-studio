@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
               >
                 Reset your password
               </h2>
-              <p className="text-sm" style={{ color: '#8A8478' }}>
+              <p className="text-sm" style={{ color: '#6B6358' }}>
                 Enter your email and we&apos;ll send you a reset link
               </p>
             </div>
@@ -159,7 +159,7 @@ export default function ForgotPasswordPage() {
             >
               Check your email
             </h2>
-            <p className="text-sm mb-1" style={{ color: '#8A8478' }}>
+            <p className="text-sm mb-1" style={{ color: '#6B6358' }}>
               If an account exists for
             </p>
             <p
@@ -168,7 +168,7 @@ export default function ForgotPasswordPage() {
             >
               {email}
             </p>
-            <p className="text-sm mb-6" style={{ color: '#8A8478' }}>
+            <p className="text-sm mb-6" style={{ color: '#6B6358' }}>
               you&apos;ll receive a reset link shortly.
             </p>
             <div
@@ -177,7 +177,7 @@ export default function ForgotPasswordPage() {
             >
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#C17F4E' }} />
-                <p className="text-xs text-left" style={{ color: '#8A8478' }}>
+                <p className="text-xs text-left" style={{ color: '#6B6358' }}>
                   If you don&apos;t see the email, check your spam folder. The link will expire in 1 hour.
                 </p>
               </div>

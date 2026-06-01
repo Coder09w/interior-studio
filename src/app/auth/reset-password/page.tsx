@@ -127,7 +127,7 @@ function ResetPasswordForm() {
             >
               Link expired or invalid
             </h2>
-            <p className="text-sm mb-6" style={{ color: '#8A8478' }}>
+            <p className="text-sm mb-6" style={{ color: '#6B6358' }}>
               {tokenError}
             </p>
             <Link href="/auth/forgot-password">
@@ -203,7 +203,7 @@ function ResetPasswordForm() {
             >
               Password reset successful
             </h2>
-            <p className="text-sm mb-6" style={{ color: '#8A8478' }}>
+            <p className="text-sm mb-6" style={{ color: '#6B6358' }}>
               Your password has been updated. You can now sign in with your new password.
             </p>
             <Link href="/auth/login">
@@ -263,7 +263,7 @@ function ResetPasswordForm() {
           >
             Set new password
           </h2>
-          <p className="text-sm" style={{ color: '#8A8478' }}>
+          <p className="text-sm" style={{ color: '#6B6358' }}>
             Choose a strong password for your account
           </p>
         </div>
@@ -299,8 +299,9 @@ function ResetPasswordForm() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                style={{ color: '#8A8478' }}
-                tabIndex={-1}
+                style={{ color: '#6B6358' }}
+                tabIndex={0}
+                aria-label="Toggle password visibility"
               >
                 {showPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -331,8 +332,9 @@ function ResetPasswordForm() {
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
-                style={{ color: '#8A8478' }}
-                tabIndex={-1}
+                style={{ color: '#6B6358' }}
+                tabIndex={0}
+                aria-label="Toggle confirm password visibility"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -349,7 +351,7 @@ function ResetPasswordForm() {
               className="rounded-lg p-3"
               style={{ backgroundColor: '#FAF8F4' }}
             >
-              <p className="text-xs" style={{ color: '#8A8478' }}>
+              <p className="text-xs" style={{ color: '#6B6358' }}>
                 {password.length < 8
                   ? '⚠️ Password must be at least 8 characters'
                   : confirmPassword && password !== confirmPassword

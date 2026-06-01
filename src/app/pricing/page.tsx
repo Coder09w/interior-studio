@@ -175,7 +175,7 @@ export default function PricingPage() {
       <SiteNav
         variant="solid"
         rightContent={
-          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#8A8478' }}>
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#6B6358' }}>
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
@@ -191,7 +191,7 @@ export default function PricingPage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           Design Freely. <span style={{ color: '#C17F4E' }}>Everything is Free.</span>
         </h1>
-        <p className="mt-4 text-lg max-w-2xl mx-auto" style={{ color: '#8A8478' }}>
+        <p className="mt-4 text-lg max-w-2xl mx-auto" style={{ color: '#6B6358' }}>
           We&apos;re currently in Early Access Beta. As one of our early users, you get{' '}
           <strong style={{ color: '#2D2D2D' }}>FREE access to all premium features</strong>{' '}
           while we gather feedback and improve the experience.
@@ -215,7 +215,7 @@ export default function PricingPage() {
               <h3 className="font-bold text-base" style={{ color: '#2D2D2D' }}>
                 Beta Launch Special: All premium features are free!
               </h3>
-              <p className="mt-1 text-sm leading-relaxed" style={{ color: '#8A8478' }}>
+              <p className="mt-1 text-sm leading-relaxed" style={{ color: '#6B6358' }}>
                 Every user currently receives full Pro+ features at no cost. This is a limited-time early access offer
                 while we refine the product based on your feedback. Premium subscriptions are coming soon, but for now
                 enjoy the full experience at no charge.
@@ -271,7 +271,7 @@ export default function PricingPage() {
                     <span className="text-4xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: isDark ? '#FFFFFF' : '#2D2D2D' }}>
                       $0
                     </span>
-                    <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : '#8A8478' }}>/beta</span>
+                    <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : '#6B6358' }}>/beta</span>
                   </div>
                   {plan.price > 0 && (
                     <span className="inline-block mt-1 text-xs line-through" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#B8A898' }}>
@@ -279,7 +279,7 @@ export default function PricingPage() {
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#8A8478' }}>{plan.description}</p>
+                <p className="mt-2 text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#6B6358' }}>{plan.description}</p>
 
                 {/* Divider */}
                 <div className="my-5 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2DDD4' }} />
@@ -328,7 +328,7 @@ export default function PricingPage() {
             <h2 className="text-3xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               What You Get During Beta
             </h2>
-            <p className="mt-3 text-base max-w-2xl mx-auto" style={{ color: '#8A8478' }}>
+            <p className="mt-3 text-base max-w-2xl mx-auto" style={{ color: '#6B6358' }}>
               Full access to premium features — no credit card required, no time limit, no catches.
               We want your feedback to make this the best interior design tool possible.
             </p>
@@ -350,7 +350,7 @@ export default function PricingPage() {
                 <h3 className="font-bold text-sm mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
                   {feat.title}
                 </h3>
-                <p className="text-sm leading-relaxed" style={{ color: '#8A8478' }}>
+                <p className="text-sm leading-relaxed" style={{ color: '#6B6358' }}>
                   {feat.desc}
                 </p>
               </div>
@@ -378,7 +378,7 @@ export default function PricingPage() {
                   <h3 className="font-bold text-sm mb-1" style={{ color: '#2D2D2D' }}>
                     We&apos;re focused on building the best platform possible
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: '#8A8478' }}>
+                  <p className="text-sm leading-relaxed" style={{ color: '#6B6358' }}>
                     During beta, we&apos;re gathering feedback from real users like you to improve the experience.
                     Your designs, suggestions, and bug reports directly shape the product. Premium plans will launch
                     once we&apos;ve built something truly worth paying for.
@@ -396,7 +396,7 @@ export default function PricingPage() {
                   <h3 className="font-bold text-sm mb-1" style={{ color: '#2D2D2D' }}>
                     Early Adopter Benefits
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: '#8A8478' }}>
+                  <p className="text-sm leading-relaxed" style={{ color: '#6B6358' }}>
                     Users who join during beta may receive exclusive discounts, extended premium access,
                     and special perks when premium plans officially launch. You&apos;re not just a user —
                     you&apos;re a founding member of our community.
@@ -414,7 +414,7 @@ export default function PricingPage() {
                   <h3 className="font-bold text-sm mb-1" style={{ color: '#2D2D2D' }}>
                     Premium Is Coming — But Not Yet
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: '#8A8478' }}>
+                  <p className="text-sm leading-relaxed" style={{ color: '#6B6358' }}>
                     Premium subscriptions are coming soon, but for now enjoy the full experience at no cost.
                     We&apos;ll give you plenty of notice before any changes, and early adopters will always
                     get the best deal. Your projects and data will always remain yours.
@@ -432,7 +432,7 @@ export default function PricingPage() {
           <h2 className="text-3xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
             Ready to Start Designing?
           </h2>
-          <p className="mt-3 text-base" style={{ color: '#8A8478' }}>
+          <p className="mt-3 text-base" style={{ color: '#6B6358' }}>
             Join the beta and get full access to all premium features — free.
           </p>
           <button
@@ -486,7 +486,7 @@ export default function PricingPage() {
           ].map(({ q, a }) => (
             <div key={q} className="rounded-xl border p-5" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
               <h4 className="font-semibold text-sm" style={{ color: '#2D2D2D' }}>{q}</h4>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: '#8A8478' }}>{a}</p>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: '#6B6358' }}>{a}</p>
             </div>
           ))}
         </div>

@@ -94,7 +94,7 @@ export default function TermsOfServicePage() {
         variant="solid"
         showBeta={false}
         rightContent={
-          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#8A8478' }}>
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: '#6B6358' }}>
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
@@ -103,7 +103,7 @@ export default function TermsOfServicePage() {
 
       {/* Breadcrumb */}
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm" style={{ color: '#8A8478' }}>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm" style={{ color: '#6B6358' }}>
           <Link href="/" className="hover:opacity-80 transition-opacity">Home</Link>
           <span>/</span>
           <span style={{ color: '#2D2D2D' }} className="font-medium">Terms of Service</span>
@@ -118,10 +118,10 @@ export default function TermsOfServicePage() {
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           Terms of Service
         </h1>
-        <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: '#8A8478' }}>
+        <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: '#6B6358' }}>
           Please read these terms carefully before using Interior Studio. By using our platform, you agree to these terms.
         </p>
-        <div className="mt-3 flex items-center justify-center gap-4 text-sm" style={{ color: '#8A8478' }}>
+        <div className="mt-3 flex items-center justify-center gap-4 text-sm" style={{ color: '#6B6358' }}>
           <span>Effective date: January 1, 2026</span>
           <span className="w-1 h-1 rounded-full" style={{ background: '#E2DDD4' }}></span>
           <span>Last updated: March 4, 2026</span>
@@ -131,7 +131,7 @@ export default function TermsOfServicePage() {
       {/* Table of Contents */}
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-8">
         <div className="rounded-2xl border p-6" style={{ background: '#FAF8F4', borderColor: '#E2DDD4' }}>
-          <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Outfit', sans-serif", color: '#8A8478' }}>
+          <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ fontFamily: "'Outfit', sans-serif", color: '#6B6358' }}>
             Table of Contents
           </h2>
           <nav className="grid sm:grid-cols-2 gap-2">
@@ -190,12 +190,12 @@ export default function TermsOfServicePage() {
                 Interior Studio
               </span>
             </div>
-            <div className="flex items-center gap-6 text-sm" style={{ color: '#8A8478' }}>
+            <div className="flex items-center gap-6 text-sm" style={{ color: '#6B6358' }}>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy Policy</Link>
               <Link href="/terms" className="font-medium" style={{ color: '#C17F4E' }}>Terms of Service</Link>
               <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact Us</Link>
             </div>
-            <p className="text-xs" style={{ color: '#8A8478' }}>
+            <p className="text-xs" style={{ color: '#6B6358' }}>
               &copy; 2026 Interior Studio. All rights reserved.
             </p>
           </div>

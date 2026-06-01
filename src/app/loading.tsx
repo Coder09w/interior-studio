@@ -31,7 +31,7 @@ export default function Loading() {
         </div>
         <p
           className="text-sm font-medium"
-          style={{ color: "#8A8478" }}
+          style={{ color: "#6B6358" }}
         >
           Loading...
         </p>
