@@ -170,15 +170,14 @@ export default function ContactPage() {
                   <Clock className="w-5 h-5" style={{ color: '#C17F4E' }} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Business Hours</h3>
-                  <p className="text-xs" style={{ color: '#8A8478' }}>Monday — Friday</p>
+                  <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Response Time</h3>
                 </div>
               </div>
               <p className="text-sm" style={{ color: '#555' }}>
-                9:00 AM — 6:00 PM EST
+                We typically respond within 24–48 hours, 7 days a week.
               </p>
               <p className="text-xs mt-1" style={{ color: '#8A8478' }}>
-                Weekend inquiries answered by Monday
+                Urgent issues get priority handling
               </p>
             </div>
 

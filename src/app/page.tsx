@@ -78,7 +78,8 @@ const staggerItem = {
 function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
-  const [display, setDisplay] = useState('0');
+  // Start with real values so static HTML shows correct numbers even if JS is slow
+  const [display, setDisplay] = useState(value + suffix);
   const hasAnimated = useRef(false);
 
   useEffect(() => {
@@ -86,6 +87,8 @@ function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: strin
     hasAnimated.current = true;
     const num = parseInt(value.replace(/\D/g, ''), 10);
     if (isNaN(num) || num === 0) { setDisplay(value + suffix); return; }
+    // Reset to 0 before animating up to real number
+    setDisplay('0' + suffix);
     const duration = 1800;
     const startTime = performance.now();
     let rafId: number;
@@ -787,17 +790,17 @@ function RoomShowcase() {
               Design Every Room in Your Home
             </h2>
             <p className="mt-3 text-sm" style={{ color: '#8A8478' }}>
-              Dedicated templates and furniture for every space.
+              Dedicated templates and furniture for every space. Click any room to start designing.
             </p>
           </div>
         </FadeInWhenVisible>
-        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
+        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-6">
           {roomTypes.map(({ icon: Icon, label, color, image }) => (
             <Link key={label} href="/editor" className="block">
               <motion.div
                 variants={staggerItem}
-                whileHover={{ y: -6, scale: 1.03 }}
-                className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-xl"
+                whileHover={{ y: -6, scale: 1.02 }}
+                className="group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-xl"
               >
               {/* Room image background */}
               <img
@@ -810,20 +813,27 @@ function RoomShowcase() {
               <div
                 className="absolute inset-0"
                 style={{
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 40%, transparent 60%)',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 40%, transparent 60%)',
                 }}
               />
+              {/* Hover CTA overlay */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm" style={{ background: 'rgba(193,127,78,0.9)' }}>
+                  Design this room
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
               {/* Label at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                <div className="flex items-center gap-2">
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                <div className="flex items-center gap-2.5">
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{ background: `${color}CC` }}
                   >
-                    <Icon className="w-4 h-4 text-white" />
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
                   <span
-                    className="text-sm font-semibold text-white"
+                    className="text-base font-semibold text-white"
                   >
                     {label}
                   </span>
@@ -920,155 +930,7 @@ function HowItWorksSection() {
   );
 }
 
-/* ─── Design Inspiration Carousel ─── */
-const showcaseItems = [
-  { image: '/images/room-living.png', title: 'Modern Living Room', description: 'Warm tones & open layout' },
-  { image: '/images/room-bedroom.png', title: 'Cozy Bedroom Retreat', description: 'Serene & minimalist design' },
-  { image: '/images/room-kitchen.png', title: 'Chef\'s Dream Kitchen', description: 'Functional elegance' },
-  { image: '/images/room-bathroom.png', title: 'Spa-Inspired Bathroom', description: 'Tranquil & luxurious' },
-  { image: '/images/room-office.png', title: 'Productive Home Office', description: 'Focus & comfort combined' },
-  { image: '/images/room-dining.png', title: 'Elegant Dining Space', description: 'Gather in style' },
-  { image: '/images/hero-living-room.png', title: 'Open Concept Living', description: 'Where comfort meets design' },
-];
 
-function DesignInspirationCarousel() {
-  const [isPaused, setIsPaused] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const posRef = useRef(0);
-  const pausedRef = useRef(false);
-
-  // Keep pausedRef in sync with isPaused state without re-creating the animation loop
-  useEffect(() => {
-    pausedRef.current = isPaused;
-  }, [isPaused]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    let animationFrame: number;
-    let lastTime = performance.now();
-    const speed = 0.5; // pixels per frame at 60fps
-
-    function animate(time: number) {
-      if (!pausedRef.current && container) {
-        const delta = (time - lastTime) / 16.67; // normalize to 60fps
-        posRef.current += speed * delta;
-        const maxScroll = container.scrollWidth / 2;
-        if (posRef.current >= maxScroll) posRef.current = 0;
-        container.style.transform = `translateX(-${posRef.current}px)`;
-      }
-      lastTime = time;
-      animationFrame = requestAnimationFrame(animate);
-    }
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, []);
-
-  // Duplicate items for infinite loop feel
-  const allItems = [...showcaseItems, ...showcaseItems];
-
-  return (
-    <section
-      className="py-20 sm:py-28 overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #2D2D2D 0%, #1A1A1A 100%)' }}
-    >
-      {/* Subtle accent gradient overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at 20% 50%, rgba(193,127,78,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(193,127,78,0.05) 0%, transparent 60%)',
-        }}
-      />
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <FadeInWhenVisible>
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
-              <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
-              <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>DESIGN INSPIRATION</span>
-            </div>
-            <h2
-              className="text-3xl sm:text-4xl font-bold tracking-tight text-white"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
-            >
-              Explore Beautiful Room <span style={{ color: '#C17F4E' }}>Designs</span>
-            </h2>
-            <p className="mt-4 text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Get inspired by stunning interior compositions crafted in Interior Studio.
-            </p>
-          </div>
-        </FadeInWhenVisible>
-      </div>
-
-      {/* Carousel */}
-      <div
-        className="relative mt-4"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        {/* Left fade */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-24 z-10 pointer-events-none"
-          style={{ background: 'linear-gradient(to right, #1A1A1A, transparent)' }}
-        />
-        {/* Right fade */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-24 z-10 pointer-events-none"
-          style={{ background: 'linear-gradient(to left, #1A1A1A, transparent)' }}
-        />
-
-        <div className="overflow-hidden">
-          <div
-            ref={scrollRef}
-            className="flex gap-6"
-            style={{ willChange: 'transform' }}
-          >
-            {allItems.map((item, i) => (
-              <div
-                key={`${item.title}-${i}`}
-                className="flex-shrink-0 w-[340px] sm:w-[420px] group cursor-pointer"
-              >
-                <div className="relative rounded-2xl overflow-hidden aspect-[3/2] border transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-[#C17F4E]/10"
-                  style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-                >
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  {/* Gradient overlay */}
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 50%, transparent 70%)' }}
-                  />
-                  {/* Title overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3
-                      className="text-lg font-semibold text-white mb-1"
-                      style={{ fontFamily: "'Outfit', sans-serif" }}
-                    >
-                      {item.title}
-                    </h3>
-                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      {item.description}
-                    </p>
-                  </div>
-                  {/* Accent border glow on hover */}
-                  <div
-                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={{ boxShadow: 'inset 0 0 0 2px rgba(193,127,78,0.4)' }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* ─── Stats ─── */
 function StatsSection() {
@@ -1506,7 +1368,6 @@ export default function HomePage() {
         <FeaturesSection />
         <RoomShowcase />
         <HowItWorksSection />
-        <DesignInspirationCarousel />
         <StatsSection />
         <TestimonialsSection />
         <ShowcaseBannerSection />

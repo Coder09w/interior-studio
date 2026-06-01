@@ -301,7 +301,7 @@ export default function SignupPage() {
           {/* Referral Source */}
           <div className="space-y-2">
             <Label style={{ color: '#2D2D2D' }}>
-              How did you hear about us?
+              How did you hear about us? <span style={{ color: '#8A8478', fontWeight: 400 }}>(optional)</span>
             </Label>
             <Select value={referralSource} onValueChange={setReferralSource}>
               <SelectTrigger
@@ -311,10 +311,12 @@ export default function SignupPage() {
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="social-media">Social Media</SelectItem>
-                <SelectItem value="friend">Friend</SelectItem>
-                <SelectItem value="blog">Blog</SelectItem>
-                <SelectItem value="search-engine">Search Engine</SelectItem>
+                <SelectItem value="google-search">Google Search</SelectItem>
+                <SelectItem value="product-hunt">Product Hunt</SelectItem>
+                <SelectItem value="twitter">Twitter / X</SelectItem>
+                <SelectItem value="reddit">Reddit</SelectItem>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="designer-friend">Designer Friend</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
