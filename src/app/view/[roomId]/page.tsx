@@ -444,22 +444,22 @@ function buildRoom(
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bulbMat);
     bulb.position.set(x * 1.5, h - 0.07, 0); roomGroup.add(bulb);
 
-    // SpotLight with soft penumbra matching main editor
-    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 2.2 : 1.5, 14, Math.PI / 3, 1.0, 2);
+    // SpotLight with soft penumbra matching main editor (candela units for r184+)
+    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 600 : 400, 14, Math.PI / 3, 1.0, 2);
     sl.position.set(x * 1.5, h - 0.07, 0);
     sl.target.position.set(x * 1.5, 0.1, 0);
     roomGroup.add(sl);
     roomGroup.add(sl.target);
 
-    // Ambient fill PointLight — eliminates harsh cone boundaries (no shadow for perf)
-    const fillPl = new THREE.PointLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 1.5 : 0.9, 14);
+    // Ambient fill PointLight — eliminates harsh cone boundaries (candela units)
+    const fillPl = new THREE.PointLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 150 : 100, 14);
     fillPl.position.set(x * 1.5, h - 0.07, 0);
     roomGroup.add(fillPl);
   }
 
   // Room fill light — simulates bounced light for realistic interior illumination
   const roomFillColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-  const roomFill = new THREE.PointLight(roomFillColor, isNight ? 0.4 : 0.25, Math.max(w, d) * 1.5);
+  const roomFill = new THREE.PointLight(roomFillColor, isNight ? 80 : 50, Math.max(w, d) * 1.5);
   roomFill.position.set(0, h * 0.7, 0);
   roomGroup.add(roomFill);
 
