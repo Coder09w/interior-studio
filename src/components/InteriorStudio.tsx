@@ -1099,13 +1099,23 @@ export default function InteriorStudio() {
     }
     spotGroup.add(spot);
 
-    const spotLight = new THREE.PointLight(
-      mood === 'night' ? 0xFFE8C0 : 0xFFEED0,
-      mood === 'night' ? 0.1 : 0.4,
-      8
-    );
-    spotLight.position.set(0, -0.085, 0);
+    // Use SpotLight with soft penumbra matching the main build
+    const isNight = mood === 'night';
+    const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
+    const spotLight = new THREE.SpotLight(lightColor, isNight ? 2.0 : 1.5, 12, Math.PI / 3.5, 1.0, 2);
+    spotLight.position.set(0, -0.06, 0);
+    spotLight.target.position.set(0, -(h - 0.1), 0);
     spotGroup.add(spotLight);
+    spotGroup.add(spotLight.target);
+
+    // Emissive bulb
+    const bulbMat = new THREE.MeshStandardMaterial({
+      color: 0xFFF5E0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
+      emissiveIntensity: isNight ? 2.0 : 1.2, roughness: 0.2, metalness: 0.0,
+    });
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bulbMat);
+    bulb.position.set(0, -0.06, 0);
+    spotGroup.add(bulb);
 
     spotGroup.position.set(newPos.x, h - 0.015, newPos.z);
     roomGroup.add(spotGroup);
@@ -1665,12 +1675,23 @@ export default function InteriorStudio() {
             (spotMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.6;
             spotGroup.add(spotMesh);
 
-            const spotLight = new THREE.PointLight(
-              mood === 'night' ? 0xFFE8C0 : 0xFFEED0,
-              mood === 'night' ? 0.1 : 0.4, 8
-            );
-            spotLight.position.set(0, -0.085, 0);
-            spotGroup.add(spotLight);
+            // SpotLight with soft penumbra matching main build
+            const isNight = mood === 'night';
+            const lightCol = isNight ? 0xFFE8C0 : 0xFFEED0;
+            const sLight = new THREE.SpotLight(lightCol, isNight ? 2.0 : 1.5, 12, Math.PI / 3.5, 1.0, 2);
+            sLight.position.set(0, -0.06, 0);
+            sLight.target.position.set(0, -(h - 0.1), 0);
+            spotGroup.add(sLight);
+            spotGroup.add(sLight.target);
+
+            // Emissive bulb
+            const bMat = new THREE.MeshStandardMaterial({
+              color: 0xFFF5E0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
+              emissiveIntensity: isNight ? 2.0 : 1.2, roughness: 0.2, metalness: 0.0,
+            });
+            const bMesh = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bMat);
+            bMesh.position.set(0, -0.06, 0);
+            spotGroup.add(bMesh);
 
             spotGroup.position.set(nx, h - 0.015, nz);
             roomGroup.add(spotGroup);

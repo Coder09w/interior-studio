@@ -26,6 +26,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import PageLoader from '@/components/PageLoader';
 import { Progress } from '@/components/ui/progress';
 import {
   DropdownMenu,
@@ -296,22 +297,7 @@ function DashboardContent() {
 
   // Loading state
   if (status === 'loading' || (status === 'authenticated' && isLoading)) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: '#F5F0E8' }}
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Loader2
-            className="w-8 h-8 animate-spin"
-            style={{ color: '#C17F4E' }}
-          />
-          <p style={{ color: '#5A4E42' }} className="text-sm">
-            Loading your workspace...
-          </p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   // Not authenticated - will redirect

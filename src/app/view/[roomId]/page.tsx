@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import PageLoader from '@/components/PageLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -421,12 +422,34 @@ function buildRoom(
     night: { color: 0x8899BB, intensity: 0.3, ambientIntensity: 0.15 },
   };
   const lightCfg = lightConfigs[lightMood] || lightConfigs.daylight;
+  const isNight = lightMood === 'night';
 
   for (let x = -1; x <= 1; x += 2) {
     const spot = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.03, 16), new THREE.MeshStandardMaterial({ color: 0x333, roughness: 0.3, metalness: 0.8 }));
     spot.position.set(x * 1.5, h - 0.015, 0); roomGroup.add(spot);
-    const spotLight = new THREE.PointLight(lightCfg.color, lightCfg.intensity, 8);
-    spotLight.position.set(x * 1.5, h - 0.1, 0); roomGroup.add(spotLight);
+
+    // Emissive ring + bulb matching main editor
+    const ringMat = new THREE.MeshStandardMaterial({
+      color: 0xFFEED0, emissive: isNight ? 0xFFE8C0 : 0xFFEED0,
+      emissiveIntensity: isNight ? 2.0 : 1.0, roughness: 0.3, metalness: 0.0,
+    });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.11, 16), ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(x * 1.5, h - 0.03, 0); roomGroup.add(ring);
+
+    const bulbMat = new THREE.MeshStandardMaterial({
+      color: 0xFFF5E0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
+      emissiveIntensity: isNight ? 2.0 : 1.2, roughness: 0.2, metalness: 0.0,
+    });
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bulbMat);
+    bulb.position.set(x * 1.5, h - 0.07, 0); roomGroup.add(bulb);
+
+    // SpotLight with soft penumbra matching main editor
+    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 2.5 : 2.0, 12, Math.PI / 3.5, 1.0, 2);
+    sl.position.set(x * 1.5, h - 0.07, 0);
+    sl.target.position.set(x * 1.5, 0.1, 0);
+    roomGroup.add(sl);
+    roomGroup.add(sl.target);
   }
 
   scene.add(roomGroup);
@@ -584,22 +607,7 @@ export default function ViewRoomPage() {
 
   // Loading
   if (isLoading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: '#F5F0E8' }}
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Loader2
-            className="w-8 h-8 animate-spin"
-            style={{ color: '#C17F4E' }}
-          />
-          <p style={{ color: '#5A4E42' }} className="text-sm">
-            Loading room…
-          </p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   // Error
