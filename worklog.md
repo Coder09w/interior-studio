@@ -351,3 +351,28 @@ Stage Summary:
 - SpotLights: Soft, natural illumination with penumbra=1.0, decay=2
 - Loader: Reaches 100%, ~4-5s total, "Ready!" + green transition
 - All changes deployed to https://instod.vercel.app
+---
+Task ID: lighting-fix-residential
+Agent: Main Agent
+Task: Fix over-bright/washed-out room lighting diagnosed from screenshots
+
+Work Log:
+- Analyzed uploaded lighting_bug_diagnosis.html and two screenshots
+- Verified which bugs are REAL vs PHANTOM by reading actual source code
+- Fixed Bug #1 (REAL): Candela values 10-20x too high — 800/1200cd ceiling → 60/90cd
+- Fixed Bug #4 (REAL): Skin system overrides mood exposure without clamping — added Math.min(v, 1.15)
+- Disproved Bug #2: Mood switching uses = (replace), NOT += (add). No stacking bug exists.
+- Disproved Bug #3: buildRoom() already disposes all roomGroup children before rebuilding
+- Fixed memory leak: Shadow map textures not disposed on room rebuild
+- Updated mood system: reduced dirLight from 0.8-1.8 to 0.25-0.5, raised night exposure 0.5→1.05
+- Updated all 6 skins: reduced dirIntensity 0.7-2.0→0.4-0.8, exposure 0.75-1.05
+- Fixed view page: furniture lights 0.6/0.8/0.3→40/55/25 cd, ceiling lights 800→60 cd
+- Added clampExposure() guard in buildRoom and skin-system.ts
+- Build successful, pushed to main
+
+Stage Summary:
+- All lighting values corrected to residential scale (50-150 lux target)
+- Exposure hard-capped at 1.15 to prevent ACES clipping
+- Shadow map memory leak fixed
+- View page furniture lights now use correct candela units
+- Commit: b106da0 pushed to main
