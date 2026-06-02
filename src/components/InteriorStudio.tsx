@@ -567,14 +567,15 @@ export default function InteriorStudio() {
     //                PointLight fill = subtle ambient (prevents harsh cone boundaries only)
     // NOTE: Three.js r184+ uses physically correct lighting by default.
     // SpotLight/PointLight intensity is in candela (cd), not arbitrary units.
-    // Indoor recessed lights are typically 200-800 cd.
+    // Strategy: SpotLights must be VERY bright to create visible light pools on floor,
+    // while fills stay subtle to maintain directional contrast.
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const mainIntensity = isNight ? 600 : 400;     // SpotLight (directional cone — primary light, in candela)
-    const fillIntensity = isNight ? 150 : 100;     // PointLight companion (subtle fill, no shadow)
-    const secondaryIntensity = isNight ? 350 : 250;
-    const secondaryFill = isNight ? 80 : 50;
-    const spotRange = 14;  // Extended range for better coverage
-    const spotAngle = Math.PI / 3; // ~60 degree cone for wide, natural spread
+    const mainIntensity = isNight ? 1200 : 800;     // SpotLight — strong directional cone
+    const fillIntensity = isNight ? 60 : 40;         // PointLight companion — very subtle fill
+    const secondaryIntensity = isNight ? 800 : 500;
+    const secondaryFill = isNight ? 40 : 25;
+    const spotRange = 14;
+    const spotAngle = Math.PI / 4; // ~45 degree cone — tighter for more visible light pools
     const shadowMapSize = mobile ? 512 : 1024;
     // Limit shadow-casting lights for performance (desktop: 4, mobile: 2)
     const maxShadowLights = mobile ? 2 : 4;
@@ -848,9 +849,7 @@ export default function InteriorStudio() {
     }
 
     // Room fill light — simulates global bounce/reflection off all surfaces
-    // This is critical for realistic interior lighting: in real rooms, light bounces
-    // off walls/floor/ceiling and fills shadowed areas. This PointLight approximates that.
-    const roomFillIntensity = isNight ? 80 : 50;
+    const roomFillIntensity = isNight ? 40 : 25;
     const roomFill = new THREE.PointLight(lightColor, roomFillIntensity, Math.max(w, d) * 1.5);
     roomFill.position.set(0, h * 0.7, 0);
     roomFill.name = 'roomFillLight';
@@ -1158,14 +1157,14 @@ export default function InteriorStudio() {
     // Use SpotLight with soft penumbra matching the main build (candela units for r184+)
     const isNight = mood === 'night';
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const spotLight = new THREE.SpotLight(lightColor, isNight ? 600 : 400, 14, Math.PI / 3, 1.0, 2);
+    const spotLight = new THREE.SpotLight(lightColor, isNight ? 1200 : 800, 14, Math.PI / 4, 1.0, 2);
     spotLight.position.set(0, -0.06, 0);
     spotLight.target.position.set(0, -(h - 0.1), 0);
     spotGroup.add(spotLight);
     spotGroup.add(spotLight.target);
 
     // Ambient fill PointLight — matches buildRoom lighting (candela units)
-    const fillLight = new THREE.PointLight(lightColor, isNight ? 150 : 100, 14);
+    const fillLight = new THREE.PointLight(lightColor, isNight ? 60 : 40, 14);
     fillLight.position.set(0, -0.06, 0);
     spotGroup.add(fillLight);
 
