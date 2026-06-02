@@ -152,10 +152,10 @@ function makeTileTexture(w: number, d: number): THREE.CanvasTexture {
 
 /* ===== LIGHTING MOODS ===== */
 const lightMoods: Record<string, { bg: number; fog: number; ambient: [number, number]; dir: [number, number]; hemi: [number, number, number]; fill: [number, number]; exposure: number }> = {
-  daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.6], dir: [0xFFF0D8, 1.5], hemi: [0xFFF5E6, 0x8B7355, 0.4], fill: [0xE0E8F0, 0.3], exposure: 1.0 },
-  golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.55], dir: [0xFFE0A0, 1.2], hemi: [0xFFF0C0, 0x8B7355, 0.3], fill: [0xFFE8C0, 0.2], exposure: 1.05 },
-  evening: { bg: 0xD8C8B0, fog: 0xD8C8B0, ambient: [0xFFC880, 0.3], dir: [0xFFE8C0, 0.8], hemi: [0xD8A070, 0x6B5340, 0.25], fill: [0xFFC880, 0.15], exposure: 0.85 },
-  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.15], dir: [0xFFE0A0, 0.15], hemi: [0x1A1A2E, 0x0D0D15, 0.15], fill: [0x4455AA, 0.05], exposure: 0.45 },
+  daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.3], dir: [0xFFF0D8, 0.8], hemi: [0xFFF5E6, 0x8B7355, 0.2], fill: [0xE0E8F0, 0.1], exposure: 1.0 },
+  golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.25], dir: [0xFFE0A0, 0.6], hemi: [0xFFF0C0, 0x8B7355, 0.15], fill: [0xFFE8C0, 0.08], exposure: 1.05 },
+  evening: { bg: 0xD8C8B0, fog: 0xD8C8B0, ambient: [0xFFC880, 0.15], dir: [0xFFE8C0, 0.4], hemi: [0xD8A070, 0x6B5340, 0.12], fill: [0xFFC880, 0.05], exposure: 0.85 },
+  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.08], dir: [0xFFE0A0, 0.1], hemi: [0x1A1A2E, 0x0D0D15, 0.08], fill: [0x4455AA, 0.02], exposure: 0.5 },
 };
 
 /* ===== FLOOR COLOR OPTIONS ===== */
