@@ -323,3 +323,31 @@ Stage Summary:
 - Loader: Complete redesign — cinematic isometric room + particles + shimmer bar
 - Lighting: Complete overhaul — SpotLights with shadows, 3-5x intensity, emissive bulbs, visible cones
 - All changes deployed to https://instod.vercel.app
+---
+Task ID: 4
+Agent: Super Z (Main)
+Task: Fix light cone boundaries + loader timing
+
+Work Log:
+- Convened EXPANDED Supreme Panel Session #4 with 4 specialist guests
+- Bruno Simon: Remove cone meshes, rely on SpotLights + emissive bulbs
+- Matt DesLauriers: Set penumbra=1.0, decay=2 for soft edges
+- Yuri Artiukh: CylinderGeometry cones are wrong approach for PBR
+- Jaume Sanchez Elias: Remove cones, soften SpotLights, fix loader completion
+- Analyzed user's screenshot with VLM — confirmed harsh geometric boundaries
+- Removed ALL 4 CylinderGeometry light cone meshes from ceiling fixtures
+- Removed createLightCone helper function entirely
+- SpotLight penumbra: 0.5 → 1.0 (maximum soft edge falloff)
+- SpotLight decay: 1.5 → 2 (physically accurate inverse-square falloff)
+- SpotLight angle: PI/4 → PI/3.5 (~51° for wider, softer spread)
+- Fixed loader: interval 350ms→500ms, eased increments, reaches 100%
+- Added "Ready!" status with green checkmark at completion
+- Progress bar turns green at 100%, dots replaced by checkmark
+- Subtle opacity fade for smooth transition
+- Build clean, TypeScript clean, pushed (commit 38dc73b)
+
+Stage Summary:
+- Light cones: Completely removed — no more harsh boundaries
+- SpotLights: Soft, natural illumination with penumbra=1.0, decay=2
+- Loader: Reaches 100%, ~4-5s total, "Ready!" + green transition
+- All changes deployed to https://instod.vercel.app
