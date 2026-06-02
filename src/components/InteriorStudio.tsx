@@ -565,15 +565,16 @@ export default function InteriorStudio() {
     const mainIntensity = isNight ? 3.0 : 2.0;
     const secondaryIntensity = isNight ? 1.5 : 1.0;
     const spotRange = 12;
-    const spotAngle = Math.PI / 4; // 45 degree cone
+    const spotAngle = Math.PI / 3.5; // ~51 degree cone for wider, softer spread
     const shadowMapSize = mobile ? 512 : 1024;
     // Limit shadow-casting lights for performance (desktop: 4, mobile: 2)
     const maxShadowLights = mobile ? 2 : 4;
     let shadowLightCount = 0;
 
     // Helper: create a SpotLight with shadow config
+    // penumbra=1.0 for soft edges, decay=2 for physically accurate falloff
     const createSpot = (intensity: number, range: number, angle: number, castShadow: boolean): THREE.SpotLight => {
-      const sl = new THREE.SpotLight(lightColor, intensity, range, angle, 0.5, 1.5);
+      const sl = new THREE.SpotLight(lightColor, intensity, range, angle, 1.0, 2);
       if (castShadow && shadowsOn && shadowLightCount < maxShadowLights) {
         sl.castShadow = true;
         sl.shadow.mapSize.set(shadowMapSize, shadowMapSize);
@@ -599,22 +600,6 @@ export default function InteriorStudio() {
         shadowLightCount++;
       }
       return pl;
-    };
-
-    // Helper: visible light cone (Minecraft-style beam)
-    const createLightCone = (height: number, topRadius: number, bottomRadius: number): THREE.Mesh => {
-      const coneGeo = new THREE.CylinderGeometry(topRadius, bottomRadius, height, 16, 1, true);
-      const coneMat = new THREE.MeshBasicMaterial({
-        color: lightColor,
-        transparent: true,
-        opacity: isNight ? 0.12 : 0.04,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      });
-      const cone = new THREE.Mesh(coneGeo, coneMat);
-      cone.name = 'lightCone';
-      return cone;
     };
 
     // Helper: emissive bulb mesh
@@ -709,10 +694,6 @@ export default function InteriorStudio() {
         headSpot.target.position.set(0, -h + 0.2, 0);
         headGroup.add(headSpot);
         headGroup.add(headSpot.target);
-        // Visible light cone
-        const cone = createLightCone(h - 0.2, 0.05, 1.2);
-        cone.position.set(0, -(0.1 + (h - 0.2) / 2), 0);
-        headGroup.add(cone);
         const xOffset = (i - (numHeads - 1) / 2) * (trackLen / (numHeads + 1));
         headGroup.position.set(xOffset, h - 0.04, spotPositions[0]?.z || 0);
         roomGroup.add(headGroup);
@@ -744,15 +725,11 @@ export default function InteriorStudio() {
       panelSpot.target.position.set(0, -h, 0);
       panelGroup.add(panelSpot);
       panelGroup.add(panelSpot.target);
-      // Visible light cone (wider for panel)
-      const cone = createLightCone(h - 0.1, 0.3, Math.max(panelW, panelD) * 0.8);
-      cone.position.set(0, -(0.05 + (h - 0.1) / 2), 0);
-      panelGroup.add(cone);
       panelGroup.position.set(spotPositions[0]?.x || 0, h - 0.015, spotPositions[0]?.z || 0);
       roomGroup.add(panelGroup);
       roomGroup.userData.ceilingSpotCount = 1;
     } else if (preset === 'pendant') {
-      // Row of hanging pendant lights — SpotLights with visible cones
+      // Row of hanging pendant lights — SpotLights with soft penumbra
       const numPendants = Math.min(3, spotPositions.length);
       for (let i = 0; i < numPendants; i++) {
         const pendGroup = new THREE.Group();
@@ -786,11 +763,6 @@ export default function InteriorStudio() {
         pendSpot.target.position.set(0, -h + 0.3, 0);
         pendGroup.add(pendSpot);
         pendGroup.add(pendSpot.target);
-        // Visible light cone
-        const coneHeight = h - 0.8;
-        const cone = createLightCone(coneHeight, 0.06, 0.9);
-        cone.position.set(0, -(0.6 + coneHeight / 2), 0);
-        pendGroup.add(cone);
         const px = (i - (numPendants - 1) / 2) * 1.2;
         pendGroup.position.set(spotPositions[i]?.x || px, h - 0.01, spotPositions[i]?.z || 0);
         roomGroup.add(pendGroup);
@@ -830,11 +802,6 @@ export default function InteriorStudio() {
         spot.target.position.set(0, -(h - 0.1), 0);
         spotGroup.add(spot);
         spotGroup.add(spot.target);
-
-        // Visible light cone
-        const cone = createLightCone(h - 0.15, 0.05, 1.0);
-        cone.position.set(0, -(0.08 + (h - 0.15) / 2), 0);
-        spotGroup.add(cone);
 
         spotGroup.position.set(pos.x, h - 0.015, pos.z);
         roomGroup.add(spotGroup);

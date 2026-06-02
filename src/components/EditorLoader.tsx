@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 /* ===== EPIC CINEMATIC LOADER FOR INTERIOR STUDIO ===== */
 
 const STAGES = [
   { at: 5, text: 'Initializing 3D Engine' },
   { at: 15, text: 'Setting up WebGL renderer' },
-  { at: 30, text: 'Loading room geometry' },
-  { at: 45, text: 'Preparing furniture library' },
-  { at: 60, text: 'Loading materials & textures' },
-  { at: 75, text: 'Building lighting system' },
-  { at: 88, text: 'Rendering environment' },
-  { at: 95, text: 'Almost ready' },
+  { at: 25, text: 'Loading room geometry' },
+  { at: 40, text: 'Preparing furniture library' },
+  { at: 55, text: 'Loading materials & textures' },
+  { at: 70, text: 'Building lighting system' },
+  { at: 82, text: 'Rendering environment' },
+  { at: 92, text: 'Almost ready' },
+  { at: 100, text: 'Ready!' },
 ];
 
 const TIPS = [
@@ -60,14 +61,10 @@ function IsometricRoom({ progress }: { progress: number }) {
       {furnitureVisible && (
         <div className="loader-iso-furniture" style={{ animationDelay: '0.8s' }}>
           <svg width="60" height="30" viewBox="0 0 60 30" fill="none">
-            {/* Sofa body */}
             <rect x="5" y="10" width="50" height="15" rx="3" fill="#8B7355" />
-            {/* Sofa back */}
             <rect x="5" y="5" width="50" height="8" rx="3" fill="#7A6348" />
-            {/* Cushions */}
             <rect x="8" y="12" width="20" height="10" rx="2" fill="#9B8365" />
             <rect x="32" y="12" width="20" height="10" rx="2" fill="#9B8365" />
-            {/* Legs */}
             <rect x="8" y="25" width="3" height="4" rx="1" fill="#5C4033" />
             <rect x="49" y="25" width="3" height="4" rx="1" fill="#5C4033" />
           </svg>
@@ -163,17 +160,29 @@ export default function EditorLoader() {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState(STAGES[0].text);
   const [tipIndex, setTipIndex] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
     let current = 0;
     const interval = setInterval(() => {
-      current += Math.random() * 6 + 2;
-      if (current > 96) current = 96;
+      // Slower, steadier progress — smaller increments, longer interval
+      // Speed slows down as we approach completion (easing)
+      const remaining = 100 - current;
+      const increment = Math.max(0.5, (remaining * 0.08) + (Math.random() * 1.5));
+      current = Math.min(current + increment, 100);
       setProgress(Math.round(current));
 
       const stage = [...STAGES].reverse().find(s => current >= s.at);
       if (stage) setStatusText(stage.text);
-    }, 350);
+
+      // When we reach 100%, mark complete and pause before allowing transition
+      if (current >= 100) {
+        setProgress(100);
+        setStatusText('Ready!');
+        setIsComplete(true);
+        clearInterval(interval);
+      }
+    }, 500); // Slower interval: 500ms (was 350ms)
 
     return () => clearInterval(interval);
   }, []);
@@ -189,7 +198,11 @@ export default function EditorLoader() {
   return (
     <div
       className="flex items-center justify-center h-screen relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #F5F0E8 0%, #EDE5D8 50%, #F0E8DC 100%)' }}
+      style={{
+        background: 'linear-gradient(135deg, #F5F0E8 0%, #EDE5D8 50%, #F0E8DC 100%)',
+        transition: 'opacity 0.6s ease-out',
+        opacity: isComplete ? 0.7 : 1,
+      }}
     >
       {/* Background floating particles */}
       <Particles />
@@ -240,7 +253,7 @@ export default function EditorLoader() {
           3D Room Design Previewer
         </p>
 
-        {/* Progress bar — MUCH bigger */}
+        {/* Progress bar */}
         <div
           className="loader-shimmer-bar"
           style={{
@@ -256,9 +269,11 @@ export default function EditorLoader() {
               height: '100%',
               borderRadius: '8px',
               width: `${progress}%`,
-              background: 'linear-gradient(90deg, #C17F4E, #D4A76A, #C17F4E)',
+              background: isComplete
+                ? 'linear-gradient(90deg, #5A8F4E, #7AB86A, #5A8F4E)' // Green when complete
+                : 'linear-gradient(90deg, #C17F4E, #D4A76A, #C17F4E)',
               backgroundSize: '200% 100%',
-              transition: 'width 0.4s ease-out',
+              transition: 'width 0.5s ease-out, background 0.5s ease',
               position: 'relative',
             }}
           />
@@ -275,23 +290,32 @@ export default function EditorLoader() {
           <p style={{
             fontFamily: "'Outfit', sans-serif",
             fontSize: '0.85rem',
-            fontWeight: 500,
-            color: '#5A4E42',
+            fontWeight: isComplete ? 700 : 500,
+            color: isComplete ? '#5A8F4E' : '#5A4E42',
+            transition: 'color 0.3s ease, font-weight 0.3s ease',
           }}>
             {statusText}
           </p>
-          <div className="loader-dot-pulse">
-            <span /><span /><span />
-          </div>
+          {!isComplete && (
+            <div className="loader-dot-pulse">
+              <span /><span /><span />
+            </div>
+          )}
+          {isComplete && (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A8F4E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
         </div>
 
         {/* Percentage */}
         <p style={{
           fontFamily: "'Outfit', sans-serif",
           fontSize: '0.75rem',
-          color: '#8B7355',
+          color: isComplete ? '#5A8F4E' : '#8B7355',
           fontWeight: 600,
           marginBottom: '24px',
+          transition: 'color 0.3s ease',
         }}>
           {progress}%
         </p>
