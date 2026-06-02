@@ -46,6 +46,14 @@ const texCache = new Map<string, THREE.CanvasTexture>();
 function getCachedTex(key: string, gen: () => THREE.CanvasTexture): THREE.CanvasTexture {
   const existing = texCache.get(key);
   if (existing) return existing;
+  // Evict stale entries for the same texture type (e.g. all hw_* when adding a new hw_)
+  const typePrefix = key.split('_')[0] + '_'; // e.g. "hw_" from "hw_8_6", "cp_" from "cp_8_6_#B8956A"
+  for (const [k, v] of texCache) {
+    if (k.startsWith(typePrefix) && k !== key) {
+      v.dispose();
+      texCache.delete(k);
+    }
+  }
   const t = gen();
   texCache.set(key, t);
   return t;

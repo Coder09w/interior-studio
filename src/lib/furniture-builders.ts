@@ -2,6 +2,22 @@ import * as THREE from 'three';
 
 export type MatType = 'fabric' | 'leather' | 'wood' | 'metal';
 
+/* ===== SEEDED PRNG — deterministic randomness for reproducible builds ===== */
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+// Generate a stable seed from furniture name + color so same item always looks the same
+function nameSeed(name: string, col: string): number {
+  let h = 0;
+  const str = name + col;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  return Math.abs(h) + 1;
+}
+
 /* ===== HELPER: Standard material ===== */
 export function makeMat(color: string, type: MatType): THREE.MeshStandardMaterial {
   const c = new THREE.Color(color);
@@ -188,6 +204,7 @@ export function createTableLamp(col: string, _mtype: MatType): THREE.Group {
 /* ===== DECOR ===== */
 export function createBookshelf(col: string, _mtype: MatType): THREE.Group {
   const g = new THREE.Group();
+  const rand = seededRandom(nameSeed('bookshelf', col || '#B8956A'));
   const m = makeMat(col || '#B8956A', 'wood');
   [[-0.38, 0.9, 0], [0.38, 0.9, 0]].forEach(p => {
     const s = new THREE.Mesh(new THREE.BoxGeometry(0.03, 1.8, 0.35), m);
@@ -202,9 +219,9 @@ export function createBookshelf(col: string, _mtype: MatType): THREE.Group {
   const bookColors = [0xC17F4E, 0x3D4F5F, 0x7A8B6F, 0x8A8478, 0xC49898];
   [0.23, 0.68, 1.13].forEach((sy, si) => {
     let bx = -0.3;
-    for (let i = 0; i < 4 + Math.floor(Math.random() * 3); i++) {
-      const bw = 0.03 + Math.random() * 0.04;
-      const bh = 0.25 + Math.random() * 0.15;
+    for (let i = 0; i < 4 + Math.floor(rand() * 3); i++) {
+      const bw = 0.03 + rand() * 0.04;
+      const bh = 0.25 + rand() * 0.15;
       const book = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.22), new THREE.MeshStandardMaterial({ color: bookColors[(si + i) % bookColors.length], roughness: 0.8 }));
       (book.material as any)._isStruct = true;
       book.position.set(bx + bw / 2, sy + bh / 2, 0.01); g.add(book);
@@ -218,6 +235,7 @@ export function createBookshelf(col: string, _mtype: MatType): THREE.Group {
 
 export function createPlant(col: string, _mtype: MatType): THREE.Group {
   const g = new THREE.Group();
+  const rand = seededRandom(nameSeed('plant', col || '#C4A882'));
   const potMat = new THREE.MeshStandardMaterial({ color: col || '#C4A882', roughness: 0.7 });
   const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.1, 0.22, 14), potMat);
   pot.position.y = 0.11; pot.castShadow = true; g.add(pot);
@@ -229,9 +247,9 @@ export function createPlant(col: string, _mtype: MatType): THREE.Group {
   const leafMat2 = new THREE.MeshStandardMaterial({ color: 0x5c8c4f, roughness: 0.8 });
   (leafMat2 as any)._isStruct = true;
   for (let i = 0; i < 5; i++) {
-    const r = 0.1 + Math.random() * 0.12;
+    const r = 0.1 + rand() * 0.12;
     const leaf = new THREE.Mesh(new THREE.SphereGeometry(Math.max(0.05, r), 10, 8), i % 2 === 0 ? leafMat : leafMat2);
-    leaf.position.set((Math.random() - 0.5) * 0.2, 0.35 + Math.random() * 0.3, (Math.random() - 0.5) * 0.2);
+    leaf.position.set((rand() - 0.5) * 0.2, 0.35 + rand() * 0.3, (rand() - 0.5) * 0.2);
     leaf.castShadow = true; g.add(leaf);
   }
   g.userData = { isFurniture: true, name: 'Plant', desc: 'Potted plant, h90cm', matType: 'fabric' as MatType, matColor: col || '#C4A882' };
@@ -676,12 +694,13 @@ export function createCredenza(col: string, _mtype: MatType): THREE.Group {
 
 export function createWallArt(col: string, _mtype: MatType): THREE.Group {
   const g = new THREE.Group();
+  const rand = seededRandom(nameSeed('wallart', col || '#5C4033'));
   const frameMat = makeMat(col || '#5C4033', 'wood');
   const frame = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.03), frameMat);
   frame.position.y = 1.5; frame.castShadow = true; g.add(frame);
   // Canvas
   const canvasColors = [0x3D4F5F, 0x7A8B6F, 0xC17F4E, 0xC49898, 0x8A8478];
-  const canvasMat = new THREE.MeshStandardMaterial({ color: canvasColors[Math.floor(Math.random() * canvasColors.length)], roughness: 0.8 });
+  const canvasMat = new THREE.MeshStandardMaterial({ color: canvasColors[Math.floor(rand() * canvasColors.length)], roughness: 0.8 });
   (canvasMat as any)._isStruct = true;
   const canvas = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.52), canvasMat);
   canvas.position.set(0, 1.5, 0.017); g.add(canvas);

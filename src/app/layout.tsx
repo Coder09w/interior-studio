@@ -114,7 +114,9 @@ export default function RootLayout({
         </a>
         <AuthProvider>
           <BetaBanner />
-          {children}
+          <div id="main-content">
+            {children}
+          </div>
           <FeedbackButton />
         </AuthProvider>
         <Toaster />

@@ -1365,7 +1365,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main id="main-content" className="flex-1">
+      <main className="flex-1">
         <HeroSection />
         <FeaturesSection />
         <RoomShowcase />
