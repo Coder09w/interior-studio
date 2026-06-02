@@ -376,3 +376,48 @@ Stage Summary:
 - Shadow map memory leak fixed
 - View page furniture lights now use correct candela units
 - Commit: b106da0 pushed to main
+
+---
+Task ID: supreme-panel-roster
+Agent: Main
+Task: Save the Supreme Panel member roster for future assemblies
+
+Work Log:
+- Documented all panel members with their full roles and philosophy
+
+Stage Summary:
+- Supreme Panel roster saved for future reference
+
+---
+
+# 🏛️ THE SUPREME PANEL — Permanent Roster
+
+## 🎨 DON NORMAN — The UX Perspective
+"The design of the interface IS the product. Users don't see your code — they feel your affordances, signifiers, and feedback loops."
+- Focus: Accessibility, readability, interaction design, mental models, signifiers
+- Key concerns: Contrast ratios, ARIA labels, keyboard navigation, trust in UI state, consistency
+
+## 💻 GENNADY KOROTKEVICH (Tourist) — The Code Perspective
+"In competitive programming, we optimize for correctness first, then speed. This codebase has correctness issues that will compound."
+- Focus: Architecture, performance, memory leaks, code correctness, determinism
+- Key concerns: Component decomposition, stale state, dead dependencies, cache eviction, seeded randomness
+
+## 📈 WARREN BUFFETT — The Investor Perspective
+"I look for companies with an economic moat — a sustainable competitive advantage. I also look for honest management."
+- Focus: Business viability, trust, retention, legal liability, operational costs, revenue leakage
+- Key concerns: Fake features (erode trust), accessibility (legal/commercial risk), maintainability (technical debt discount), pricing flow
+
+## 💡 JENSEN HUANG — The Innovator Perspective
+"The biggest opportunities come from architecture pivots — when you see that the current structure is limiting what's possible."
+- Focus: Architecture enabling features, strategic blockers, innovation roadmap, GPU/3D optimization
+- Key concerns: Monolith preventing features (collab, VR, undo), token system enabling dark mode, modular materials for mix-and-match
+
+## 🧪 TESTING BUREAU — Bach, Jones, Bolton, Crispin & Gregory
+- **James Bach** — Exploratory Testing: "I don't follow checklists. I investigate."
+  - Focus: Edge cases, deviation from happy path, context loss, data corruption
+- **Angie Jones** — Automation & Visual Testing: "I look for what's repeatable and verifiable."
+  - Focus: E2E tests, visual regression, API contracts, CI/CD
+- **Michael Bolton** — Rapid Software Testing: "Testing isn't about confirming that things work. It's about discovering what could go wrong."
+  - Focus: Data migration, format changes, responsive sharing, input validation timing
+- **Lisa Crispin & Janet Gregory** — Agile Testing: "Testing must be integrated into development, not bolted on at the end."
+  - Focus: Error boundaries, console cleanup, feedback integration, monitoring, staging
