@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import PageLoader from '@/components/PageLoader';
+import EditorLoader from '@/components/EditorLoader';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -254,7 +254,7 @@ function ProfileContent() {
 
   // Loading state
   if (status === 'loading' || (status === 'authenticated' && isLoading)) {
-    return <PageLoader />;
+    return <EditorLoader />;
   }
 
   if (!session) return null;

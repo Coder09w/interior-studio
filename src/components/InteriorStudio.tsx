@@ -583,13 +583,16 @@ export default function InteriorStudio() {
 
     // Helper: create a SpotLight with shadow config
     // penumbra=1.0 for soft edges, decay=2 for physically accurate falloff
+    // NOTE: shadow.camera.far MUST be a positive value (> near), independent of light distance.
+    // When range=0 (no distance limit), we use h*1.5 to cover the full room height.
     const createSpot = (intensity: number, range: number, angle: number, castShadow: boolean): THREE.SpotLight => {
       const sl = new THREE.SpotLight(lightColor, intensity, range, angle, 1.0, 2);
       if (castShadow && shadowsOn && shadowLightCount < maxShadowLights) {
         sl.castShadow = true;
         sl.shadow.mapSize.set(shadowMapSize, shadowMapSize);
         sl.shadow.camera.near = 0.3;
-        sl.shadow.camera.far = range;
+        // CRITICAL: far must be > near. When range=0 (infinite), use room height * 1.5
+        sl.shadow.camera.far = range > 0 ? range : h * 1.5;
         sl.shadow.bias = -0.002;
         sl.shadow.radius = mobile ? 2 : 4;
         shadowLightCount++;
@@ -604,7 +607,8 @@ export default function InteriorStudio() {
         pl.castShadow = true;
         pl.shadow.mapSize.set(shadowMapSize, shadowMapSize);
         pl.shadow.camera.near = 0.3;
-        pl.shadow.camera.far = range;
+        // CRITICAL: far must be > near. When range=0 (infinite), use room height * 1.5
+        pl.shadow.camera.far = range > 0 ? range : h * 1.5;
         pl.shadow.bias = -0.002;
         pl.shadow.radius = mobile ? 2 : 4;
         shadowLightCount++;
@@ -1738,19 +1742,35 @@ export default function InteriorStudio() {
             (spotMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.6;
             spotGroup.add(spotMesh);
 
-            // SpotLight with soft penumbra matching main build
+            // SpotLight with soft penumbra matching main build (candela units for Three.js r184+)
             const isNight = mood === 'night';
             const lightCol = isNight ? 0xFFE8C0 : 0xFFEED0;
-            const sLight = new THREE.SpotLight(lightCol, isNight ? 2.0 : 1.5, 12, Math.PI / 3.5, 1.0, 2);
+            const mobile = isMobileRef.current;
+            const shadowsOn = shadowsEnabledRef.current;
+            const sLight = new THREE.SpotLight(lightCol, isNight ? 1200 : 800, 0, Math.PI / 4, 1.0, 2);
             sLight.position.set(0, -0.06, 0);
             sLight.target.position.set(0, -(h - 0.1), 0);
+            // Enable shadow matching buildRoom config
+            if (shadowsOn) {
+              sLight.castShadow = true;
+              sLight.shadow.mapSize.set(mobile ? 512 : 1024, mobile ? 512 : 1024);
+              sLight.shadow.camera.near = 0.3;
+              sLight.shadow.camera.far = h * 1.5;
+              sLight.shadow.bias = -0.002;
+              sLight.shadow.radius = mobile ? 2 : 4;
+            }
             spotGroup.add(sLight);
             spotGroup.add(sLight.target);
+
+            // Ambient fill PointLight — matches buildRoom lighting (candela units)
+            const sFill = new THREE.PointLight(lightCol, isNight ? 60 : 40, 0);
+            sFill.position.set(0, -0.06, 0);
+            spotGroup.add(sFill);
 
             // Emissive bulb
             const bMat = new THREE.MeshStandardMaterial({
               color: 0xFFF5E0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-              emissiveIntensity: isNight ? 2.0 : 1.2, roughness: 0.2, metalness: 0.0,
+              emissiveIntensity: isNight ? 3.0 : 2.0, roughness: 0.2, metalness: 0.0,
             });
             const bMesh = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bMat);
             bMesh.position.set(0, -0.06, 0);
