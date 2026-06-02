@@ -563,11 +563,13 @@ export default function InteriorStudio() {
     const isNight = mood === 'night';
 
     // Intensity multipliers: night mood needs lights to SHINE, daytime they're subtle
+    // Key principle: SpotLight = dominant directional light (creates shadows + light pools)
+    //                PointLight fill = subtle ambient (prevents harsh cone boundaries only)
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const mainIntensity = isNight ? 2.2 : 1.5;   // SpotLight (directional cone)
-    const fillIntensity = isNight ? 1.5 : 0.9;   // PointLight companion (ambient fill — no shadow)
-    const secondaryIntensity = isNight ? 1.2 : 0.8;
-    const secondaryFill = isNight ? 0.7 : 0.45;
+    const mainIntensity = isNight ? 3.5 : 2.5;   // SpotLight (directional cone — primary light)
+    const fillIntensity = isNight ? 0.8 : 0.5;   // PointLight companion (subtle fill — no shadow)
+    const secondaryIntensity = isNight ? 2.0 : 1.5;
+    const secondaryFill = isNight ? 0.5 : 0.3;
     const spotRange = 14;  // Extended range for better coverage
     const spotAngle = Math.PI / 3; // ~60 degree cone for wide, natural spread
     const shadowMapSize = mobile ? 512 : 1024;
@@ -612,7 +614,7 @@ export default function InteriorStudio() {
       const bulbMat = new THREE.MeshStandardMaterial({
         color: 0xFFF5E0,
         emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-        emissiveIntensity: isNight ? 2.0 : 1.2,
+        emissiveIntensity: isNight ? 3.0 : 2.0,
         roughness: 0.2,
         metalness: 0.0,
       });
@@ -811,7 +813,7 @@ export default function InteriorStudio() {
 
         // Emissive recessed ring (the "on" indicator)
         const ringMat = new THREE.MeshStandardMaterial({
-          color: 0xFFEED0, emissive: lightColor, emissiveIntensity: isNight ? 2.0 : 1.0,
+          color: 0xFFEED0, emissive: lightColor, emissiveIntensity: isNight ? 3.0 : 1.5,
           roughness: 0.3, metalness: 0.0,
         });
         const ring = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.11, 16), ringMat);
@@ -845,7 +847,7 @@ export default function InteriorStudio() {
     // Room fill light — simulates global bounce/reflection off all surfaces
     // This is critical for realistic interior lighting: in real rooms, light bounces
     // off walls/floor/ceiling and fills shadowed areas. This PointLight approximates that.
-    const roomFillIntensity = isNight ? 0.4 : 0.25;
+    const roomFillIntensity = isNight ? 0.6 : 0.4;
     const roomFill = new THREE.PointLight(lightColor, roomFillIntensity, Math.max(w, d) * 1.5);
     roomFill.position.set(0, h * 0.7, 0);
     roomFill.name = 'roomFillLight';
@@ -1531,7 +1533,7 @@ export default function InteriorStudio() {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, preserveDrawingBuffer: true, powerPreference: mobile ? 'low-power' : 'high-performance' });
     renderer.setPixelRatio(pr);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1; renderer.outputColorSpace = THREE.SRGBColorSpace;
     rendererRef.current = renderer;
 
