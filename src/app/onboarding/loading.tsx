@@ -1,2 +1,2 @@
-import EditorLoader from '@/components/EditorLoader';
-export default EditorLoader;
+import PageLoader from '@/components/PageLoader';
+export default PageLoader;

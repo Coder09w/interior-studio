@@ -30,7 +30,7 @@ We also utilize analytics cookies powered by services such as Google Analytics t
     id: 'third-party-services',
     icon: Users,
     title: '3. Third-Party Services',
-    content: `Interior Studio integrates with several trusted third-party services to deliver core functionality. We use NextAuth.js for authentication, which handles your login credentials securely and supports various identity providers including Google and GitHub. Your authentication data is processed by these providers according to their respective privacy policies, and we only receive the minimum information necessary to identify your account — typically your name and email address.
+    content: `Interior Studio integrates with trusted third-party services to deliver core functionality. We use NextAuth.js for authentication, which handles your login credentials securely. Your authentication data is processed according to our strict data protection standards, and we only collect the minimum information necessary to identify your account — typically your name and email address.
 
 Our application data is stored in a secure, encrypted database with robust access controls. This ensures that your design projects, account information, and preferences are stored safely on our infrastructure. We do not share your personal data or design content with advertising networks, data brokers, or any third parties for marketing purposes. When we engage subprocessors to assist with operations such as hosting, email delivery, or customer support, we ensure they adhere to data protection standards equivalent to our own and process data only under our instructions.`,
   },
@@ -54,9 +54,9 @@ Depending on your jurisdiction, you may have additional rights under data protec
     id: 'contact-information',
     icon: Mail,
     title: '6. Contact Us',
-    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data handling practices, we encourage you to reach out to our dedicated privacy team. We are committed to addressing your inquiries promptly and transparently. You may contact us via email at privacy@instod.vercel.app for all privacy-related matters, including data access requests, deletion requests, and questions about how your information is processed.
+    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data handling practices, we encourage you to reach out to our dedicated privacy team. We are committed to addressing your inquiries promptly and transparently. You may contact us via email at privacy@interiorstudio.app for all privacy-related matters, including data access requests, deletion requests, and questions about how your information is processed.
 
-For general support inquiries, account-related issues, or technical assistance, please email support@instod.vercel.app. Our team typically responds within 24 to 48 business hours. If you are not satisfied with our response to a privacy concern, you have the right to lodge a complaint with your local data protection authority. We value your trust and are continuously working to ensure that your data is handled with the care and respect it deserves.`,
+For general support inquiries, account-related issues, or technical assistance, please email hello@interiorstudio.app. Our team typically responds within 24 to 48 business hours. If you are not satisfied with our response to a privacy concern, you have the right to lodge a complaint with your local data protection authority. We value your trust and are continuously working to ensure that your data is handled with the care and respect it deserves.`,
   },
 ];
 

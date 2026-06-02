@@ -12,7 +12,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import EditorLoader from '@/components/EditorLoader';
+import PageLoader from '@/components/PageLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -618,7 +618,7 @@ export default function ViewRoomPage() {
 
   // Loading
   if (isLoading) {
-    return <EditorLoader />;
+    return <PageLoader />;
   }
 
   // Error

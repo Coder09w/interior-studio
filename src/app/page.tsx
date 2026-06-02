@@ -413,12 +413,13 @@ function HeroSection() {
                 </div>
               </div>
 
-              {/* Simulated room viewport */}
+              {/* Simulated room viewport — decorative preview only */}
               <div
                 className="relative aspect-[4/3] overflow-hidden"
                 style={{
                   background:
                     'linear-gradient(135deg, #F0E8D8 0%, #E8DFD0 40%, #DDD4C4 100%)',
+                  pointerEvents: 'none',
                 }}
               >
                 {/* Floor grid */}
@@ -927,6 +928,20 @@ function HowItWorksSection() {
             </motion.div>
           ))}
         </StaggerContainer>
+
+        {/* CTA after steps */}
+        <FadeInWhenVisible delay={0.3}>
+          <div className="text-center mt-10">
+            <Link
+              href="/editor"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              Ready? Start designing
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </FadeInWhenVisible>
       </div>
     </section>
   );

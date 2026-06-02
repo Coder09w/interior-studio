@@ -369,7 +369,7 @@ export default function SignupPage() {
                 Continue as guest
               </Link>
               <p className="text-[10px] text-center mt-2" style={{ color: '#5A4E42' }}>
-                Limited features — 8 furniture items, 2 rooms
+                Designs won&apos;t be saved without an account
               </p>
             </div>
           </div>

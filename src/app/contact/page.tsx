@@ -155,11 +155,11 @@ export default function ContactPage() {
                 </div>
               </div>
               <a
-                href="mailto:support@instod.vercel.app"
+                href="mailto:hello@interiorstudio.app"
                 className="text-sm font-medium hover:underline"
                 style={{ color: '#C17F4E' }}
               >
-                support@instod.vercel.app
+                hello@interiorstudio.app
               </a>
             </div>
 
@@ -203,9 +203,9 @@ export default function ContactPage() {
               <div className="flex items-start gap-3">
                 <Phone className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#C17F4E' }} />
                 <div>
-                  <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Priority Support</h3>
+                  <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Full Support During Beta</h3>
                   <p className="text-xs mt-1 leading-relaxed" style={{ color: '#5A4E42' }}>
-                    Pro and Studio subscribers receive priority support with guaranteed response times. Upgrade your plan for faster assistance.
+                    All users receive the same level of support during our beta period. Priority support tiers will launch alongside paid plans after beta ends.
                   </p>
                 </div>
               </div>

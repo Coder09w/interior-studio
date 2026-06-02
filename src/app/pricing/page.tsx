@@ -225,93 +225,129 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Plan Cards with Beta Overlay */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
+      {/* Unified Beta Card */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div
+          className="relative rounded-2xl border-2 p-8 sm:p-10 text-center"
+          style={{
+            background: 'linear-gradient(180deg, #FFFBF5 0%, #FFF8F0 100%)',
+            borderColor: '#C17F4E',
+            boxShadow: '0 0 30px rgba(193,127,78,0.1), 0 0 60px rgba(193,127,78,0.05)',
+          }}
+        >
+          {/* Beta badge */}
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-5 py-1 rounded-full text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+            EARLY ACCESS BETA
+          </div>
+
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: '#C17F4E15' }}>
+            <Gift className="w-7 h-7" style={{ color: '#C17F4E' }} />
+          </div>
+
+          <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
+            Full Access, Free During Beta
+          </h2>
+          <p className="mt-2 text-sm" style={{ color: '#5A4E42' }}>
+            Every feature unlocked. No credit card. No time limit.
+          </p>
+
+          <div className="my-6 flex items-baseline justify-center gap-1">
+            <span className="text-5xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>$0</span>
+            <span className="text-sm" style={{ color: '#5A4E42' }}>/beta</span>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3 text-left mb-8">
+            {[
+              'Unlimited design projects',
+              'All 30+ furniture items',
+              'All 6 room types & 4 lighting moods',
+              'Revision snapshots',
+              'Share links & screenshot export',
+              'Custom room dimensions',
+              'Material & skin system',
+              'Save & manage projects',
+            ].map((feat, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#C17F4E' }} />
+                <span className="text-sm" style={{ color: '#2D2D2D' }}>{feat}</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => {
+              if (session) {
+                router.push('/dashboard');
+              } else {
+                router.push('/auth/signup');
+              }
+            }}
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+          >
+            {session ? 'Go to Dashboard' : 'Start Designing Free'}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Post-Beta Plan Preview */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
+            What&apos;s Coming After Beta
+          </h2>
+          <p className="mt-2 text-sm" style={{ color: '#5A4E42' }}>
+            These plans will launch once we exit beta. Early adopters get the best deals.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
           {PLAN_CARDS.map((plan) => {
             const isDark = (plan as any).dark;
             const PlanIcon = plan.icon;
             return (
               <div
                 key={plan.key}
-                className="relative rounded-2xl border-2 p-8 transition-all duration-200 hover:shadow-lg flex flex-col"
+                className="rounded-2xl border-2 p-6 opacity-75"
                 style={{
-                  background: plan.bg,
-                  borderColor: plan.borderColor,
-                  transform: plan.scale ? 'scale(1.04)' : 'none',
-                  zIndex: plan.scale ? 10 : 1,
+                  background: isDark ? 'linear-gradient(180deg, #3D3D3D 0%, #2D2D2D 100%)' : '#FFFFFF',
+                  borderColor: isDark ? '#555' : '#E2DDD4',
                   color: isDark ? '#FFFFFF' : '#2D2D2D',
                 }}
               >
-                {/* Featured glow ring for Pro */}
-                {(plan as any).featured && (
-                  <div className="absolute -inset-[2px] rounded-2xl pointer-events-none" style={{ boxShadow: '0 0 30px rgba(193,127,78,0.15), 0 0 60px rgba(193,127,78,0.05)' }} />
-                )}
-
-                {/* Badge */}
-                {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold text-white" style={{ background: plan.accentColor }}>
-                    {plan.badge}
-                  </div>
-                )}
-
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: (plan as any).iconBg }}>
-                  <PlanIcon className="w-6 h-6" style={{ color: isDark ? '#D4A76A' : plan.accentColor }} />
+                {/* Coming soon overlay */}
+                <div className="text-center mb-3">
+                  <span className="inline-block text-[10px] font-bold tracking-wider px-3 py-1 rounded-full" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: isDark ? 'rgba(255,255,255,0.6)' : '#5A4E42' }}>
+                    COMING SOON
+                  </span>
                 </div>
 
-                {/* Plan name */}
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: (plan as any).iconBg }}>
+                  <PlanIcon className="w-5 h-5" style={{ color: isDark ? '#D4A76A' : plan.accentColor }} />
+                </div>
+
                 <h3 className="text-lg font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: isDark ? '#FFFFFF' : '#2D2D2D' }}>
                   {plan.name}
                 </h3>
 
-                {/* Beta Price Override */}
-                <div className="mb-1 mt-2">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: isDark ? '#FFFFFF' : '#2D2D2D' }}>
-                      $0
-                    </span>
-                    <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : '#5A4E42' }}>/beta</span>
-                  </div>
-                  {plan.price > 0 && (
-                    <span className="inline-block mt-1 text-xs line-through" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : '#B8A898' }}>
-                      ${plan.price}/month after beta
-                    </span>
-                  )}
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: isDark ? '#FFFFFF' : '#2D2D2D' }}>
+                    ${plan.price}
+                  </span>
+                  <span className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#5A4E42' }}>/month</span>
                 </div>
-                <p className="mt-2 text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#5A4E42' }}>{plan.description}</p>
+                <p className="mt-2 text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : '#5A4E42' }}>{plan.description}</p>
 
-                {/* Divider */}
-                <div className="my-5 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2DDD4' }} />
+                <div className="my-4 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2DDD4' }} />
 
-                {/* Feature list */}
-                <div className="space-y-3 flex-1">
+                <div className="space-y-2">
                   {plan.features.map((feat, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: isDark ? '#D4A76A' : plan.accentColor }} />
-                      <span className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : '#2D2D2D' }}>{feat}</span>
+                      <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: isDark ? '#D4A76A' : plan.accentColor }} />
+                      <span className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#5A4E42' }}>{feat}</span>
                     </div>
                   ))}
                 </div>
-
-                {/* CTA Button */}
-                <button
-                  onClick={() => handleCtaClick(plan.key)}
-                  className="mt-8 w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all hover:opacity-90"
-                  style={{
-                    background: plan.key === 'free'
-                      ? 'transparent'
-                      : isDark
-                        ? 'linear-gradient(135deg, #D4A76A, #C17F4E)'
-                        : `linear-gradient(135deg, ${plan.accentColor}, ${plan.accentColor}CC)`,
-                    color: plan.key === 'free' ? plan.accentColor : '#FFFFFF',
-                    border: plan.key === 'free' ? `2px solid ${plan.accentColor}` : 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {plan.cta}
-                  <ChevronRight className="w-4 h-4" />
-                </button>
               </div>
             );
           })}

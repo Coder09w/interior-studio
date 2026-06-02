@@ -26,7 +26,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import EditorLoader from '@/components/EditorLoader';
+import PageLoader from '@/components/PageLoader';
 import { Progress } from '@/components/ui/progress';
 import {
   DropdownMenu,
@@ -297,7 +297,7 @@ function DashboardContent() {
 
   // Loading state
   if (status === 'loading' || (status === 'authenticated' && isLoading)) {
-    return <EditorLoader />;
+    return <PageLoader />;
   }
 
   // Not authenticated - will redirect
