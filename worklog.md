@@ -292,3 +292,34 @@ Stage Summary:
 - Commit: 4e30f5d on main
 - All 5 voted fixes implemented and verified
 - Build passes cleanly
+---
+Task ID: 3
+Agent: Super Z (Main)
+Task: Epic cinematic loader + realistic lighting overhaul
+
+Work Log:
+- Convened Supreme Panel Session #3 — all 5 members voted
+- Created EditorLoader.tsx component with isometric CSS room that builds itself
+- Added 12 new CSS keyframe animations to globals.css
+- Letter-by-letter animated "Interior Studio" title with blur-in effect
+- Floating ambient particles (8 particles, randomized paths)
+- Shimmer progress bar (8px height, was 2px) with animated gradient overlay
+- Rotating tips system (7 tips, cycles every 4s)
+- Animated typing dots for status text
+- Updated all 3 loader instances: editor/page.tsx, editor/[projectId]/page.tsx, loading.tsx
+- Replaced ceiling PointLights with SpotLights for recessed/track/pendant fixtures
+- Added castShadow to ceiling SpotLights + PointLights (capped: 4 desktop, 2 mobile)
+- 3-5x intensity increase on all lights (main 2.0-3.0, secondary 1.0-1.5)
+- Added emissive bulb meshes on ALL ceiling fixtures + furniture lights
+- Added emissive crystal drops on chandelier arms + recessed ring indicators
+- Added visible light cone meshes (additive blending, Minecraft-style beams)
+- Updated furniture-builders.ts: Floor Lamp 1.8 (was 0.6), Pendant 2.5 (was 0.8), Table Lamp 1.2 (was 0.3)
+- Adjusted light moods to let ceiling lights dominate (reduced ambient/directional)
+- Added isMobileRef for mobile detection in buildRoom callback
+- Build passes clean, TypeScript passes clean
+- Committed and pushed (commit 1818236)
+
+Stage Summary:
+- Loader: Complete redesign — cinematic isometric room + particles + shimmer bar
+- Lighting: Complete overhaul — SpotLights with shadows, 3-5x intensity, emissive bulbs, visible cones
+- All changes deployed to https://instod.vercel.app
