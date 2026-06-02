@@ -165,7 +165,19 @@ export function createFloorLamp(col: string, _mtype: MatType): THREE.Group {
   (shadeMat as any)._isStruct = true;
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 0.22, 16, 1, true), shadeMat);
   shade.position.y = 1.55; shade.castShadow = true; g.add(shade);
-  const bulb = new THREE.PointLight(0xffe8c0, 0.6, 5);
+  // Emissive bulb — the light source itself glows
+  const bulbMat = new THREE.MeshStandardMaterial({
+    color: 0xFFF5E0, emissive: 0xFFE8A0, emissiveIntensity: 1.5, roughness: 0.2, metalness: 0.0,
+  });
+  const bulbMesh = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), bulbMat);
+  bulbMesh.position.y = 1.5; g.add(bulbMesh);
+  const bulb = new THREE.PointLight(0xffe8c0, 1.8, 8);
+  bulb.castShadow = true;
+  bulb.shadow.mapSize.set(512, 512);
+  bulb.shadow.camera.near = 0.2;
+  bulb.shadow.camera.far = 8;
+  bulb.shadow.bias = -0.002;
+  bulb.shadow.radius = 3;
   bulb.position.y = 1.5; g.add(bulb);
   g.userData = { isFurniture: true, name: 'Floor Lamp', desc: 'Arc floor lamp, h160cm', matType: 'metal' as MatType, matColor: col || '#333' };
   return g;
@@ -178,8 +190,20 @@ export function createPendant(col: string, _mtype: MatType, roomH = 3): THREE.Gr
   wire.position.y = roomH - 0.4; g.add(wire);
   const shade = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: col || '#C17F4E', roughness: 0.4, metalness: 0.3, side: THREE.DoubleSide }));
   shade.position.y = roomH - 0.85; shade.castShadow = true; g.add(shade);
-  const light = new THREE.PointLight(0xffe0a0, 0.8, 6);
+  const light = new THREE.PointLight(0xffe0a0, 2.5, 10);
+  light.castShadow = true;
+  light.shadow.mapSize.set(512, 512);
+  light.shadow.camera.near = 0.2;
+  light.shadow.camera.far = 10;
+  light.shadow.bias = -0.002;
+  light.shadow.radius = 3;
   light.position.y = roomH - 0.9; g.add(light);
+  // Emissive bulb
+  const bulbMat = new THREE.MeshStandardMaterial({
+    color: 0xFFF5E0, emissive: 0xFFE0A0, emissiveIntensity: 1.8, roughness: 0.2, metalness: 0.0,
+  });
+  const bulbMesh = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), bulbMat);
+  bulbMesh.position.y = roomH - 0.9; g.add(bulbMesh);
   g.userData = { isFurniture: true, name: 'Pendant Light', desc: 'Hanging pendant', matType: 'metal' as MatType, matColor: col || '#C17F4E' };
   return g;
 }
@@ -195,8 +219,20 @@ export function createTableLamp(col: string, _mtype: MatType): THREE.Group {
   (shadeMat as any)._isStruct = true;
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.16, 16, 1, true), shadeMat);
   shade.position.y = 0.4; g.add(shade);
-  const light = new THREE.PointLight(0xffe8c0, 0.3, 3);
+  const light = new THREE.PointLight(0xffe8c0, 1.2, 5);
+  light.castShadow = true;
+  light.shadow.mapSize.set(512, 512);
+  light.shadow.camera.near = 0.2;
+  light.shadow.camera.far = 5;
+  light.shadow.bias = -0.002;
+  light.shadow.radius = 3;
   light.position.y = 0.38; g.add(light);
+  // Emissive bulb
+  const bulbMat = new THREE.MeshStandardMaterial({
+    color: 0xFFF5E0, emissive: 0xFFE8C0, emissiveIntensity: 1.5, roughness: 0.2, metalness: 0.0,
+  });
+  const bulbMesh = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bulbMat);
+  bulbMesh.position.y = 0.38; g.add(bulbMesh);
   g.userData = { isFurniture: true, name: 'Table Lamp', desc: 'Ceramic lamp, h40cm', matType: 'fabric' as MatType, matColor: col || '#E8DCC8' };
   return g;
 }

@@ -5,29 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { Loader2 } from 'lucide-react';
+import EditorLoader from '@/components/EditorLoader';
 
 // Dynamic import to avoid SSR issues with Three.js
 const InteriorStudio = dynamic(() => import('@/components/InteriorStudio'), {
   ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-screen" style={{ background: '#F5F0E8' }}>
-      <div className="text-center max-w-sm w-full px-6">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
-          <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3" />
-            <path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0Z" />
-            <path d="M4 18v2" />
-            <path d="M20 18v2" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Interior Studio</h2>
-        <div className="mt-5 mb-3 w-full h-2 rounded-full overflow-hidden" style={{ background: '#E2DDD4' }}>
-          <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }} />
-        </div>
-        <p className="text-sm" style={{ color: '#5A4E42' }}>Loading 3D Editor...</p>
-      </div>
-    </div>
-  ),
+  loading: () => <EditorLoader />,
 });
 
 interface RoomData {
@@ -101,16 +84,7 @@ export default function EditorProjectPage() {
 
   // Loading state
   if (status === 'loading' || isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen" style={{ background: '#F5F0E8' }}>
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#C17F4E' }} />
-          <p style={{ color: '#5A4E42' }} className="text-sm">
-            Loading project…
-          </p>
-        </div>
-      </div>
-    );
+    return <EditorLoader />;
   }
 
   // Error state
