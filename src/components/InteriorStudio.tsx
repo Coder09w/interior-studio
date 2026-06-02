@@ -1209,6 +1209,10 @@ export default function InteriorStudio() {
   }, [currentRoomId, serializeFurniture, loadFurnitureData, deselectAll]);
 
   const addNewRoom = useCallback(() => {
+    if (isGuest && rooms.length >= GUEST_MAX_ROOMS) {
+      showToast(`Guest limit: ${GUEST_MAX_ROOMS} rooms — sign up for unlimited`);
+      return;
+    }
     const id = `room_${Date.now()}`;
     const typeLabel: Record<string, string> = { living: 'Living Room', bedroom: 'Bedroom', kitchen: 'Kitchen', bathroom: 'Bathroom', office: 'Office', dining: 'Dining Room' };
     const name = newRoomName || typeLabel[newRoomType] || 'New Room';
@@ -2093,7 +2097,7 @@ export default function InteriorStudio() {
         <div className="h-full overflow-y-auto int-scrollbar">
           {/* Category tabs */}
           <div className="flex gap-1 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
-            {categories.map(cat => (
+            {categories.filter(cat => !isGuest || GUEST_ALLOWED_CATEGORIES.has(cat.id)).map(cat => (
               <button key={cat.id} onClick={() => setCurrentCat(cat.id)} className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium cursor-pointer transition-all whitespace-nowrap border"
                 style={{ background: currentCat === cat.id ? '#C17F4E' : '#FAF8F4', color: currentCat === cat.id ? '#fff' : '#5A4E42', borderColor: currentCat === cat.id ? '#C17F4E' : 'transparent' }}>
                 <i className={`fas ${cat.icon} mr-0.5`} />{cat.label}
@@ -2128,7 +2132,7 @@ export default function InteriorStudio() {
             ))}
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {matColors[currentMatType].map(c => (
+            {(isGuest ? matColors[currentMatType].slice(0, GUEST_COLORS_PER_TYPE) : matColors[currentMatType]).map(c => (
               <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }} className="w-8 h-8 rounded-lg cursor-pointer transition-all border-2"
                 style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
             ))}
@@ -2479,7 +2483,7 @@ export default function InteriorStudio() {
           ))}
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {matColors[currentMatType].map(c => (
+          {(isGuest ? matColors[currentMatType].slice(0, GUEST_COLORS_PER_TYPE) : matColors[currentMatType]).map(c => (
             <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }} className="w-7 h-7 rounded-lg cursor-pointer transition-all border-2"
               style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
           ))}
