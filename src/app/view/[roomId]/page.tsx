@@ -445,12 +445,23 @@ function buildRoom(
     bulb.position.set(x * 1.5, h - 0.07, 0); roomGroup.add(bulb);
 
     // SpotLight with soft penumbra matching main editor
-    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 2.5 : 2.0, 12, Math.PI / 3.5, 1.0, 2);
+    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 2.2 : 1.5, 14, Math.PI / 3, 1.0, 2);
     sl.position.set(x * 1.5, h - 0.07, 0);
     sl.target.position.set(x * 1.5, 0.1, 0);
     roomGroup.add(sl);
     roomGroup.add(sl.target);
+
+    // Ambient fill PointLight — eliminates harsh cone boundaries (no shadow for perf)
+    const fillPl = new THREE.PointLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 1.5 : 0.9, 14);
+    fillPl.position.set(x * 1.5, h - 0.07, 0);
+    roomGroup.add(fillPl);
   }
+
+  // Room fill light — simulates bounced light for realistic interior illumination
+  const roomFillColor = isNight ? 0xFFE8C0 : 0xFFEED0;
+  const roomFill = new THREE.PointLight(roomFillColor, isNight ? 0.4 : 0.25, Math.max(w, d) * 1.5);
+  roomFill.position.set(0, h * 0.7, 0);
+  roomGroup.add(roomFill);
 
   scene.add(roomGroup);
   return roomGroup;
@@ -478,7 +489,7 @@ function RoomViewer({ roomData }: { roomData: RoomData }) {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -491,18 +502,18 @@ function RoomViewer({ roomData }: { roomData: RoomData }) {
     controls.maxDistance = 22;
     controls.target.set(0, height / 2, 0);
 
-    // Lighting
-    const lightConfigs: Record<string, { ambientColor: number; ambientIntensity: number; dirColor: number; dirIntensity: number }> = {
-      daylight: { ambientColor: 0xFFE8D0, ambientIntensity: 0.5, dirColor: 0xFFF0D8, dirIntensity: 1.8 },
-      golden: { ambientColor: 0xFFDDB0, ambientIntensity: 0.35, dirColor: 0xFFE0B0, dirIntensity: 1.5 },
-      evening: { ambientColor: 0xFFCCAA, ambientIntensity: 0.25, dirColor: 0xFFCC90, dirIntensity: 1.2 },
-      night: { ambientColor: 0x8899BB, ambientIntensity: 0.15, dirColor: 0x6677AA, dirIntensity: 0.8 },
+    // Lighting — mood-aware configuration
+    const lightConfigs: Record<string, { ambientColor: number; ambientIntensity: number; dirColor: number; dirIntensity: number; hemiSky: number; hemiGround: number; hemiIntensity: number; fillColor: number; fillIntensity: number }> = {
+      daylight: { ambientColor: 0xFFE8D0, ambientIntensity: 0.6, dirColor: 0xFFF0D8, dirIntensity: 1.5, hemiSky: 0xFFF5E6, hemiGround: 0x8B7355, hemiIntensity: 0.4, fillColor: 0xE0E8F0, fillIntensity: 0.3 },
+      golden: { ambientColor: 0xFFD8A0, ambientIntensity: 0.55, dirColor: 0xFFE0A0, dirIntensity: 1.2, hemiSky: 0xFFF0C0, hemiGround: 0x8B7355, hemiIntensity: 0.3, fillColor: 0xFFE8C0, fillIntensity: 0.2 },
+      evening: { ambientColor: 0xFFC880, ambientIntensity: 0.3, dirColor: 0xFFE8C0, dirIntensity: 0.8, hemiSky: 0xD8A070, hemiGround: 0x6B5340, hemiIntensity: 0.25, fillColor: 0xFFC880, fillIntensity: 0.15 },
+      night: { ambientColor: 0xFFE0A0, ambientIntensity: 0.15, dirColor: 0xFFE0A0, dirIntensity: 0.15, hemiSky: 0x1A1A2E, hemiGround: 0x0D0D15, hemiIntensity: 0.15, fillColor: 0x4455AA, fillIntensity: 0.05 },
     };
     const lCfg = lightConfigs[lightMood] || lightConfigs.daylight;
 
     const ambientLight = new THREE.AmbientLight(lCfg.ambientColor, lCfg.ambientIntensity);
     scene.add(ambientLight);
-    const hemiLight = new THREE.HemisphereLight(0xFFF5E6, 0x8B7355, 0.4);
+    const hemiLight = new THREE.HemisphereLight(lCfg.hemiSky, lCfg.hemiGround, lCfg.hemiIntensity);
     scene.add(hemiLight);
 
     const dirLight = new THREE.DirectionalLight(lCfg.dirColor, lCfg.dirIntensity);
@@ -516,7 +527,7 @@ function RoomViewer({ roomData }: { roomData: RoomData }) {
     dirLight.shadow.radius = 4;
     scene.add(dirLight);
 
-    const fillLight = new THREE.DirectionalLight(0xE0E8F0, 0.3);
+    const fillLight = new THREE.DirectionalLight(lCfg.fillColor, lCfg.fillIntensity);
     fillLight.position.set(-4, 5, -3);
     scene.add(fillLight);
 

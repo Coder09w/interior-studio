@@ -226,7 +226,9 @@ export function applySkinToSkeleton(
   skin: SkinDefinition,
   ambientLight: THREE.AmbientLight | null,
   dirLight: THREE.DirectionalLight | null,
-  renderer: THREE.WebGLRenderer | null
+  renderer: THREE.WebGLRenderer | null,
+  hemiLight?: THREE.HemisphereLight | null,
+  fillLight?: THREE.DirectionalLight | null
 ): void {
   // 1. Apply room structure materials
   roomGroup.traverse(child => {
@@ -303,6 +305,15 @@ export function applySkinToSkeleton(
     if (l.bgColor) {
       scene.background = new THREE.Color(l.bgColor);
       scene.fog = new THREE.FogExp2(new THREE.Color(l.bgColor).getHex(), 0.018);
+    }
+    // Update hemisphere light intensity based on skin's ambient ratio
+    if (hemiLight && l.ambientIntensity !== undefined) {
+      hemiLight.intensity = l.ambientIntensity * 0.7;
+    }
+    // Update fill light to match skin tone
+    if (fillLight && l.dirColor) {
+      fillLight.color.set(l.dirColor);
+      fillLight.intensity = (l.dirIntensity || 1.0) * 0.2;
     }
   }
 }

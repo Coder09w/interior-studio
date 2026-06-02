@@ -151,11 +151,11 @@ function makeTileTexture(w: number, d: number): THREE.CanvasTexture {
 }
 
 /* ===== LIGHTING MOODS ===== */
-const lightMoods: Record<string, { bg: number; fog: number; ambient: [number, number]; dir: [number, number]; exposure: number }> = {
-  daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.6], dir: [0xFFF0D8, 1.5], exposure: 1.0 },
-  golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.55], dir: [0xFFE0A0, 1.2], exposure: 1.05 },
-  evening: { bg: 0xD8C8B0, fog: 0xD8C8B0, ambient: [0xFFC880, 0.3], dir: [0xFFE8C0, 0.8], exposure: 0.85 },
-  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.08], dir: [0xFFE0A0, 0.15], exposure: 0.45 },
+const lightMoods: Record<string, { bg: number; fog: number; ambient: [number, number]; dir: [number, number]; hemi: [number, number, number]; fill: [number, number]; exposure: number }> = {
+  daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.6], dir: [0xFFF0D8, 1.5], hemi: [0xFFF5E6, 0x8B7355, 0.4], fill: [0xE0E8F0, 0.3], exposure: 1.0 },
+  golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.55], dir: [0xFFE0A0, 1.2], hemi: [0xFFF0C0, 0x8B7355, 0.3], fill: [0xFFE8C0, 0.2], exposure: 1.05 },
+  evening: { bg: 0xD8C8B0, fog: 0xD8C8B0, ambient: [0xFFC880, 0.3], dir: [0xFFE8C0, 0.8], hemi: [0xD8A070, 0x6B5340, 0.25], fill: [0xFFC880, 0.15], exposure: 0.85 },
+  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.15], dir: [0xFFE0A0, 0.15], hemi: [0x1A1A2E, 0x0D0D15, 0.15], fill: [0x4455AA, 0.05], exposure: 0.45 },
 };
 
 /* ===== FLOOR COLOR OPTIONS ===== */
@@ -277,6 +277,8 @@ export default function InteriorStudio() {
   // Refs for scene lights (to update on mood change)
   const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
   const dirLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const hemiLightRef = useRef<THREE.HemisphereLight | null>(null);
+  const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
 
   // Ref for triggering renders from outside useEffect
   const needsRenderRef = useRef<(() => void) | null>(null);
@@ -562,10 +564,12 @@ export default function InteriorStudio() {
 
     // Intensity multipliers: night mood needs lights to SHINE, daytime they're subtle
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const mainIntensity = isNight ? 3.0 : 2.0;
-    const secondaryIntensity = isNight ? 1.5 : 1.0;
-    const spotRange = 12;
-    const spotAngle = Math.PI / 3.5; // ~51 degree cone for wider, softer spread
+    const mainIntensity = isNight ? 2.2 : 1.5;   // SpotLight (directional cone)
+    const fillIntensity = isNight ? 1.5 : 0.9;   // PointLight companion (ambient fill — no shadow)
+    const secondaryIntensity = isNight ? 1.2 : 0.8;
+    const secondaryFill = isNight ? 0.7 : 0.45;
+    const spotRange = 14;  // Extended range for better coverage
+    const spotAngle = Math.PI / 3; // ~60 degree cone for wide, natural spread
     const shadowMapSize = mobile ? 512 : 1024;
     // Limit shadow-casting lights for performance (desktop: 4, mobile: 2)
     const maxShadowLights = mobile ? 2 : 4;
@@ -615,6 +619,14 @@ export default function InteriorStudio() {
       return new THREE.Mesh(bulbGeo, bulbMat);
     };
 
+    // Helper: ambient PointLight companion (no shadow — for realistic fill lighting)
+    // Simulates light bouncing off surfaces that SpotLights can't reach
+    const createFill = (intensity: number, range: number): THREE.PointLight => {
+      const fl = new THREE.PointLight(lightColor, intensity, range);
+      // No shadow on fill lights — they provide ambient room illumination only
+      return fl;
+    };
+
     if (preset === 'chandelier') {
       // Central chandelier fixture — PointLight for omnidirectional glow
       const chandGroup = new THREE.Group();
@@ -657,6 +669,10 @@ export default function InteriorStudio() {
       const centralLight = createPoint(mainIntensity, spotRange, true);
       centralLight.position.set(0, -0.5, 0);
       chandGroup.add(centralLight);
+      // Ambient fill light — simulates light bouncing off walls/ceiling
+      const chandFill = createFill(fillIntensity, spotRange);
+      chandFill.position.set(0, -0.3, 0);
+      chandGroup.add(chandFill);
       // Central emissive bulb
       const centralBulb = createBulb(0.05);
       centralBulb.position.set(0, -0.5, 0);
@@ -694,6 +710,10 @@ export default function InteriorStudio() {
         headSpot.target.position.set(0, -h + 0.2, 0);
         headGroup.add(headSpot);
         headGroup.add(headSpot.target);
+        // Ambient fill PointLight — eliminates harsh cone boundaries
+        const headFill = createFill(secondaryFill, spotRange);
+        headFill.position.set(0, -0.1, 0);
+        headGroup.add(headFill);
         const xOffset = (i - (numHeads - 1) / 2) * (trackLen / (numHeads + 1));
         headGroup.position.set(xOffset, h - 0.04, spotPositions[0]?.z || 0);
         roomGroup.add(headGroup);
@@ -725,6 +745,10 @@ export default function InteriorStudio() {
       panelSpot.target.position.set(0, -h, 0);
       panelGroup.add(panelSpot);
       panelGroup.add(panelSpot.target);
+      // Ambient fill — panel lights should illuminate the entire room evenly
+      const panelFill = createFill(fillIntensity * 1.8, spotRange * 1.2);
+      panelFill.position.set(0, -0.3, 0);
+      panelGroup.add(panelFill);
       panelGroup.position.set(spotPositions[0]?.x || 0, h - 0.015, spotPositions[0]?.z || 0);
       roomGroup.add(panelGroup);
       roomGroup.userData.ceilingSpotCount = 1;
@@ -763,6 +787,10 @@ export default function InteriorStudio() {
         pendSpot.target.position.set(0, -h + 0.3, 0);
         pendGroup.add(pendSpot);
         pendGroup.add(pendSpot.target);
+        // Ambient fill PointLight — warm glow around pendant
+        const pendFill = createFill(secondaryFill, spotRange);
+        pendFill.position.set(0, -0.5, 0);
+        pendGroup.add(pendFill);
         const px = (i - (numPendants - 1) / 2) * 1.2;
         pendGroup.position.set(spotPositions[i]?.x || px, h - 0.01, spotPositions[i]?.z || 0);
         roomGroup.add(pendGroup);
@@ -803,11 +831,25 @@ export default function InteriorStudio() {
         spotGroup.add(spot);
         spotGroup.add(spot.target);
 
+        // Ambient fill PointLight — simulates bounced light, eliminates harsh cone boundaries
+        const recessedFill = createFill(fillIntensity, spotRange);
+        recessedFill.position.set(0, -0.06, 0);
+        spotGroup.add(recessedFill);
+
         spotGroup.position.set(pos.x, h - 0.015, pos.z);
         roomGroup.add(spotGroup);
       });
       roomGroup.userData.ceilingSpotCount = spotPositions.length;
     }
+
+    // Room fill light — simulates global bounce/reflection off all surfaces
+    // This is critical for realistic interior lighting: in real rooms, light bounces
+    // off walls/floor/ceiling and fills shadowed areas. This PointLight approximates that.
+    const roomFillIntensity = isNight ? 0.4 : 0.25;
+    const roomFill = new THREE.PointLight(lightColor, roomFillIntensity, Math.max(w, d) * 1.5);
+    roomFill.position.set(0, h * 0.7, 0);
+    roomFill.name = 'roomFillLight';
+    roomGroup.add(roomFill);
 
     // Grid helper
     const gridHelper = new THREE.GridHelper(Math.max(w, d), Math.max(w, d) * 2, 0xCCBBAA, 0xDDD4C8);
@@ -829,6 +871,15 @@ export default function InteriorStudio() {
     if (dirLightRef.current) {
       dirLightRef.current.color.setHex(moodData.dir[0]);
       dirLightRef.current.intensity = moodData.dir[1];
+    }
+    if (hemiLightRef.current) {
+      hemiLightRef.current.color.setHex(moodData.hemi[0]);
+      hemiLightRef.current.groundColor.setHex(moodData.hemi[1]);
+      hemiLightRef.current.intensity = moodData.hemi[2];
+    }
+    if (fillLightRef.current) {
+      fillLightRef.current.color.setHex(moodData.fill[0]);
+      fillLightRef.current.intensity = moodData.fill[1];
     }
 
     // Store built dimensions for in-place preview scaling
@@ -1102,11 +1153,16 @@ export default function InteriorStudio() {
     // Use SpotLight with soft penumbra matching the main build
     const isNight = mood === 'night';
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const spotLight = new THREE.SpotLight(lightColor, isNight ? 2.0 : 1.5, 12, Math.PI / 3.5, 1.0, 2);
+    const spotLight = new THREE.SpotLight(lightColor, isNight ? 2.0 : 1.5, 14, Math.PI / 3, 1.0, 2);
     spotLight.position.set(0, -0.06, 0);
     spotLight.target.position.set(0, -(h - 0.1), 0);
     spotGroup.add(spotLight);
     spotGroup.add(spotLight.target);
+
+    // Ambient fill PointLight — matches buildRoom lighting
+    const fillLight = new THREE.PointLight(lightColor, isNight ? 1.5 : 0.9, 14);
+    fillLight.position.set(0, -0.06, 0);
+    spotGroup.add(fillLight);
 
     // Emissive bulb
     const bulbMat = new THREE.MeshStandardMaterial({
@@ -1435,7 +1491,7 @@ export default function InteriorStudio() {
         if (skin) {
           setActiveSkin(preset.skin); activeSkinRef.current = preset.skin;
           const sc = sceneRef.current, rg = roomGroupRef.current;
-          if (sc && rg) applySkinToSkeleton(sc, rg, placedItemsRef.current, skin, ambientLightRef.current, dirLightRef.current, rendererRef.current);
+          if (sc && rg) applySkinToSkeleton(sc, rg, placedItemsRef.current, skin, ambientLightRef.current, dirLightRef.current, rendererRef.current, hemiLightRef.current, fillLightRef.current);
         }
       }
 
@@ -1475,7 +1531,7 @@ export default function InteriorStudio() {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, preserveDrawingBuffer: true, powerPreference: mobile ? 'low-power' : 'high-performance' });
     renderer.setPixelRatio(pr);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFShadowMap;
+    renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1; renderer.outputColorSpace = THREE.SRGBColorSpace;
     rendererRef.current = renderer;
 
@@ -1491,7 +1547,8 @@ export default function InteriorStudio() {
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xFFE8D0, 0.5);
     scene.add(ambientLight); ambientLightRef.current = ambientLight;
-    scene.add(new THREE.HemisphereLight(0xFFF5E6, 0x8B7355, 0.4));
+    const hemiLight = new THREE.HemisphereLight(0xFFF5E6, 0x8B7355, 0.4);
+    scene.add(hemiLight); hemiLightRef.current = hemiLight;
     const dirLight = new THREE.DirectionalLight(0xFFF0D8, 1.8); dirLight.position.set(4, 8, 5); dirLight.castShadow = true;
     // Lower shadow map on mobile for perf
     const shadowSize = mobile ? 1024 : 2048;
@@ -1499,7 +1556,9 @@ export default function InteriorStudio() {
     dirLight.shadow.camera.left = -10; dirLight.shadow.camera.right = 10; dirLight.shadow.camera.top = 10; dirLight.shadow.camera.bottom = -10; dirLight.shadow.camera.near = 0.5; dirLight.shadow.camera.far = 30; dirLight.shadow.bias = -0.001;
     if (!mobile) dirLight.shadow.radius = 4;
     scene.add(dirLight); dirLightRef.current = dirLight;
-    scene.add(new THREE.DirectionalLight(0xE0E8F0, 0.3).translateX(-4).translateY(5).translateZ(-3));
+    const fillLight = new THREE.DirectionalLight(0xE0E8F0, 0.3);
+    fillLight.position.set(-4, 5, -3);
+    scene.add(fillLight); fillLightRef.current = fillLight;
 
     const roomGroup = new THREE.Group(); scene.add(roomGroup); roomGroupRef.current = roomGroup;
     buildRoom(); setTimeout(() => {
@@ -1544,7 +1603,7 @@ export default function InteriorStudio() {
                 const sc = sceneRef.current;
                 const rg = roomGroupRef.current;
                 if (!sc || !rg) return;
-                applySkinToSkeleton(sc, rg, placedItemsRef.current, skin, ambientLightRef.current, dirLightRef.current, rendererRef.current);
+                applySkinToSkeleton(sc, rg, placedItemsRef.current, skin, ambientLightRef.current, dirLightRef.current, rendererRef.current, hemiLightRef.current, fillLightRef.current);
                 markSceneDirty();
               }, 150);
             }
@@ -1993,7 +2052,9 @@ export default function InteriorStudio() {
       skin,
       ambientLightRef.current,
       dirLightRef.current,
-      rendererRef.current
+      rendererRef.current,
+      hemiLightRef.current,
+      fillLightRef.current
     );
     markSceneDirty();
     markUnsaved();
