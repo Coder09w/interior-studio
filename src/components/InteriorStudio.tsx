@@ -558,69 +558,18 @@ export default function InteriorStudio() {
     }
 
     // Ceiling spots (from persisted positions, style based on preset)
-    // === REALISTIC LIGHTING: SpotLights with shadows + emissive bulbs + visible cones ===
+    // === SIMPLE LIGHTING: PointLights with low arbitrary intensity (no candela/decay) ===
     const spotPositions = ceilingSpotPositionsRef.current;
     const preset = ceilingLightPresetRef.current;
-    const mobile = isMobileRef.current;
-    const shadowsOn = shadowsEnabledRef.current;
     const metalMat = new THREE.MeshStandardMaterial({ color: 0x333, roughness: 0.3, metalness: 0.8 });
     const brassMat = new THREE.MeshStandardMaterial({ color: 0xB8860B, roughness: 0.35, metalness: 0.7 });
     const isNight = mood === 'night';
-
-    // ── Residential candela values (Three.js r184+ physically correct) ──────────
-    // Previous values (800/1200 cd) produced 260+ lux on the floor — brighter than
-    // a hospital. A residential living room targets 50–150 lux total on the floor.
-    // Formula: lux = cd / (height²). At h=3.5m: 50cd / 12.25 = ~4 lux per spot.
-    // With 4 spots + fills + global lights, total ≈ 80–150 lux — correct for a home.
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const mainIntensity = isNight ? 90 : 60;       // SpotLight — recessed/primary cone
-    const fillIntensity = isNight ? 20 : 15;       // PointLight companion — subtle fill
-    const secondaryIntensity = isNight ? 70 : 45;  // SpotLight — track/pendant cone
-    const secondaryFill = isNight ? 15 : 10;       // PointLight — track/pendant fill
-    const spotRange = 0;  // 0 = no distance limit, rely on decay=2 for natural falloff
-    // ── Exposure guard: prevent ACES clipping ──────────────────────────────
-    // ACES Filmic clips highlights above exposure ~1.15. Never exceed this.
+    // Simple intensity values (old-style, no physically correct candela)
+    const mainIntensity = isNight ? 0.5 : 0.8;
+    const secondaryIntensity = isNight ? 0.4 : 0.6;
+    // Exposure guard
     const clampExposure = (v: number) => Math.max(0.3, Math.min(v, 1.15));
-    const spotAngle = Math.PI / 4; // ~45 degree cone — tighter for more visible light pools
-    const shadowMapSize = mobile ? 512 : 1024;
-    // Limit shadow-casting lights for performance (desktop: 4, mobile: 2)
-    const maxShadowLights = mobile ? 2 : 4;
-    let shadowLightCount = 0;
-
-    // Helper: create a SpotLight with shadow config
-    // penumbra=1.0 for soft edges, decay=2 for physically accurate falloff
-    // NOTE: shadow.camera.far MUST be a positive value (> near), independent of light distance.
-    // When range=0 (no distance limit), we use h*1.5 to cover the full room height.
-    const createSpot = (intensity: number, range: number, angle: number, castShadow: boolean): THREE.SpotLight => {
-      const sl = new THREE.SpotLight(lightColor, intensity, range, angle, 1.0, 2);
-      if (castShadow && shadowsOn && shadowLightCount < maxShadowLights) {
-        sl.castShadow = true;
-        sl.shadow.mapSize.set(shadowMapSize, shadowMapSize);
-        sl.shadow.camera.near = 0.3;
-        // CRITICAL: far must be > near. When range=0 (infinite), use room height * 1.5
-        sl.shadow.camera.far = range > 0 ? range : h * 1.5;
-        sl.shadow.bias = -0.002;
-        sl.shadow.radius = mobile ? 2 : 4;
-        shadowLightCount++;
-      }
-      return sl;
-    };
-
-    // Helper: create a PointLight with optional shadow
-    const createPoint = (intensity: number, range: number, castShadow: boolean): THREE.PointLight => {
-      const pl = new THREE.PointLight(lightColor, intensity, range);
-      if (castShadow && shadowsOn && shadowLightCount < maxShadowLights) {
-        pl.castShadow = true;
-        pl.shadow.mapSize.set(shadowMapSize, shadowMapSize);
-        pl.shadow.camera.near = 0.3;
-        // CRITICAL: far must be > near. When range=0 (infinite), use room height * 1.5
-        pl.shadow.camera.far = range > 0 ? range : h * 1.5;
-        pl.shadow.bias = -0.002;
-        pl.shadow.radius = mobile ? 2 : 4;
-        shadowLightCount++;
-      }
-      return pl;
-    };
 
     // Helper: emissive bulb mesh
     const createBulb = (radius: number): THREE.Mesh => {
@@ -628,23 +577,15 @@ export default function InteriorStudio() {
       const bulbMat = new THREE.MeshStandardMaterial({
         color: 0xFFF5E0,
         emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-        emissiveIntensity: isNight ? 3.0 : 2.0,
+        emissiveIntensity: isNight ? 1.5 : 1.0,
         roughness: 0.2,
         metalness: 0.0,
       });
       return new THREE.Mesh(bulbGeo, bulbMat);
     };
 
-    // Helper: ambient PointLight companion (no shadow — for realistic fill lighting)
-    // Simulates light bouncing off surfaces that SpotLights can't reach
-    const createFill = (intensity: number, range: number): THREE.PointLight => {
-      const fl = new THREE.PointLight(lightColor, intensity, range);
-      // No shadow on fill lights — they provide ambient room illumination only
-      return fl;
-    };
-
     if (preset === 'chandelier') {
-      // Central chandelier fixture — PointLight for omnidirectional glow
+      // Central chandelier fixture — simple PointLight
       const chandGroup = new THREE.Group();
       chandGroup.name = 'ceilingSpot_0';
       chandGroup.userData.isCeilingSpot = true;
@@ -660,7 +601,7 @@ export default function InteriorStudio() {
       const hub = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), brassMat);
       hub.position.y = -0.42;
       chandGroup.add(hub);
-      // Arms with crystals + lights
+      // Arms with crystals
       for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI * 2;
         const armLen = 0.3;
@@ -669,26 +610,18 @@ export default function InteriorStudio() {
         arm.position.set(Math.cos(angle) * armLen / 2, -0.42, Math.sin(angle) * armLen / 2);
         arm.rotation.y = -angle;
         chandGroup.add(arm);
-        // Crystal drop with emissive glow
+        // Crystal drop
         const crystal = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshStandardMaterial({
           color: 0xFFFFFF, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.85,
-          emissive: lightColor, emissiveIntensity: isNight ? 1.0 : 0.5,
+          emissive: lightColor, emissiveIntensity: isNight ? 0.5 : 0.3,
         }));
         crystal.position.set(Math.cos(angle) * armLen, -0.48, Math.sin(angle) * armLen);
         chandGroup.add(crystal);
-        // Small light at each arm tip (no shadow — too many)
-        const tipLight = new THREE.PointLight(lightColor, isNight ? 15 : 8, 4);
-        tipLight.position.set(Math.cos(angle) * armLen, -0.45, Math.sin(angle) * armLen);
-        chandGroup.add(tipLight);
       }
-      // Central light — MAIN shadow-casting PointLight
-      const centralLight = createPoint(mainIntensity, spotRange, true);
+      // Central PointLight
+      const centralLight = new THREE.PointLight(lightColor, mainIntensity, 10);
       centralLight.position.set(0, -0.5, 0);
       chandGroup.add(centralLight);
-      // Ambient fill light — simulates light bouncing off walls/ceiling
-      const chandFill = createFill(fillIntensity, spotRange);
-      chandFill.position.set(0, -0.3, 0);
-      chandGroup.add(chandFill);
       // Central emissive bulb
       const centralBulb = createBulb(0.05);
       centralBulb.position.set(0, -0.5, 0);
@@ -697,7 +630,7 @@ export default function InteriorStudio() {
       roomGroup.add(chandGroup);
       roomGroup.userData.ceilingSpotCount = 1;
     } else if (preset === 'track') {
-      // Track light — SpotLights pointing DOWN with visible light cones
+      // Track light — simple PointLights
       const trackLen = w * 0.6;
       const trackBar = new THREE.Mesh(new THREE.BoxGeometry(trackLen, 0.04, 0.06), new THREE.MeshStandardMaterial({ color: 0x222, roughness: 0.4, metalness: 0.7 }));
       trackBar.name = 'ceilingTrack';
@@ -720,23 +653,17 @@ export default function InteriorStudio() {
         const bulb = createBulb(0.03);
         bulb.position.set(0, -0.1, 0);
         headGroup.add(bulb);
-        // SpotLight pointing down (shadow on first 2 only)
-        const headSpot = createSpot(secondaryIntensity, spotRange, spotAngle, i < 2);
-        headSpot.position.set(0, -0.1, 0);
-        headSpot.target.position.set(0, -h + 0.2, 0);
-        headGroup.add(headSpot);
-        headGroup.add(headSpot.target);
-        // Ambient fill PointLight — eliminates harsh cone boundaries
-        const headFill = createFill(secondaryFill, spotRange);
-        headFill.position.set(0, -0.1, 0);
-        headGroup.add(headFill);
+        // Simple PointLight
+        const headLight = new THREE.PointLight(lightColor, secondaryIntensity, 8);
+        headLight.position.set(0, -0.1, 0);
+        headGroup.add(headLight);
         const xOffset = (i - (numHeads - 1) / 2) * (trackLen / (numHeads + 1));
         headGroup.position.set(xOffset, h - 0.04, spotPositions[0]?.z || 0);
         roomGroup.add(headGroup);
       }
       roomGroup.userData.ceilingSpotCount = numHeads;
     } else if (preset === 'panel') {
-      // LED panel light — broad soft illumination
+      // LED panel light — simple PointLight
       const panelW = Math.min(w * 0.5, 2.5);
       const panelD = Math.min(d * 0.3, 1.2);
       const panelGroup = new THREE.Group();
@@ -746,30 +673,24 @@ export default function InteriorStudio() {
       // Panel frame
       const frame = new THREE.Mesh(new THREE.BoxGeometry(panelW + 0.04, 0.03, panelD + 0.04), metalMat);
       panelGroup.add(frame);
-      // Emissive panel surface — BRIGHT
+      // Emissive panel surface
       const panelMat = new THREE.MeshStandardMaterial({
         color: 0xFFEED0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-        emissiveIntensity: isNight ? 2.5 : 1.5, roughness: 0.3,
+        emissiveIntensity: isNight ? 1.5 : 0.8, roughness: 0.3,
       });
       const panel = new THREE.Mesh(new THREE.PlaneGeometry(panelW, panelD), panelMat);
       panel.rotation.x = Math.PI / 2;
       panel.position.y = -0.016;
       panelGroup.add(panel);
-      // Main SpotLight for broad cone shadow (panel emits downward)
-      const panelSpot = createSpot(isNight ? 120 : 80, 0, Math.PI / 3, true);
-      panelSpot.position.set(0, -0.05, 0);
-      panelSpot.target.position.set(0, -h, 0);
-      panelGroup.add(panelSpot);
-      panelGroup.add(panelSpot.target);
-      // Ambient fill — panel lights should illuminate the entire room evenly
-      const panelFill = createFill(isNight ? 30 : 20, 0);
-      panelFill.position.set(0, -0.3, 0);
-      panelGroup.add(panelFill);
+      // Simple PointLight
+      const panelLight = new THREE.PointLight(lightColor, mainIntensity, 12);
+      panelLight.position.set(0, -0.3, 0);
+      panelGroup.add(panelLight);
       panelGroup.position.set(spotPositions[0]?.x || 0, h - 0.015, spotPositions[0]?.z || 0);
       roomGroup.add(panelGroup);
       roomGroup.userData.ceilingSpotCount = 1;
     } else if (preset === 'pendant') {
-      // Row of hanging pendant lights — SpotLights with soft penumbra
+      // Row of hanging pendant lights — simple PointLights
       const numPendants = Math.min(3, spotPositions.length);
       for (let i = 0; i < numPendants; i++) {
         const pendGroup = new THREE.Group();
@@ -789,7 +710,7 @@ export default function InteriorStudio() {
         pendGroup.add(shade);
         // Inner glow — emissive shade interior
         const innerGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.1, 0.08, 12), new THREE.MeshStandardMaterial({
-          color: 0xFFF0D0, emissive: lightColor, emissiveIntensity: isNight ? 2.5 : 1.5, roughness: 0.5,
+          color: 0xFFF0D0, emissive: lightColor, emissiveIntensity: isNight ? 1.0 : 0.5, roughness: 0.5,
         }));
         innerGlow.position.y = -0.54;
         pendGroup.add(innerGlow);
@@ -797,23 +718,17 @@ export default function InteriorStudio() {
         const bulb = createBulb(0.025);
         bulb.position.set(0, -0.58, 0);
         pendGroup.add(bulb);
-        // SpotLight pointing down (shadow on first pendant only)
-        const pendSpot = createSpot(secondaryIntensity, spotRange, spotAngle, i === 0);
-        pendSpot.position.set(0, -0.58, 0);
-        pendSpot.target.position.set(0, -h + 0.3, 0);
-        pendGroup.add(pendSpot);
-        pendGroup.add(pendSpot.target);
-        // Ambient fill PointLight — warm glow around pendant
-        const pendFill = createFill(secondaryFill, spotRange);
-        pendFill.position.set(0, -0.5, 0);
-        pendGroup.add(pendFill);
+        // Simple PointLight
+        const pendLight = new THREE.PointLight(lightColor, secondaryIntensity, 8);
+        pendLight.position.set(0, -0.5, 0);
+        pendGroup.add(pendLight);
         const px = (i - (numPendants - 1) / 2) * 1.2;
         pendGroup.position.set(spotPositions[i]?.x || px, h - 0.01, spotPositions[i]?.z || 0);
         roomGroup.add(pendGroup);
       }
       roomGroup.userData.ceilingSpotCount = numPendants;
     } else {
-      // Default recessed spots — SpotLights pointing down with visible light cones
+      // Default recessed spots — simple PointLights
       spotPositions.forEach((pos, idx) => {
         const spotGroup = new THREE.Group();
         spotGroup.name = `ceilingSpot_${idx}`;
@@ -827,7 +742,7 @@ export default function InteriorStudio() {
 
         // Emissive recessed ring (the "on" indicator)
         const ringMat = new THREE.MeshStandardMaterial({
-          color: 0xFFEED0, emissive: lightColor, emissiveIntensity: isNight ? 3.0 : 1.5,
+          color: 0xFFEED0, emissive: lightColor, emissiveIntensity: isNight ? 1.5 : 0.8,
           roughness: 0.3, metalness: 0.0,
         });
         const ring = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.11, 16), ringMat);
@@ -840,17 +755,10 @@ export default function InteriorStudio() {
         bulb.position.set(0, -0.06, 0);
         spotGroup.add(bulb);
 
-        // SpotLight pointing down (shadow on first 2 only)
-        const spot = createSpot(mainIntensity, spotRange, spotAngle, idx < 2);
+        // Simple PointLight
+        const spot = new THREE.PointLight(lightColor, mainIntensity, 10);
         spot.position.set(0, -0.06, 0);
-        spot.target.position.set(0, -(h - 0.1), 0);
         spotGroup.add(spot);
-        spotGroup.add(spot.target);
-
-        // Ambient fill PointLight — simulates bounced light, eliminates harsh cone boundaries
-        const recessedFill = createFill(fillIntensity, spotRange);
-        recessedFill.position.set(0, -0.06, 0);
-        spotGroup.add(recessedFill);
 
         spotGroup.position.set(pos.x, h - 0.015, pos.z);
         roomGroup.add(spotGroup);
@@ -858,8 +766,8 @@ export default function InteriorStudio() {
       roomGroup.userData.ceilingSpotCount = spotPositions.length;
     }
 
-    // Room fill light — simulates global bounce/reflection off all surfaces
-    const roomFillIntensity = isNight ? 20 : 12;
+    // Room fill light
+    const roomFillIntensity = isNight ? 0.3 : 0.5;
     const roomFill = new THREE.PointLight(lightColor, roomFillIntensity, 0);
     roomFill.position.set(0, h * 0.7, 0);
     roomFill.name = 'roomFillLight';
@@ -1164,24 +1072,17 @@ export default function InteriorStudio() {
     }
     spotGroup.add(spot);
 
-    // Use SpotLight with soft penumbra matching the main build (candela units for r184+)
+    // Simple PointLight (old-style, no candela)
     const isNight = mood === 'night';
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const spotLight = new THREE.SpotLight(lightColor, isNight ? 90 : 60, 0, Math.PI / 4, 1.0, 2);
-    spotLight.position.set(0, -0.06, 0);
-    spotLight.target.position.set(0, -(h - 0.1), 0);
-    spotGroup.add(spotLight);
-    spotGroup.add(spotLight.target);
-
-    // Ambient fill PointLight — matches buildRoom lighting (candela units)
-    const fillLight = new THREE.PointLight(lightColor, isNight ? 20 : 15, 0);
-    fillLight.position.set(0, -0.06, 0);
-    spotGroup.add(fillLight);
+    const pointLight = new THREE.PointLight(lightColor, isNight ? 0.5 : 0.8, 10);
+    pointLight.position.set(0, -0.06, 0);
+    spotGroup.add(pointLight);
 
     // Emissive bulb
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0xFFF5E0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-      emissiveIntensity: isNight ? 2.0 : 1.2, roughness: 0.2, metalness: 0.0,
+      emissiveIntensity: isNight ? 1.5 : 1.0, roughness: 0.2, metalness: 0.0,
     });
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bulbMat);
     bulb.position.set(0, -0.06, 0);
@@ -1748,35 +1649,17 @@ export default function InteriorStudio() {
             (spotMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.6;
             spotGroup.add(spotMesh);
 
-            // SpotLight with soft penumbra matching main build (candela units for Three.js r184+)
+            // Simple PointLight (old-style, no candela)
             const isNight = mood === 'night';
             const lightCol = isNight ? 0xFFE8C0 : 0xFFEED0;
-            const mobile = isMobileRef.current;
-            const shadowsOn = shadowsEnabledRef.current;
-            const sLight = new THREE.SpotLight(lightCol, isNight ? 90 : 60, 0, Math.PI / 4, 1.0, 2);
+            const sLight = new THREE.PointLight(lightCol, isNight ? 0.5 : 0.8, 10);
             sLight.position.set(0, -0.06, 0);
-            sLight.target.position.set(0, -(h - 0.1), 0);
-            // Enable shadow matching buildRoom config
-            if (shadowsOn) {
-              sLight.castShadow = true;
-              sLight.shadow.mapSize.set(mobile ? 512 : 1024, mobile ? 512 : 1024);
-              sLight.shadow.camera.near = 0.3;
-              sLight.shadow.camera.far = h * 1.5;
-              sLight.shadow.bias = -0.002;
-              sLight.shadow.radius = mobile ? 2 : 4;
-            }
             spotGroup.add(sLight);
-            spotGroup.add(sLight.target);
-
-            // Ambient fill PointLight — matches buildRoom lighting (candela units)
-            const sFill = new THREE.PointLight(lightCol, isNight ? 60 : 40, 0);
-            sFill.position.set(0, -0.06, 0);
-            spotGroup.add(sFill);
 
             // Emissive bulb
             const bMat = new THREE.MeshStandardMaterial({
               color: 0xFFF5E0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-              emissiveIntensity: isNight ? 3.0 : 2.0, roughness: 0.2, metalness: 0.0,
+              emissiveIntensity: isNight ? 1.5 : 1.0, roughness: 0.2, metalness: 0.0,
             });
             const bMesh = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bMat);
             bMesh.position.set(0, -0.06, 0);

@@ -160,7 +160,7 @@ function createFloorLamp(col: string, _mtype: MatType): THREE.Group {
   pole.position.y = 0.78; pole.castShadow = true; g.add(pole);
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 0.22, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0xf5e8d0, roughness: 0.9, side: THREE.DoubleSide }));
   shade.position.y = 1.55; shade.castShadow = true; g.add(shade);
-  const bulb = new THREE.PointLight(0xffe8c0, 40, 4);
+  const bulb = new THREE.PointLight(0xffe8c0, 0.6, 5);
   bulb.position.y = 1.5; g.add(bulb);
   return g;
 }
@@ -171,7 +171,7 @@ function createPendant(col: string, _mtype: MatType, roomH: number): THREE.Group
   wire.position.y = roomH - 0.4; g.add(wire);
   const shade = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: col || '#C17F4E', roughness: 0.4, metalness: 0.3, side: THREE.DoubleSide }));
   shade.position.y = roomH - 0.85; shade.castShadow = true; g.add(shade);
-  const light = new THREE.PointLight(0xffe0a0, 55, 5);
+  const light = new THREE.PointLight(0xffe0a0, 0.8, 6);
   light.position.y = roomH - 0.9; g.add(light);
   return g;
 }
@@ -185,7 +185,7 @@ function createTableLamp(col: string, _mtype: MatType): THREE.Group {
   body.position.y = 0.18; body.castShadow = true; g.add(body);
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.16, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0xfff5e6, roughness: 0.9, side: THREE.DoubleSide }));
   shade.position.y = 0.4; g.add(shade);
-  const light = new THREE.PointLight(0xffe8c0, 25, 3);
+  const light = new THREE.PointLight(0xffe8c0, 0.4, 4);
   light.position.y = 0.38; g.add(light);
   return g;
 }
@@ -444,22 +444,15 @@ function buildRoom(
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), bulbMat);
     bulb.position.set(x * 1.5, h - 0.07, 0); roomGroup.add(bulb);
 
-    // SpotLight with soft penumbra matching main editor (candela units for r184+)
-    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 90 : 60, 0, Math.PI / 4, 1.0, 2);
-    sl.position.set(x * 1.5, h - 0.07, 0);
-    sl.target.position.set(x * 1.5, 0.1, 0);
-    roomGroup.add(sl);
-    roomGroup.add(sl.target);
-
-    // Ambient fill PointLight — eliminates harsh cone boundaries (candela units)
-    const fillPl = new THREE.PointLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 20 : 15, 0);
-    fillPl.position.set(x * 1.5, h - 0.07, 0);
-    roomGroup.add(fillPl);
+    // Simple PointLight (old-style, no candela)
+    const pl = new THREE.PointLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 0.5 : 0.8, 10);
+    pl.position.set(x * 1.5, h - 0.07, 0);
+    roomGroup.add(pl);
   }
 
-  // Room fill light — simulates bounced light for realistic interior illumination
+  // Room fill light
   const roomFillColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-  const roomFill = new THREE.PointLight(roomFillColor, isNight ? 20 : 12, 0);
+  const roomFill = new THREE.PointLight(roomFillColor, isNight ? 0.3 : 0.5, 0);
   roomFill.position.set(0, h * 0.7, 0);
   roomGroup.add(roomFill);
 
