@@ -172,12 +172,12 @@ export function createFloorLamp(col: string, _mtype: MatType): THREE.Group {
   const bulbMesh = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), bulbMat);
   bulbMesh.position.y = 1.5; g.add(bulbMesh);
   // Three.js r184+ uses candela units for physically correct lighting.
-  // Ceiling lights are 800-1200 cd; furniture lights should be 400-800 cd for visible illumination.
-  const bulb = new THREE.PointLight(0xffe8c0, 600, 8);
+  // Residential furniture lights: floor lamp ~40cd, matching residential ceiling light scale.
+  const bulb = new THREE.PointLight(0xffe8c0, 40, 4);
   bulb.castShadow = true;
   bulb.shadow.mapSize.set(512, 512);
   bulb.shadow.camera.near = 0.2;
-  bulb.shadow.camera.far = 8;
+  bulb.shadow.camera.far = 4;
   bulb.shadow.bias = -0.002;
   bulb.shadow.radius = 3;
   bulb.position.y = 1.5; g.add(bulb);
@@ -192,12 +192,12 @@ export function createPendant(col: string, _mtype: MatType, roomH = 3): THREE.Gr
   wire.position.y = roomH - 0.4; g.add(wire);
   const shade = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: col || '#C17F4E', roughness: 0.4, metalness: 0.3, side: THREE.DoubleSide }));
   shade.position.y = roomH - 0.85; shade.castShadow = true; g.add(shade);
-  // Three.js r184+ candela units — pendant lights need high intensity for visible pools
-  const light = new THREE.PointLight(0xffe0a0, 900, 10);
+  // Three.js r184+ candela units — pendant at residential scale
+  const light = new THREE.PointLight(0xffe0a0, 55, 5);
   light.castShadow = true;
   light.shadow.mapSize.set(512, 512);
   light.shadow.camera.near = 0.2;
-  light.shadow.camera.far = 10;
+  light.shadow.camera.far = 5;
   light.shadow.bias = -0.002;
   light.shadow.radius = 3;
   light.position.y = roomH - 0.9; g.add(light);
@@ -222,12 +222,12 @@ export function createTableLamp(col: string, _mtype: MatType): THREE.Group {
   (shadeMat as any)._isStruct = true;
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.16, 16, 1, true), shadeMat);
   shade.position.y = 0.4; g.add(shade);
-  // Three.js r184+ candela units — table lamp needs adequate intensity
-  const light = new THREE.PointLight(0xffe8c0, 400, 5);
+  // Three.js r184+ candela units — table lamp at residential scale
+  const light = new THREE.PointLight(0xffe8c0, 25, 3);
   light.castShadow = true;
   light.shadow.mapSize.set(512, 512);
   light.shadow.camera.near = 0.2;
-  light.shadow.camera.far = 5;
+  light.shadow.camera.far = 3;
   light.shadow.bias = -0.002;
   light.shadow.radius = 3;
   light.position.y = 0.38; g.add(light);

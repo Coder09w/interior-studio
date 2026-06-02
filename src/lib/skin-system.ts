@@ -62,10 +62,10 @@ export const SKINS_DICTIONARY: Record<string, SkinDefinition> = {
     },
     lighting: {
       ambientColor: '#FFE8D0',
-      ambientIntensity: 0.5,
+      ambientIntensity: 0.4,
       dirColor: '#FFF0D8',
-      dirIntensity: 1.8,
-      exposure: 1.1,
+      dirIntensity: 0.8,
+      exposure: 1.0,
       bgColor: '#F5F0E8',
     },
   },
@@ -89,10 +89,10 @@ export const SKINS_DICTIONARY: Record<string, SkinDefinition> = {
     },
     lighting: {
       ambientColor: '#FFD8A0',
-      ambientIntensity: 0.3,
+      ambientIntensity: 0.2,
       dirColor: '#FFE0A0',
-      dirIntensity: 0.8,
-      exposure: 0.8,
+      dirIntensity: 0.4,
+      exposure: 0.75,
       bgColor: '#1A1815',
     },
   },
@@ -116,10 +116,10 @@ export const SKINS_DICTIONARY: Record<string, SkinDefinition> = {
     },
     lighting: {
       ambientColor: '#FFE8D0',
-      ambientIntensity: 0.6,
+      ambientIntensity: 0.45,
       dirColor: '#FFF5E0',
-      dirIntensity: 2.0,
-      exposure: 1.2,
+      dirIntensity: 0.7,
+      exposure: 1.05,
       bgColor: '#F8F5F0',
     },
   },
@@ -143,10 +143,10 @@ export const SKINS_DICTIONARY: Record<string, SkinDefinition> = {
     },
     lighting: {
       ambientColor: '#FFE8D0',
-      ambientIntensity: 0.5,
+      ambientIntensity: 0.4,
       dirColor: '#FFF0D8',
-      dirIntensity: 1.8,
-      exposure: 1.1,
+      dirIntensity: 0.8,
+      exposure: 1.0,
       bgColor: '#F0E8E0',
     },
   },
@@ -170,10 +170,10 @@ export const SKINS_DICTIONARY: Record<string, SkinDefinition> = {
     },
     lighting: {
       ambientColor: '#FFE0C0',
-      ambientIntensity: 0.4,
+      ambientIntensity: 0.35,
       dirColor: '#FFE8D0',
-      dirIntensity: 1.2,
-      exposure: 0.95,
+      dirIntensity: 0.6,
+      exposure: 0.9,
       bgColor: '#D8D0C8',
     },
   },
@@ -197,10 +197,10 @@ export const SKINS_DICTIONARY: Record<string, SkinDefinition> = {
     },
     lighting: {
       ambientColor: '#FFE8D0',
-      ambientIntensity: 0.55,
+      ambientIntensity: 0.4,
       dirColor: '#FFF0D8',
-      dirIntensity: 1.6,
-      exposure: 1.05,
+      dirIntensity: 0.7,
+      exposure: 0.95,
       bgColor: '#F0E8E0',
     },
   },
@@ -300,7 +300,8 @@ export function applySkinToSkeleton(
       if (l.dirIntensity !== undefined) dirLight.intensity = l.dirIntensity;
     }
     if (renderer && l.exposure !== undefined) {
-      renderer.toneMappingExposure = l.exposure;
+      // Clamp exposure to prevent ACES Filmic clipping (above ~1.15 blows out highlights)
+      renderer.toneMappingExposure = Math.max(0.3, Math.min(l.exposure, 1.15));
     }
     if (l.bgColor) {
       scene.background = new THREE.Color(l.bgColor);

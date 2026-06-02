@@ -160,7 +160,7 @@ function createFloorLamp(col: string, _mtype: MatType): THREE.Group {
   pole.position.y = 0.78; pole.castShadow = true; g.add(pole);
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 0.22, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0xf5e8d0, roughness: 0.9, side: THREE.DoubleSide }));
   shade.position.y = 1.55; shade.castShadow = true; g.add(shade);
-  const bulb = new THREE.PointLight(0xffe8c0, 0.6, 5);
+  const bulb = new THREE.PointLight(0xffe8c0, 40, 4);
   bulb.position.y = 1.5; g.add(bulb);
   return g;
 }
@@ -171,7 +171,7 @@ function createPendant(col: string, _mtype: MatType, roomH: number): THREE.Group
   wire.position.y = roomH - 0.4; g.add(wire);
   const shade = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), new THREE.MeshStandardMaterial({ color: col || '#C17F4E', roughness: 0.4, metalness: 0.3, side: THREE.DoubleSide }));
   shade.position.y = roomH - 0.85; shade.castShadow = true; g.add(shade);
-  const light = new THREE.PointLight(0xffe0a0, 0.8, 6);
+  const light = new THREE.PointLight(0xffe0a0, 55, 5);
   light.position.y = roomH - 0.9; g.add(light);
   return g;
 }
@@ -185,7 +185,7 @@ function createTableLamp(col: string, _mtype: MatType): THREE.Group {
   body.position.y = 0.18; body.castShadow = true; g.add(body);
   const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, 0.16, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0xfff5e6, roughness: 0.9, side: THREE.DoubleSide }));
   shade.position.y = 0.4; g.add(shade);
-  const light = new THREE.PointLight(0xffe8c0, 0.3, 3);
+  const light = new THREE.PointLight(0xffe8c0, 25, 3);
   light.position.y = 0.38; g.add(light);
   return g;
 }
@@ -445,21 +445,21 @@ function buildRoom(
     bulb.position.set(x * 1.5, h - 0.07, 0); roomGroup.add(bulb);
 
     // SpotLight with soft penumbra matching main editor (candela units for r184+)
-    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 1200 : 800, 0, Math.PI / 4, 1.0, 2);
+    const sl = new THREE.SpotLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 90 : 60, 0, Math.PI / 4, 1.0, 2);
     sl.position.set(x * 1.5, h - 0.07, 0);
     sl.target.position.set(x * 1.5, 0.1, 0);
     roomGroup.add(sl);
     roomGroup.add(sl.target);
 
     // Ambient fill PointLight — eliminates harsh cone boundaries (candela units)
-    const fillPl = new THREE.PointLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 60 : 40, 0);
+    const fillPl = new THREE.PointLight(isNight ? 0xFFE8C0 : 0xFFEED0, isNight ? 20 : 15, 0);
     fillPl.position.set(x * 1.5, h - 0.07, 0);
     roomGroup.add(fillPl);
   }
 
   // Room fill light — simulates bounced light for realistic interior illumination
   const roomFillColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-  const roomFill = new THREE.PointLight(roomFillColor, isNight ? 40 : 25, 0);
+  const roomFill = new THREE.PointLight(roomFillColor, isNight ? 20 : 12, 0);
   roomFill.position.set(0, h * 0.7, 0);
   roomGroup.add(roomFill);
 
@@ -491,7 +491,7 @@ function RoomViewer({ roomData }: { roomData: RoomData }) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 0.9;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -504,10 +504,10 @@ function RoomViewer({ roomData }: { roomData: RoomData }) {
 
     // Lighting — mood-aware configuration
     const lightConfigs: Record<string, { ambientColor: number; ambientIntensity: number; dirColor: number; dirIntensity: number; hemiSky: number; hemiGround: number; hemiIntensity: number; fillColor: number; fillIntensity: number }> = {
-      daylight: { ambientColor: 0xFFE8D0, ambientIntensity: 0.6, dirColor: 0xFFF0D8, dirIntensity: 1.5, hemiSky: 0xFFF5E6, hemiGround: 0x8B7355, hemiIntensity: 0.4, fillColor: 0xE0E8F0, fillIntensity: 0.3 },
-      golden: { ambientColor: 0xFFD8A0, ambientIntensity: 0.55, dirColor: 0xFFE0A0, dirIntensity: 1.2, hemiSky: 0xFFF0C0, hemiGround: 0x8B7355, hemiIntensity: 0.3, fillColor: 0xFFE8C0, fillIntensity: 0.2 },
-      evening: { ambientColor: 0xFFC880, ambientIntensity: 0.3, dirColor: 0xFFE8C0, dirIntensity: 0.8, hemiSky: 0xD8A070, hemiGround: 0x6B5340, hemiIntensity: 0.25, fillColor: 0xFFC880, fillIntensity: 0.15 },
-      night: { ambientColor: 0xFFE0A0, ambientIntensity: 0.15, dirColor: 0xFFE0A0, dirIntensity: 0.15, hemiSky: 0x1A1A2E, hemiGround: 0x0D0D15, hemiIntensity: 0.15, fillColor: 0x4455AA, fillIntensity: 0.05 },
+      daylight: { ambientColor: 0xFFE8D0, ambientIntensity: 0.5, dirColor: 0xFFF0D8, dirIntensity: 0.5, hemiSky: 0xFFF5E6, hemiGround: 0x8B7355, hemiIntensity: 0.3, fillColor: 0xE0E8F0, fillIntensity: 0.15 },
+      golden: { ambientColor: 0xFFD8A0, ambientIntensity: 0.35, dirColor: 0xFFE0A0, dirIntensity: 0.4, hemiSky: 0xFFF0C0, hemiGround: 0x8B7355, hemiIntensity: 0.2, fillColor: 0xFFE8C0, fillIntensity: 0.1 },
+      evening: { ambientColor: 0xFFC880, ambientIntensity: 0.2, dirColor: 0xFFE8C0, dirIntensity: 0.25, hemiSky: 0xD8A070, hemiGround: 0x6B5340, hemiIntensity: 0.15, fillColor: 0xFFC880, fillIntensity: 0.06 },
+      night: { ambientColor: 0xFFE0A0, ambientIntensity: 0.08, dirColor: 0xFFE0A0, dirIntensity: 0.08, hemiSky: 0x1A1A2E, hemiGround: 0x0D0D15, hemiIntensity: 0.05, fillColor: 0x4455AA, fillIntensity: 0.02 },
     };
     const lCfg = lightConfigs[lightMood] || lightConfigs.daylight;
 

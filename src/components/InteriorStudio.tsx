@@ -152,10 +152,10 @@ function makeTileTexture(w: number, d: number): THREE.CanvasTexture {
 
 /* ===== LIGHTING MOODS ===== */
 const lightMoods: Record<string, { bg: number; fog: number; ambient: [number, number]; dir: [number, number]; hemi: [number, number, number]; fill: [number, number]; exposure: number }> = {
-  daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.3], dir: [0xFFF0D8, 0.8], hemi: [0xFFF5E6, 0x8B7355, 0.2], fill: [0xE0E8F0, 0.1], exposure: 1.0 },
-  golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.25], dir: [0xFFE0A0, 0.6], hemi: [0xFFF0C0, 0x8B7355, 0.15], fill: [0xFFE8C0, 0.08], exposure: 1.05 },
-  evening: { bg: 0xD8C8B0, fog: 0xD8C8B0, ambient: [0xFFC880, 0.15], dir: [0xFFE8C0, 0.4], hemi: [0xD8A070, 0x6B5340, 0.12], fill: [0xFFC880, 0.05], exposure: 0.85 },
-  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.08], dir: [0xFFE0A0, 0.1], hemi: [0x1A1A2E, 0x0D0D15, 0.08], fill: [0x4455AA, 0.02], exposure: 0.5 },
+  daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.5], dir: [0xFFF0D8, 0.5], hemi: [0xFFF5E6, 0x8B7355, 0.3], fill: [0xE0E8F0, 0.15], exposure: 0.9 },
+  golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.35], dir: [0xFFE0A0, 0.4], hemi: [0xFFF0C0, 0x8B7355, 0.2], fill: [0xFFE8C0, 0.1], exposure: 0.95 },
+  evening: { bg: 0xD8C8B0, fog: 0xD8C8B0, ambient: [0xFFC880, 0.2], dir: [0xFFE8C0, 0.25], hemi: [0xD8A070, 0x6B5340, 0.15], fill: [0xFFC880, 0.06], exposure: 0.85 },
+  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.08], dir: [0xFFE0A0, 0.08], hemi: [0x1A1A2E, 0x0D0D15, 0.05], fill: [0x4455AA, 0.02], exposure: 1.05 },
 };
 
 /* ===== FLOOR COLOR OPTIONS ===== */
@@ -462,12 +462,17 @@ export default function InteriorStudio() {
     const scene = sceneRef.current;
     if (!roomGroup || !scene) return;
 
-    // Dispose old children
+    // Dispose old children — including shadow maps to prevent GPU memory leaks
     while (roomGroup.children.length) {
       const child = roomGroup.children[0];
       roomGroup.remove(child);
       child.traverse(c => {
         if (c instanceof THREE.Mesh) { c.geometry?.dispose(); (c.material as THREE.Material)?.dispose(); }
+        // Dispose shadow map textures for SpotLights and PointLights
+        if ((c instanceof THREE.SpotLight || c instanceof THREE.PointLight) && c.shadow?.map) {
+          c.shadow.map.dispose();
+          c.shadow.map = null;
+        }
       });
     }
 
@@ -562,19 +567,20 @@ export default function InteriorStudio() {
     const brassMat = new THREE.MeshStandardMaterial({ color: 0xB8860B, roughness: 0.35, metalness: 0.7 });
     const isNight = mood === 'night';
 
-    // Intensity multipliers: night mood needs lights to SHINE, daytime they're subtle
-    // Key principle: SpotLight = dominant directional light (creates shadows + light pools)
-    //                PointLight fill = subtle ambient (prevents harsh cone boundaries only)
-    // NOTE: Three.js r184+ uses physically correct lighting by default.
-    // SpotLight/PointLight intensity is in candela (cd), not arbitrary units.
-    // Strategy: SpotLights must be VERY bright to create visible light pools on floor,
-    // while fills stay subtle to maintain directional contrast.
+    // ── Residential candela values (Three.js r184+ physically correct) ──────────
+    // Previous values (800/1200 cd) produced 260+ lux on the floor — brighter than
+    // a hospital. A residential living room targets 50–150 lux total on the floor.
+    // Formula: lux = cd / (height²). At h=3.5m: 50cd / 12.25 = ~4 lux per spot.
+    // With 4 spots + fills + global lights, total ≈ 80–150 lux — correct for a home.
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const mainIntensity = isNight ? 1200 : 800;     // SpotLight — strong directional cone
-    const fillIntensity = isNight ? 60 : 40;         // PointLight companion — very subtle fill
-    const secondaryIntensity = isNight ? 800 : 500;
-    const secondaryFill = isNight ? 40 : 25;
+    const mainIntensity = isNight ? 90 : 60;       // SpotLight — recessed/primary cone
+    const fillIntensity = isNight ? 20 : 15;       // PointLight companion — subtle fill
+    const secondaryIntensity = isNight ? 70 : 45;  // SpotLight — track/pendant cone
+    const secondaryFill = isNight ? 15 : 10;       // PointLight — track/pendant fill
     const spotRange = 0;  // 0 = no distance limit, rely on decay=2 for natural falloff
+    // ── Exposure guard: prevent ACES clipping ──────────────────────────────
+    // ACES Filmic clips highlights above exposure ~1.15. Never exceed this.
+    const clampExposure = (v: number) => Math.max(0.3, Math.min(v, 1.15));
     const spotAngle = Math.PI / 4; // ~45 degree cone — tighter for more visible light pools
     const shadowMapSize = mobile ? 512 : 1024;
     // Limit shadow-casting lights for performance (desktop: 4, mobile: 2)
@@ -671,7 +677,7 @@ export default function InteriorStudio() {
         crystal.position.set(Math.cos(angle) * armLen, -0.48, Math.sin(angle) * armLen);
         chandGroup.add(crystal);
         // Small light at each arm tip (no shadow — too many)
-        const tipLight = new THREE.PointLight(lightColor, isNight ? 80 : 50, 4);
+        const tipLight = new THREE.PointLight(lightColor, isNight ? 15 : 8, 4);
         tipLight.position.set(Math.cos(angle) * armLen, -0.45, Math.sin(angle) * armLen);
         chandGroup.add(tipLight);
       }
@@ -750,13 +756,13 @@ export default function InteriorStudio() {
       panel.position.y = -0.016;
       panelGroup.add(panel);
       // Main SpotLight for broad cone shadow (panel emits downward)
-      const panelSpot = createSpot(mainIntensity * 1.5, 0, Math.PI / 3, true);
+      const panelSpot = createSpot(isNight ? 120 : 80, 0, Math.PI / 3, true);
       panelSpot.position.set(0, -0.05, 0);
       panelSpot.target.position.set(0, -h, 0);
       panelGroup.add(panelSpot);
       panelGroup.add(panelSpot.target);
       // Ambient fill — panel lights should illuminate the entire room evenly
-      const panelFill = createFill(fillIntensity * 1.8, 0);
+      const panelFill = createFill(isNight ? 30 : 20, 0);
       panelFill.position.set(0, -0.3, 0);
       panelGroup.add(panelFill);
       panelGroup.position.set(spotPositions[0]?.x || 0, h - 0.015, spotPositions[0]?.z || 0);
@@ -853,7 +859,7 @@ export default function InteriorStudio() {
     }
 
     // Room fill light — simulates global bounce/reflection off all surfaces
-    const roomFillIntensity = isNight ? 40 : 25;
+    const roomFillIntensity = isNight ? 20 : 12;
     const roomFill = new THREE.PointLight(lightColor, roomFillIntensity, 0);
     roomFill.position.set(0, h * 0.7, 0);
     roomFill.name = 'roomFillLight';
@@ -869,7 +875,7 @@ export default function InteriorStudio() {
     const moodData = lightMoods[mood] || lightMoods.daylight;
     scene.background = new THREE.Color(moodData.bg);
     scene.fog = new THREE.FogExp2(moodData.fog, 0.018);
-    if (rendererRef.current) rendererRef.current.toneMappingExposure = moodData.exposure;
+    if (rendererRef.current) rendererRef.current.toneMappingExposure = clampExposure(moodData.exposure);
 
     // Update actual scene lights
     if (ambientLightRef.current) {
@@ -1161,14 +1167,14 @@ export default function InteriorStudio() {
     // Use SpotLight with soft penumbra matching the main build (candela units for r184+)
     const isNight = mood === 'night';
     const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
-    const spotLight = new THREE.SpotLight(lightColor, isNight ? 1200 : 800, 0, Math.PI / 4, 1.0, 2);
+    const spotLight = new THREE.SpotLight(lightColor, isNight ? 90 : 60, 0, Math.PI / 4, 1.0, 2);
     spotLight.position.set(0, -0.06, 0);
     spotLight.target.position.set(0, -(h - 0.1), 0);
     spotGroup.add(spotLight);
     spotGroup.add(spotLight.target);
 
     // Ambient fill PointLight — matches buildRoom lighting (candela units)
-    const fillLight = new THREE.PointLight(lightColor, isNight ? 60 : 40, 0);
+    const fillLight = new THREE.PointLight(lightColor, isNight ? 20 : 15, 0);
     fillLight.position.set(0, -0.06, 0);
     spotGroup.add(fillLight);
 
@@ -1540,7 +1546,7 @@ export default function InteriorStudio() {
     renderer.setPixelRatio(pr);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1; renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.9; renderer.outputColorSpace = THREE.SRGBColorSpace;
     rendererRef.current = renderer;
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -1555,16 +1561,16 @@ export default function InteriorStudio() {
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xFFE8D0, 0.5);
     scene.add(ambientLight); ambientLightRef.current = ambientLight;
-    const hemiLight = new THREE.HemisphereLight(0xFFF5E6, 0x8B7355, 0.4);
+    const hemiLight = new THREE.HemisphereLight(0xFFF5E6, 0x8B7355, 0.3);
     scene.add(hemiLight); hemiLightRef.current = hemiLight;
-    const dirLight = new THREE.DirectionalLight(0xFFF0D8, 1.8); dirLight.position.set(4, 8, 5); dirLight.castShadow = true;
+    const dirLight = new THREE.DirectionalLight(0xFFF0D8, 0.5); dirLight.position.set(4, 8, 5); dirLight.castShadow = true;
     // Lower shadow map on mobile for perf
     const shadowSize = mobile ? 1024 : 2048;
     dirLight.shadow.mapSize.set(shadowSize, shadowSize);
     dirLight.shadow.camera.left = -10; dirLight.shadow.camera.right = 10; dirLight.shadow.camera.top = 10; dirLight.shadow.camera.bottom = -10; dirLight.shadow.camera.near = 0.5; dirLight.shadow.camera.far = 30; dirLight.shadow.bias = -0.001;
     if (!mobile) dirLight.shadow.radius = 4;
     scene.add(dirLight); dirLightRef.current = dirLight;
-    const fillLight = new THREE.DirectionalLight(0xE0E8F0, 0.3);
+    const fillLight = new THREE.DirectionalLight(0xE0E8F0, 0.15);
     fillLight.position.set(-4, 5, -3);
     scene.add(fillLight); fillLightRef.current = fillLight;
 
@@ -1747,7 +1753,7 @@ export default function InteriorStudio() {
             const lightCol = isNight ? 0xFFE8C0 : 0xFFEED0;
             const mobile = isMobileRef.current;
             const shadowsOn = shadowsEnabledRef.current;
-            const sLight = new THREE.SpotLight(lightCol, isNight ? 1200 : 800, 0, Math.PI / 4, 1.0, 2);
+            const sLight = new THREE.SpotLight(lightCol, isNight ? 90 : 60, 0, Math.PI / 4, 1.0, 2);
             sLight.position.set(0, -0.06, 0);
             sLight.target.position.set(0, -(h - 0.1), 0);
             // Enable shadow matching buildRoom config
