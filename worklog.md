@@ -446,3 +446,32 @@ Stage Summary:
 - 1 issue (EditorLoader) was misdiagnosed — it's correctly scoped to /editor only
 - Added database-backed feedback storage (was previously console.log only)
 - All changes deployed and verified on https://instod.vercel.app
+
+---
+Task ID: 1
+Agent: Main
+Task: V4 Audit Fixes + Mobile UX Overhaul + Database Verification
+
+Work Log:
+- Read Claude's final truth report (9 remaining issues) and mobile UX analysis (3 problems from screenshots)
+- Fix #1: Removed root loading.tsx — PageLoader no longer fires on /terms, /privacy, /contact, /about pages
+- Fix #2: Replaced hello@interiorstudio.app on /contact with form link text
+- Fix #3: Fixed Terms page "5 room types" → "6 room types"
+- Fix #4: Fixed Homepage footer #feedback dead anchor → /contact
+- Fix #5: Added founder section (Arjun Mehta) to About page
+- Fix #6: Added mobile-visible benefit bullets to Signup page (lg:hidden)
+- Mobile Fix #1: Bottom nav redesigned — icon-only 5 tabs, 56px height, Capture moved to top bar
+- Mobile Fix #2: Item panel converted to bottom sheet on mobile (fixed bottom, max 50vh, drag handle)
+- Mobile Fix #3: Viewport changed to 100dvh flex layout, canvas uses flex-1 min-h-0
+- Enlarged action buttons to 44px+ tap targets on mobile
+- Removed paddingTop:44 from canvas (flex layout handles it)
+- Bottom panel auto height when collapsed (was 22vh wasted space)
+- Verified database: all 15 API routes properly structured, correct Prisma model usage, proper auth/ownership checks
+- Build passed clean, pushed to GitHub, Vercel deployed (age:0 confirmed)
+
+Stage Summary:
+- 7 files changed, 88 insertions, 66 deletions
+- All 6 V4 audit "fix today" issues resolved
+- All 3 mobile UX problems from screenshots resolved
+- Database verified healthy — no critical issues found
+- Deployed to https://instod.vercel.app
