@@ -196,9 +196,28 @@ export default function SignupPage() {
             <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               Create an account
             </h2>
-            <p className="text-sm mb-6" style={{ color: '#5A4E42' }}>
+            <p className="text-sm mb-4" style={{ color: '#5A4E42' }}>
               Start designing your dream space for free
             </p>
+
+            {/* Mobile-only benefits */}
+            <div className="lg:hidden mb-5 p-4 rounded-xl" style={{ background: '#FAF8F4', border: '1px solid #E2DDD4' }}>
+              <div className="space-y-2">
+                {[
+                  '6 room types with 30+ furniture items',
+                  'Save & manage multiple projects',
+                  'All skins, presets & export tools',
+                  'Free during beta — no credit card',
+                ].map((benefit) => (
+                  <div key={benefit} className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(193,127,78,0.15)' }}>
+                      <Check className="w-2.5 h-2.5" style={{ color: '#C17F4E' }} />
+                    </div>
+                    <span className="text-xs" style={{ color: '#5A4E42' }}>{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Error */}
             {errors.general && (

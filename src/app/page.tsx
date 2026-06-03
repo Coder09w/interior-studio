@@ -1326,7 +1326,7 @@ function Footer() {
               {[
                 { label: 'About', href: '/about' },
                 { label: 'Contact', href: '/contact' },
-                { label: 'Feedback', href: '#feedback' },
+                { label: 'Feedback', href: '/contact' },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link

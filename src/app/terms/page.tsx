@@ -46,7 +46,7 @@ You retain full ownership of the room designs and creative content you produce u
     id: 'subscription-plans',
     icon: CreditCard,
     title: '5. Subscription Plans and Billing',
-    content: `Interior Studio offers three subscription tiers designed to meet the needs of different users. The Free plan provides full access to the 3D room editor, over 30 furniture items, 5 room types, 4 lighting moods, the material and color system, screenshot export, and up to 3 saved designs. This plan is available at no cost and requires no payment information.
+    content: `Interior Studio offers three subscription tiers designed to meet the needs of different users. The Free plan provides full access to the 3D room editor, over 30 furniture items, 6 room types, 4 lighting moods, the material and color system, screenshot export, and up to 3 saved designs. This plan is available at no cost and requires no payment information.
 
 The Pro plan, priced at $12 per month, includes everything in the Free plan plus unlimited saved designs, multiple rooms per project, shareable viewing links, priority rendering, custom room dimensions, image and PDF export, and email support. The Studio plan, priced at $29 per month, is designed for professional interior designers and includes everything in the Pro plan plus unlimited projects, client sharing and feedback tools, brand customization, API access, team collaboration, priority support, and custom furniture uploads.
 

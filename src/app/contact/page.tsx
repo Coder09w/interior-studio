@@ -154,13 +154,13 @@ export default function ContactPage() {
                   <p className="text-xs" style={{ color: '#5A4E42' }}>We respond within 24-48 hours</p>
                 </div>
               </div>
-              <a
-                href="mailto:hello@interiorstudio.app"
-                className="text-sm font-medium hover:underline"
-                style={{ color: '#C17F4E' }}
-              >
-                hello@interiorstudio.app
-              </a>
+              <p className="text-sm" style={{ color: '#555' }}>
+                Use the contact form on this page, or reach out via our{' '}
+                <Link href="/contact" className="font-medium hover:underline" style={{ color: '#C17F4E' }}>
+                  support channel
+                </Link>
+                . We respond promptly.
+              </p>
             </div>
 
             {/* Response Time Card */}

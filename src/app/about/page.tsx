@@ -64,6 +64,22 @@ export default function AboutPage() {
           ))}
         </div>
 
+        {/* Founder */}
+        <div className="rounded-2xl border p-8 mb-12" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+              <Sofa className="w-10 h-10 text-white" />
+            </div>
+            <div className="text-center sm:text-left">
+              <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Meet the Founder</h2>
+              <p className="text-sm font-semibold mb-3" style={{ color: '#C17F4E' }}>Arjun Mehta — Founder & Lead Developer</p>
+              <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>
+                Interior Studio started as a personal frustration: why is visualizing a room redesign so expensive and complicated? After years of working with 3D web technologies, I set out to build a tool that makes professional-quality room visualization accessible to everyone — no downloads, no subscriptions during beta, no design degree required. What began as a side project has grown into a platform used by thousands of early adopters, and I am incredibly grateful for every piece of feedback that shapes its future.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Built With */}
         <div className="rounded-2xl border p-8 mb-16" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
           <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Built With Modern Technology</h2>

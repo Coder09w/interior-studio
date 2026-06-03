@@ -2830,7 +2830,7 @@ export default function InteriorStudio() {
   );
 
   return (
-    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-screen overflow-hidden`} style={{ background: '#F5F0E8', color: '#2D2D2D', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} overflow-hidden`} style={{ background: '#F5F0E8', color: '#2D2D2D', fontFamily: "'DM Sans', sans-serif", height: '100dvh' }}>
       {/* WebGL Fallback — shown when browser doesn't support WebGL */}
       {webglError && (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -3263,7 +3263,7 @@ export default function InteriorStudio() {
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className={`flex-1 relative ${isMobile ? 'h-[65vh]' : ''}`} style={{ background: '#FAF8F4' }}>
+      <main className="flex-1 relative min-h-0" style={{ background: '#FAF8F4' }}>
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #E2DDD4' }}>
           {!isMobile && (
@@ -3294,13 +3294,12 @@ export default function InteriorStudio() {
 
           {/* Mobile right actions */}
           {isMobile && (
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
+              <button onClick={takeScreenshot} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'rgba(255,255,255,0.5)' }} aria-label="Capture screenshot" title="Capture"><i className="fas fa-camera text-sm" /></button>
               {!isGuest && (
-                <button onClick={() => window.location.href = '/dashboard'} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.08)' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-base" /></button>
+                <button onClick={() => window.location.href = '/dashboard'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.08)' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-sm" /></button>
               )}
-              <button onClick={saveRoom} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#7A8B6F', color: '#7A8B6F', background: 'rgba(122,139,111,0.08)' }} aria-label="Save design" title="Save"><i className="fas fa-save text-base" /></button>
-              <button onClick={undo} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'rgba(226,221,212,0.2)' }} aria-label="Undo" title="Undo"><i className="fas fa-undo text-base" /></button>
-              <button onClick={redo} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'rgba(226,221,212,0.2)' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-base" /></button>
+              <button onClick={saveRoom} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#7A8B6F', color: '#7A8B6F', background: 'rgba(122,139,111,0.08)' }} aria-label="Save design" title="Save"><i className="fas fa-save text-sm" /></button>
             </div>
           )}
 
@@ -3319,7 +3318,7 @@ export default function InteriorStudio() {
           )}
         </div>
 
-        <canvas ref={canvasRef} role="application" aria-label="3D Room Editor — use mouse to orbit, scroll to zoom" style={{ width: '100%', height: '100%', display: 'block', cursor: ceilingEditMode ? 'crosshair' : 'grab', paddingTop: 44 }} />
+        <canvas ref={canvasRef} role="application" aria-label="3D Room Editor — use mouse to orbit, scroll to zoom" style={{ width: '100%', height: '100%', display: 'block', cursor: ceilingEditMode ? 'crosshair' : 'grab' }} />
 
         {/* Ceiling Edit Mode Floating Panel */}
         {ceilingEditMode && (
@@ -3412,19 +3411,22 @@ export default function InteriorStudio() {
           </div>
         )}
 
-        {/* Selected item panel */}
+        {/* Selected item panel — bottom sheet on mobile, floating card on desktop */}
         {itemPanelVisible && (
-          <div className={`absolute z-10 rounded-xl p-3 border ${isMobile ? 'bottom-2 left-2 right-2' : 'bottom-5 left-5'}`} style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: '#E2DDD4', minWidth: isMobile ? 'auto' : 200 }}>
+          <div className={`z-10 border ${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl p-4 max-h-[50vh] overflow-y-auto' : 'absolute bottom-5 left-5 rounded-xl p-3'}`} style={{ background: isMobile ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: isMobile ? '#E2DDD4' : '#E2DDD4', minWidth: isMobile ? 'auto' : 200, paddingBottom: isMobile ? 'calc(16px + env(safe-area-inset-bottom, 0px))' : undefined }}>
+            {isMobile && (
+              <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: '#D4D0C8' }} />
+            )}
             <div className="flex items-center justify-between mb-1">
               <h4 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>{selectedName}</h4>
               <button onClick={deselectAll} aria-label="Deselect item" className="text-xs cursor-pointer" style={{ color: '#5A4E42' }}><i className="fas fa-times" /></button>
             </div>
             <p className="text-[10px]" style={{ color: '#5A4E42' }}>{selectedDesc}</p>
-            <div className="flex gap-1.5 mt-2">
-              <button onClick={() => rotateSelected('left')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', fontSize: 10 }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
-              <button onClick={() => rotateSelected('right')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', fontSize: 10 }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
-              <button onClick={duplicateSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', fontSize: 10 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
-              <button onClick={deleteSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 10 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
+            <div className={`flex gap-1.5 mt-2 ${isMobile ? 'justify-center' : ''}`}>
+              <button onClick={() => rotateSelected('left')} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#E2DDD4', fontSize: isMobile ? 14 : 10 }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+              <button onClick={() => rotateSelected('right')} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#E2DDD4', fontSize: isMobile ? 14 : 10 }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+              <button onClick={duplicateSelected} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#E2DDD4', fontSize: isMobile ? 14 : 10 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
+              <button onClick={deleteSelected} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: isMobile ? 14 : 10 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
             </div>
             {isMobile && (
               <p className="text-[9px] mt-1.5" style={{ color: '#5A4E42' }}><i className="fas fa-hand-pointer mr-1" />Tap item to select. Use two fingers to rotate.</p>
@@ -3442,45 +3444,25 @@ export default function InteriorStudio() {
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '38vh' : '22vh', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
-          {/* Tab bar */}
-          <div role="tablist" className="flex border-b" style={{ borderColor: '#E2DDD4' }}>
-            <button onClick={() => setMobilePanel(mobilePanel === 'skeleton' ? null : 'skeleton')}
-              role="tab" aria-selected={mobilePanel === 'skeleton'}
-              className={`flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5 transition-all ${mobilePanel === 'skeleton' ? 'border-b-3' : ''}`}
-              style={{ color: mobilePanel === 'skeleton' ? '#5C4033' : '#5A4E42', borderColor: mobilePanel === 'skeleton' ? '#5C4033' : 'transparent', background: mobilePanel === 'skeleton' ? 'rgba(92,64,51,0.06)' : 'transparent' }}>
-              <i className="fas fa-bone" />Skeleton
-            </button>
-            <button onClick={() => setMobilePanel(mobilePanel === 'presets' ? null : 'presets')}
-              role="tab" aria-selected={mobilePanel === 'presets'}
-              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'presets' ? 'border-b-3' : ''}`}
-              style={{ color: mobilePanel === 'presets' ? '#C17F4E' : '#5A4E42', borderColor: mobilePanel === 'presets' ? '#C17F4E' : 'transparent', background: mobilePanel === 'presets' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
-              <i className="fas fa-magic" />Presets
-            </button>
-            <button onClick={() => setMobilePanel(mobilePanel === 'furniture' ? null : 'furniture')}
-              role="tab" aria-selected={mobilePanel === 'furniture'}
-              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'furniture' ? 'border-b-3' : ''}`}
-              style={{ color: mobilePanel === 'furniture' ? '#C17F4E' : '#5A4E42', borderColor: mobilePanel === 'furniture' ? '#C17F4E' : 'transparent', background: mobilePanel === 'furniture' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
-              <i className="fas fa-couch" />Items
-            </button>
-            <button onClick={() => setMobilePanel(mobilePanel === 'material' ? null : 'material')}
-              role="tab" aria-selected={mobilePanel === 'material'}
-              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'material' ? 'border-b-3' : ''}`}
-              style={{ color: mobilePanel === 'material' ? '#C17F4E' : '#5A4E42', borderColor: mobilePanel === 'material' ? '#C17F4E' : 'transparent', background: mobilePanel === 'material' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
-              <i className="fas fa-palette" />Skins
-            </button>
-            <button onClick={() => setMobilePanel(mobilePanel === 'room' ? null : 'room')}
-              role="tab" aria-selected={mobilePanel === 'room'}
-              className={`flex-1 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${mobilePanel === 'room' ? 'border-b-3' : ''}`}
-              style={{ color: mobilePanel === 'room' ? '#C17F4E' : '#5A4E42', borderColor: mobilePanel === 'room' ? '#C17F4E' : 'transparent', background: mobilePanel === 'room' ? 'rgba(193,127,78,0.05)' : 'transparent' }}>
-              <i className="fas fa-sliders-h" />Room
-            </button>
-            <button onClick={takeScreenshot}
-              role="tab" aria-selected={false}
-              className="flex-1 py-3 text-[12px] font-bold flex items-center justify-center gap-1.5"
-              style={{ color: '#5A4E42' }}>
-              <i className="fas fa-camera" />Capture
-            </button>
+        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '38vh' : 'auto', paddingBottom: 'env(safe-area-inset-bottom, 0px)', flexShrink: 0 }}>
+          {/* Tab bar — icon-only, 5 tabs max, 56px height */}
+          <div role="tablist" className="flex border-b" style={{ borderColor: '#E2DDD4', height: 56 }}>
+            {([
+              { id: 'skeleton' as const, icon: 'fa-bone', label: 'Skeleton', color: '#5C4033' },
+              { id: 'presets' as const, icon: 'fa-magic', label: 'Presets', color: '#C17F4E' },
+              { id: 'furniture' as const, icon: 'fa-couch', label: 'Items', color: '#C17F4E' },
+              { id: 'material' as const, icon: 'fa-palette', label: 'Skins', color: '#C17F4E' },
+              { id: 'room' as const, icon: 'fa-sliders-h', label: 'Room', color: '#C17F4E' },
+            ]).map(({ id, icon, label, color }) => (
+              <button key={id} onClick={() => setMobilePanel(mobilePanel === id ? null : id)}
+                role="tab" aria-selected={mobilePanel === id}
+                className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"
+                style={{ color: mobilePanel === id ? color : '#5A4E42', background: mobilePanel === id ? `${color}0A` : 'transparent' }}>
+                <i className={`fas ${icon}`} style={{ fontSize: 16 }} />
+                <span style={{ fontSize: 9, fontWeight: 600 }}>{label}</span>
+                {mobilePanel === id && <div style={{ width: 4, height: 4, borderRadius: '50%', background: color, position: 'absolute', bottom: 4 }} />}
+              </button>
+            ))}
           </div>
 
           {/* Panel content */}
