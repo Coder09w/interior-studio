@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { builders, makeMat } from '@/lib/furniture-builders';
@@ -11,12 +11,12 @@ import { SKINS_DICTIONARY, applySkinToSkeleton, SKINS_LIST } from '@/lib/skin-sy
 import { DESIGN_PRESETS, getPresetsForRoom, getPresetById } from '@/lib/design-presets';
 import type { DesignPreset, RoomType as PresetRoomType } from '@/lib/design-presets';
 
-// Guest mode restrictions
-const GUEST_ALLOWED_FURNITURE = new Set(['createSofa', 'createCoffeeTable', 'createBed', 'createDiningTable', 'createDiningChair', 'createKitchenCounter', 'createDesk', 'createOfficeChair']);
-const GUEST_ALLOWED_CATEGORIES = new Set<CategoryId>(['seating', 'tables', 'bedroom']);
-const GUEST_MAX_ROOMS = 2;
-const GUEST_MAX_ITEMS = 8;
-const GUEST_COLORS_PER_TYPE = 4;
+// Guest mode restrictions — relaxed during beta (all features free)
+const GUEST_ALLOWED_FURNITURE = new Set(['createSofa', 'createCoffeeTable', 'createBed', 'createDiningTable', 'createDiningChair', 'createKitchenCounter', 'createDesk', 'createOfficeChair', 'createBookshelf', 'createArmchair', 'createLoveSeat', 'createOttoman', 'createWardrobe', 'createNightstand', 'createDresser', 'createConsole', 'createRug', 'createFloorLamp', 'createTableLamp', 'createVanityTable', 'createCredenza', 'createKitchenCart', 'createFilingCabinet', 'createFloorMirror', 'createWallArt']);
+const GUEST_ALLOWED_CATEGORIES = new Set<CategoryId>(['seating', 'tables', 'bedroom', 'kitchen', 'office', 'bathroom', 'lighting', 'decor']);
+const GUEST_MAX_ROOMS = 6;
+const GUEST_MAX_ITEMS = 30;
+const GUEST_COLORS_PER_TYPE = 12;
 
 /* ===== TYPES ===== */
 interface FurnitureData {
@@ -182,6 +182,7 @@ export default function InteriorStudio() {
   const selectedObjRef = useRef<THREE.Group | null>(null);
   const isDragRef = useRef(false);
   const dragItemRef = useRef<THREE.Group | null>(null);
+  const meshCacheRef = useRef<THREE.Mesh[]>([]);
   const dragPlaneRef = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
   const dragOffsetRef = useRef(new THREE.Vector3());
   const intersectionRef = useRef(new THREE.Vector3());
@@ -368,6 +369,7 @@ export default function InteriorStudio() {
       });
     });
     placedItemsRef.current = [];
+    meshCacheRef.current = []; // Invalidate mesh cache
     selectedObjRef.current = null;
     setItemPanelVisible(false);
 
@@ -462,12 +464,17 @@ export default function InteriorStudio() {
     const scene = sceneRef.current;
     if (!roomGroup || !scene) return;
 
-    // Dispose old children — including shadow maps to prevent GPU memory leaks
+    // Dispose old children — including shadow maps and textures to prevent GPU memory leaks
     while (roomGroup.children.length) {
       const child = roomGroup.children[0];
       roomGroup.remove(child);
       child.traverse(c => {
-        if (c instanceof THREE.Mesh) { c.geometry?.dispose(); (c.material as THREE.Material)?.dispose(); }
+        if (c instanceof THREE.Mesh) {
+          const mat = c.material as THREE.MeshStandardMaterial;
+          mat.map?.dispose(); // Dispose texture before material
+          c.geometry?.dispose();
+          if (Array.isArray(mat)) mat.forEach(m => m.dispose()); else mat?.dispose();
+        }
         // Dispose shadow map textures for SpotLights and PointLights
         if ((c instanceof THREE.SpotLight || c instanceof THREE.PointLight) && c.shadow?.map) {
           c.shadow.map.dispose();
@@ -1217,6 +1224,7 @@ export default function InteriorStudio() {
     item.position.set(px, 0, pz);
     item.userData.fn = fnName;
     sceneRef.current?.add(item); placedItemsRef.current.push(item);
+    meshCacheRef.current = []; // Invalidate mesh cache
     selectItem(item); setItemCount(placedItemsRef.current.length);
     markUnsaved();
     markSceneDirty();
@@ -1230,6 +1238,7 @@ export default function InteriorStudio() {
     const name = selected.userData.name;
     sceneRef.current?.remove(selected); placedItemsRef.current = placedItemsRef.current.filter(i => i !== selected);
     selected.traverse(c => { if (c instanceof THREE.Mesh) { c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material?.dispose(); } });
+    meshCacheRef.current = []; // Invalidate mesh cache
     selectedObjRef.current = null; setItemPanelVisible(false); setItemCount(placedItemsRef.current.length);
     markUnsaved(); markSceneDirty(); showToast(`Removed ${name}`);
   }, [pushHistory, showToast, markUnsaved, markSceneDirty]);
@@ -1243,6 +1252,7 @@ export default function InteriorStudio() {
     item.position.copy(selected.position).add(new THREE.Vector3(0.5, 0, 0.5));
     item.rotation.y = selected.rotation.y; item.userData.fn = d.fn;
     sceneRef.current?.add(item); placedItemsRef.current.push(item);
+    meshCacheRef.current = []; // Invalidate mesh cache
     selectItem(item); setItemCount(placedItemsRef.current.length);
     markUnsaved(); markSceneDirty(); showToast(`Duplicated ${d.name}`);
   }, [pushHistory, selectItem, showToast, markUnsaved, markSceneDirty]);
@@ -1438,7 +1448,7 @@ export default function InteriorStudio() {
 
     // Performance: lower pixel ratio on mobile, limit to 1.5x
     const pr = mobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2);
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, preserveDrawingBuffer: true, powerPreference: mobile ? 'low-power' : 'high-performance' });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, preserveDrawingBuffer: false, powerPreference: mobile ? 'low-power' : 'high-performance' });
     renderer.setPixelRatio(pr);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFShadowMap;
@@ -1544,7 +1554,9 @@ export default function InteriorStudio() {
     const resizeObserver = new ResizeObserver(() => { onResize(); });
     if (canvas.parentElement) resizeObserver.observe(canvas.parentElement);
 
-    const getMeshes = (): THREE.Mesh[] => { const m: THREE.Mesh[] = []; placedItemsRef.current.forEach(g => g.traverse(c => { if (c instanceof THREE.Mesh) m.push(c); })); return m; };
+    // Cached mesh array — rebuilt only when furniture changes, not on every click
+    const rebuildMeshCache = () => { meshCacheRef.current = []; placedItemsRef.current.forEach(g => g.traverse(c => { if (c instanceof THREE.Mesh) meshCacheRef.current.push(c); })); };
+    const getMeshes = (): THREE.Mesh[] => { if (meshCacheRef.current.length === 0 && placedItemsRef.current.length > 0) rebuildMeshCache(); return meshCacheRef.current; };
 
     // Ceiling drag plane (for dragging lights on ceiling)
     const ceilingDragPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), roomHRef.current);
@@ -1837,7 +1849,8 @@ export default function InteriorStudio() {
     const markDirty = () => { needsRender = true; };
     needsRenderRef.current = () => { needsRender = true; };
     canvas.addEventListener('pointerdown', markDirty);
-    canvas.addEventListener('pointermove', markDirty);
+    // Only mark dirty on pointermove when actually dragging something
+    canvas.addEventListener('pointermove', () => { if (isDragRef.current || dragItemRef.current) needsRender = true; });
     animate();
 
     // Auto-save timer — actually persists room data to localStorage
@@ -1847,9 +1860,10 @@ export default function InteriorStudio() {
         setSaveStatus('saving');
         try {
           const rid = currentRoomIdRef.current;
-          roomStatesRef.current.set(rid, serializeFurniture());
+          const furnitureData = serializeFurniture(); // Serialize once, not twice
+          roomStatesRef.current.set(rid, furnitureData);
           const roomData = {
-            furniture: JSON.stringify(serializeFurniture()),
+            furniture: JSON.stringify(furnitureData),
             width: roomWRef.current,
             depth: roomDRef.current,
             height: roomHRef.current,
@@ -1879,7 +1893,7 @@ export default function InteriorStudio() {
           showToast('Auto-save failed — storage full');
         }
       }
-    }, 60000);
+    }, 30000); // Reduced from 60s to 30s for better safety
 
     // Handle WebGL context loss — save data and warn user
     canvas.addEventListener('webglcontextlost', (e) => {
@@ -1908,9 +1922,34 @@ export default function InteriorStudio() {
       buildRoom();
     }, false);
 
+    // Save on page close/navigate away
+    const beforeUnload = () => {
+      try {
+        const rid = currentRoomIdRef.current;
+        const furnitureData = serializeFurniture();
+        roomStatesRef.current.set(rid, furnitureData);
+        const roomData = {
+          furniture: JSON.stringify(furnitureData),
+          width: roomWRef.current, depth: roomDRef.current, height: roomHRef.current,
+          wallColor: wallColRef.current, floorType: floorTypeRef.current, floorColor: floorColorRef.current,
+          doorWall: doorWallRef.current, windowCount: windowCountRef.current, windowWall: windowWallRef.current,
+          lightMood: lightMoodRef.current, ceilingLightPreset: ceilingLightPresetRef.current,
+          designName: designNameRef.current, activeSkin: activeSkinRef.current,
+        };
+        const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
+        savedRooms[rid] = roomData;
+        localStorage.setItem('instod_rooms', JSON.stringify(savedRooms));
+        const allRoomStates: Record<string, FurnitureData[]> = {};
+        roomStatesRef.current.forEach((val, key) => { allRoomStates[key] = val; });
+        localStorage.setItem('instod_room_states', JSON.stringify(allRoomStates));
+      } catch (_e) { /* best effort */ }
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+
     return () => {
       cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('beforeunload', beforeUnload);
       resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', onPointerDown); canvas.removeEventListener('pointermove', onPointerMove); canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('touchstart', onTouchStart); canvas.removeEventListener('touchmove', onTouchMove); canvas.removeEventListener('touchend', onTouchEnd);
@@ -2173,7 +2212,7 @@ export default function InteriorStudio() {
   }, [designName, showToast]);
 
   // Filtered furniture items
-  const filteredItems = searchQuery ? furnitureItems[currentCat].filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())) : furnitureItems[currentCat];
+  const filteredItems = useMemo(() => searchQuery ? furnitureItems[currentCat].filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())) : furnitureItems[currentCat], [searchQuery, currentCat]);
 
   const floorTypeOptions = [
     { id: 'hardwood', label: 'Hardwood', color: '#B8956A' },
@@ -2340,13 +2379,13 @@ export default function InteriorStudio() {
           <div className="mb-2"><span className="text-[10px] font-medium">Wall Color</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {wallColorOptions.map(wc => (
-                <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-6 h-6 rounded-md cursor-pointer border-2 transition-all"
+                <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
                   style={{ background: wc.color, borderColor: wallCol === wc.color ? '#C17F4E' : 'transparent' }} title={wc.label} />
               ))}
               <div className="relative">
                 <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-6 h-6" />
-                <div className="w-6 h-6 rounded-md border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                  className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
+                <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                   <i className="fas fa-eyedropper text-[6px] text-white drop-shadow" />
                 </div>
               </div>
@@ -2356,7 +2395,7 @@ export default function InteriorStudio() {
           <div className="mb-2"><span className="text-[10px] font-medium">Flooring</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {floorTypeOptions.map(ft => (
-                <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; buildRoom(); markUnsaved(); }} className="w-6 h-6 rounded-md cursor-pointer border-2 transition-all"
+                <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; buildRoom(); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
                   style={{ background: ft.color, borderColor: floorType === ft.id ? '#C17F4E' : 'transparent' }} title={ft.label} />
               ))}
             </div>
@@ -2365,13 +2404,13 @@ export default function InteriorStudio() {
           <div className="mb-2"><span className="text-[10px] font-medium">Floor Color</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {floorColorOptions.map(fc => (
-                <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-6 h-6 rounded-md cursor-pointer border-2 transition-all"
+                <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
                   style={{ background: fc.color, borderColor: floorColor === fc.color ? '#C17F4E' : 'transparent' }} title={fc.label} />
               ))}
               <div className="relative">
                 <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-6 h-6" />
-                <div className="w-6 h-6 rounded-md border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                  className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
+                <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                   <i className="fas fa-eyedropper text-[6px] text-white drop-shadow" />
                 </div>
               </div>
@@ -2618,7 +2657,7 @@ export default function InteriorStudio() {
                 <span className="text-[9px]" style={{ color: '#5A4E42' }}>m</span>
               </div>
             </div>
-            <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); buildRoom(); markUnsaved(); }} />
+            <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} />
           </div>
         ))}
 
@@ -3343,7 +3382,7 @@ export default function InteriorStudio() {
                   <h3 className="text-xs font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#C17F4E' }}>Ceiling Light Editor</h3>
                   <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(193,127,78,0.1)', color: '#C17F4E' }}>{ceilingSpotPositionsRef.current.length}/6</span>
                 </div>
-                <button onClick={exitCeilingEditMode} aria-label="Exit ceiling editor" className="w-6 h-6 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-[9px]" /></button>
+                <button onClick={exitCeilingEditMode} aria-label="Exit ceiling editor" className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-[9px]" /></button>
               </div>
               <div className="flex gap-1.5 mb-2">
                 <button onClick={addCeilingLight} className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#C17F4E', color: '#fff', border: 'none' }}>
@@ -3462,13 +3501,13 @@ export default function InteriorStudio() {
           {!mobilePanel && (
             <div className="relative flex items-center border-b" style={{ borderColor: '#F0E8D8', height: 44 }}>
               <div className="flex items-center gap-1 overflow-x-auto px-2 flex-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }} ref={el => { if (el) { const handleScroll = () => { const chev = el.parentElement?.querySelector('.scroll-chevron') as HTMLElement; if (chev) chev.style.opacity = el.scrollLeft + el.clientWidth < el.scrollWidth - 10 ? '1' : '0'; }; el.addEventListener('scroll', handleScroll); setTimeout(() => { const chev = el.parentElement?.querySelector('.scroll-chevron') as HTMLElement; if (chev) chev.style.opacity = el.scrollLeft + el.clientWidth < el.scrollWidth - 10 ? '1' : '0'; }, 100); } }}>
-                <button onClick={saveRoom} className="shrink-0 flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer" style={{ background: '#7A8B6F', color: '#fff' }} aria-label="Save design"><i className="fas fa-save text-[10px]" />Save</button>
-                <button onClick={undo} className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Undo"><i className="fas fa-undo text-xs" /></button>
-                <button onClick={redo} className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Redo"><i className="fas fa-redo text-xs" /></button>
-                <button onClick={takeScreenshot} className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Screenshot"><i className="fas fa-camera text-xs" /></button>
-                <button onClick={shareRoom} className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Share"><i className="fas fa-share-alt text-xs" /></button>
+                <button onClick={saveRoom} className="shrink-0 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-[10px] font-semibold cursor-pointer" style={{ background: '#7A8B6F', color: '#fff' }} aria-label="Save design"><i className="fas fa-save text-[10px]" />Save</button>
+                <button onClick={undo} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Undo"><i className="fas fa-undo text-xs" /></button>
+                <button onClick={redo} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Redo"><i className="fas fa-redo text-xs" /></button>
+                <button onClick={takeScreenshot} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Screenshot"><i className="fas fa-camera text-xs" /></button>
+                <button onClick={shareRoom} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Share"><i className="fas fa-share-alt text-xs" /></button>
                 {!isGuest && (
-                  <button onClick={() => window.location.href = '/dashboard'} className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.08)' }} aria-label="Dashboard"><i className="fas fa-th-large text-xs" /></button>
+                  <button onClick={() => window.location.href = '/dashboard'} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.08)' }} aria-label="Dashboard"><i className="fas fa-th-large text-xs" /></button>
                 )}
               </div>
               {/* Scroll chevron indicator */}
@@ -3512,7 +3551,7 @@ export default function InteriorStudio() {
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? '24vh' : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (mobilePanel ? '40vh' : 100) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div role="status" aria-live="polite" className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff' }}>{toastMsg}</div>
       </div>
       </>
