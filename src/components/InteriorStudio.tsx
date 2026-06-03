@@ -2251,29 +2251,29 @@ export default function InteriorStudio() {
           {/* Category tabs */}
           <div className="flex gap-1 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
             {categories.filter(cat => !isGuest || GUEST_ALLOWED_CATEGORIES.has(cat.id)).map(cat => (
-              <button key={cat.id} onClick={() => setCurrentCat(cat.id)} className="px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all whitespace-nowrap border"
-                style={{ background: currentCat === cat.id ? '#C17F4E' : '#FAF8F4', color: currentCat === cat.id ? '#fff' : '#5A4E42', borderColor: currentCat === cat.id ? '#C17F4E' : 'transparent' }}>
+              <button key={cat.id} onClick={() => setCurrentCat(cat.id)}
+                className={`cursor-pointer transition-all whitespace-nowrap ${currentCat === cat.id ? 'int-cat-tab-active' : 'int-cat-tab'}`}>
                 <i className={`fas ${cat.icon} mr-0.5`} />{cat.label}
               </button>
             ))}
           </div>
           {/* Search */}
           <div className="px-3 py-1">
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="w-full px-3 py-1.5 rounded-lg text-xs border" style={{ borderColor: '#E2DDD4', background: '#FAF8F4' }} />
+            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="int-search-input" style={{ paddingLeft: '14px' }} />
           </div>
           {/* Items grid */}
           <div className="grid grid-cols-3 gap-1.5 p-3">
             {filteredItems.map(item => {
               const isLocked = isGuest && !GUEST_ALLOWED_FURNITURE.has(item.fn);
               return (
-              <button key={item.name} onClick={() => { if (isLocked) { showToast('Sign in to unlock this item'); return; } addFurniture(item.fn, currentColor, currentMatType); }} className="p-2.5 rounded-xl border-2 cursor-pointer transition-all duration-200 text-center relative hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97]"
-                style={{ background: isLocked ? '#F8F6F2' : '#FAF8F4', borderColor: isLocked ? '#D4C8B8' : '#E8E2DA' }}>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-1 text-sm relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}>
+              <button key={item.name} onClick={() => { if (isLocked) { showToast('Sign in to unlock this item'); return; } addFurniture(item.fn, currentColor, currentMatType); }} className="int-furniture-card text-center relative"
+                style={{ background: isLocked ? '#F8F6F2' : undefined }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-1 text-sm relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}>
                   <i className={`fas ${item.icon}`} />
                 </div>
-                <p className="text-[11px] font-semibold leading-tight" style={{ color: isLocked ? '#A09080' : '#2D2D2D' }}>{item.name}</p>
+                <p className="text-[12px] font-semibold leading-tight" style={{ color: isLocked ? '#A09080' : '#2D2D2D' }}>{item.name}</p>
                 {isLocked && (
-                  <div className="absolute inset-0 rounded-xl flex flex-col items-center justify-center" style={{ background: 'rgba(250,248,244,0.75)' }}>
+                  <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center" style={{ background: 'rgba(250,248,244,0.75)' }}>
                     <i className="fas fa-lock text-[12px] mb-0.5" style={{ color: '#C17F4E' }} />
                     <span className="text-[9px] font-bold" style={{ color: '#C17F4E' }}>Sign In</span>
                   </div>
@@ -2286,49 +2286,52 @@ export default function InteriorStudio() {
       ),
       material: (
         <div className="h-full overflow-y-auto int-scrollbar p-3">
-          <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Material & Color</p>
+          <p className="int-section-header">Material & Color</p>
           <div className="flex gap-1 mb-2 flex-wrap">
             {(['fabric', 'leather', 'wood', 'metal'] as MatType[]).map(t => (
-              <button key={t} onClick={() => setCurrentMatType(t)} className="text-[11px] px-3 py-1.5 rounded-full border cursor-pointer transition-all"
-                style={{ borderColor: currentMatType === t ? '#C17F4E' : '#E2DDD4', background: currentMatType === t ? 'rgba(193,127,78,0.1)' : 'transparent', color: currentMatType === t ? '#C17F4E' : '#5A4E42' }}>
+              <button key={t} onClick={() => setCurrentMatType(t)}
+                className={`cursor-pointer transition-all ${currentMatType === t ? 'int-mat-pill-active' : 'int-mat-pill'}`}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
           <div className="flex flex-wrap gap-1.5">
             {(isGuest ? matColors[currentMatType].slice(0, GUEST_COLORS_PER_TYPE) : matColors[currentMatType]).map(c => (
-              <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }} className="w-8 h-8 rounded-lg cursor-pointer transition-all border-2"
-                style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
+              <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }}
+                className={`int-color-swatch ${currentColor === c ? 'int-color-swatch-active' : ''}`}
+                style={{ background: c }} aria-label={colorNames[c] || c} role="radio" aria-checked={currentColor === c} />
             ))}
           </div>
           <div className="flex items-center gap-1 mt-1"><span className="text-[10px]" style={{ color: '#5A4E42' }}>Color:</span><span className="text-[11px] font-semibold" style={{ color: '#C17F4E' }}>{colorNames[currentColor] || currentColor}</span></div>
           {/* Wall Color */}
-          <p className="text-[11px] font-bold uppercase tracking-[2px] mt-3 mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Wall Color</p>
+          <p className="int-section-header" style={{ marginTop: '12px' }}>Wall Color</p>
           <div className="flex flex-wrap gap-1.5">
             {wallColorOptions.map(wc => (
-              <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
-                style={{ background: wc.color, borderColor: wallCol === wc.color ? '#C17F4E' : 'transparent' }} title={wc.label} />
+              <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }}
+                className={`int-color-swatch ${wallCol === wc.color ? 'int-color-swatch-active' : ''}`}
+                style={{ background: wc.color }} aria-label={wc.label} role="radio" aria-checked={wallCol === wc.color} />
             ))}
             <div className="relative">
               <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
-              <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
-                <i className="fas fa-eyedropper text-[8px] text-white drop-shadow" />
+              <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
               </div>
             </div>
           </div>
           {/* Floor Color */}
-          <p className="text-[11px] font-bold uppercase tracking-[2px] mt-3 mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Floor Color</p>
+          <p className="int-section-header" style={{ marginTop: '12px' }}>Floor Color</p>
           <div className="flex flex-wrap gap-1.5">
             {floorColorOptions.map(fc => (
-              <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
-                style={{ background: fc.color, borderColor: floorColor === fc.color ? '#C17F4E' : 'transparent' }} title={fc.label} />
+              <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }}
+                className={`int-color-swatch ${floorColor === fc.color ? 'int-color-swatch-active' : ''}`}
+                style={{ background: fc.color }} aria-label={fc.label} role="radio" aria-checked={floorColor === fc.color} />
             ))}
             <div className="relative">
               <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
-              <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
-                <i className="fas fa-eyedropper text-[8px] text-white drop-shadow" />
+              <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
               </div>
             </div>
           </div>
@@ -2336,30 +2339,28 @@ export default function InteriorStudio() {
       ),
       skin: (
         <div className="h-full overflow-y-auto int-scrollbar p-3">
-          <p className="text-[11px] font-bold uppercase tracking-[2px] mb-3" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Design Themes</p>
+          <p className="int-section-header">Design Themes</p>
           <div className="grid grid-cols-2 gap-2">
             {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
               <button key={skin.id} onClick={() => applySkin(skin.id)}
                 className="p-3 rounded-xl border-2 cursor-pointer transition-all text-left"
                 style={{
-                  borderColor: activeSkin === skin.id ? skin.accent : '#E2DDD4',
-                  background: activeSkin === skin.id ? `${skin.accent}10` : '#FAF8F4',
+                  borderColor: activeSkin === skin.id ? skin.accent : '#E8DFD4',
+                  background: activeSkin === skin.id ? `${skin.accent}10` : '#FFFFFF',
                 }}>
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: activeSkin === skin.id ? skin.accent : '#F0E8D8', color: activeSkin === skin.id ? '#fff' : '#5A4E42' }}>
                     <i className={`fas ${skin.icon} text-xs`} />
                   </div>
                   <div>
-                    <p className="text-[13px] font-bold" style={{ color: activeSkin === skin.id ? skin.accent : '#2D2D2D' }}>{skin.name}</p>
+                    <p className="text-[14px] font-bold" style={{ color: activeSkin === skin.id ? skin.accent : '#2D2D2D' }}>{skin.name}</p>
                   </div>
                 </div>
-                <p className="text-[11px] leading-tight" style={{ color: '#5A4E42' }}>{skin.description}</p>
-                {/* Color preview dots */}
-                <div className="flex gap-1 mt-2">
-                  {Object.values(skin.slots).filter(Boolean).slice(0, 5).map((slot, i) => (
-                    <div key={i} className="w-3 h-3 rounded-full border" style={{ background: (slot as any).color, borderColor: '#E2DDD4' }} />
-                  ))}
-                </div>
+                <p className="text-[11px] leading-tight" style={{ color: '#7A6E62' }}>{skin.description}</p>
+                {/* Color preview bar */}
+                <div className="int-skin-colorbar" style={{
+                  background: `linear-gradient(90deg, ${Object.values(skin.slots).filter(Boolean).slice(0, 5).map((s: any) => s.color).join(', ')})`
+                }} />
               </button>
             ))}
           </div>
@@ -2372,69 +2373,72 @@ export default function InteriorStudio() {
       ),
       room: (
         <div className="h-full overflow-y-auto int-scrollbar p-3">
-          <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Room Settings</p>
+          <p className="int-section-header">Room Settings</p>
           {[
             { label: 'Width', val: roomW, min: 4, max: 14, step: 0.5, setter: [setRoomW, (v: number) => roomWRef.current = v] },
             { label: 'Depth', val: roomD, min: 4, max: 12, step: 0.5, setter: [setRoomD, (v: number) => roomDRef.current = v] },
             { label: 'Height', val: roomH, min: 2.5, max: 5, step: 0.25, setter: [setRoomH, (v: number) => roomHRef.current = v] },
           ].map(({ label, val, min, max, step, setter }) => (
             <div key={label as string} className="mb-2">
-              <div className="flex justify-between mb-0.5 items-center"><span className="text-[11px] font-semibold">{label as string}</span>
+              <div className="flex justify-between mb-0.5 items-center"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>{label as string}</span>
                 <div className="flex items-center gap-0.5">
-                  <input type="number" className="w-10 text-[11px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); } }} />
-                  <span className="text-[11px]" style={{ color: '#5A4E42' }}>m</span>
+                  <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#4A3E32' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); } }} />
+                  <span className="text-[12px]" style={{ color: '#4A3E32' }}>m</span>
                 </div>
               </div>
               <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} />
             </div>
           ))}
           {/* Wall Color */}
-          <div className="mb-2"><span className="text-[11px] font-semibold">Wall Color</span>
+          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Wall Color</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {wallColorOptions.map(wc => (
-                <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
-                  style={{ background: wc.color, borderColor: wallCol === wc.color ? '#C17F4E' : 'transparent' }} title={wc.label} />
+                <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }}
+                  className={`int-color-swatch ${wallCol === wc.color ? 'int-color-swatch-active' : ''}`}
+                  style={{ background: wc.color }} aria-label={wc.label} role="radio" aria-checked={wallCol === wc.color} />
               ))}
               <div className="relative">
                 <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
                   className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
-                <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
-                  <i className="fas fa-eyedropper text-[6px] text-white drop-shadow" />
+                <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                  <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
                 </div>
               </div>
             </div>
           </div>
           {/* Floor Type */}
-          <div className="mb-2"><span className="text-[11px] font-semibold">Flooring</span>
+          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {floorTypeOptions.map(ft => (
-                <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; buildRoom(); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
-                  style={{ background: ft.color, borderColor: floorType === ft.id ? '#C17F4E' : 'transparent' }} title={ft.label} />
+                <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; buildRoom(); markUnsaved(); }}
+                  className={`int-color-swatch ${floorType === ft.id ? 'int-color-swatch-active' : ''}`}
+                  style={{ background: ft.color }} aria-label={ft.label} role="radio" aria-checked={floorType === ft.id} />
               ))}
             </div>
           </div>
           {/* Floor Color */}
-          <div className="mb-2"><span className="text-[11px] font-semibold">Floor Color</span>
+          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Floor Color</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {floorColorOptions.map(fc => (
-                <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-8 h-8 rounded-lg cursor-pointer border-2 transition-all"
-                  style={{ background: fc.color, borderColor: floorColor === fc.color ? '#C17F4E' : 'transparent' }} title={fc.label} />
+                <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }}
+                  className={`int-color-swatch ${floorColor === fc.color ? 'int-color-swatch-active' : ''}`}
+                  style={{ background: fc.color }} aria-label={fc.label} role="radio" aria-checked={floorColor === fc.color} />
               ))}
               <div className="relative">
                 <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
                   className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
-                <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
-                  <i className="fas fa-eyedropper text-[6px] text-white drop-shadow" />
+                <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                  <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
                 </div>
               </div>
             </div>
           </div>
           {/* Lighting */}
-          <div><span className="text-[11px] font-semibold">Lighting</span>
+          <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
             <div className="flex gap-1 mt-1.5 flex-wrap">
               {lightMoodOptions.map(lm => (
                 <button key={lm.id} onClick={() => { setLightMood(lm.id); lightMoodRef.current = lm.id; buildRoom(); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                  style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E2DDD4', color: lightMood === lm.id ? '#C17F4E' : '#5A4E42', background: lightMood === lm.id ? 'rgba(193,127,78,0.08)' : 'transparent' }}>
+                  style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E8DFD4', color: lightMood === lm.id ? '#C17F4E' : '#4A3E32', background: lightMood === lm.id ? '#F5E8DC' : 'transparent' }}>
                   {lm.icon} {lm.label}
                 </button>
               ))}
@@ -2442,12 +2446,12 @@ export default function InteriorStudio() {
           </div>
           {/* Ceiling Light Preset - Mobile */}
           <div className="mt-3">
-            <span className="text-[11px] font-semibold">Ceiling Light Style</span>
+            <span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Ceiling Light Style</span>
             <div className="flex gap-1 mt-1.5 flex-wrap">
               {ceilingLightPresets.map(p => (
                 <button key={p.id} onClick={() => { setCeilingLightPreset(p.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'); ceilingLightPresetRef.current = p.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'; const newPositions: Record<string, Array<{ x: number; z: number }>> = { recessed: [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }], chandelier: [{ x: 0, z: 0 }], track: [{ x: -1.2, z: 0 }, { x: -0.4, z: 0 }, { x: 0.4, z: 0 }, { x: 1.2, z: 0 }], panel: [{ x: 0, z: 0 }], pendant: [{ x: -1.2, z: 0 }, { x: 0, z: 0 }, { x: 1.2, z: 0 }] }; ceilingSpotPositionsRef.current = newPositions[p.id] || [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }]; buildRoom(); markUnsaved(); }}
                   className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                  style={{ borderColor: ceilingLightPreset === p.id ? '#C17F4E' : '#E2DDD4', color: ceilingLightPreset === p.id ? '#C17F4E' : '#5A4E42', background: ceilingLightPreset === p.id ? 'rgba(193,127,78,0.08)' : 'transparent' }}>
+                  style={{ borderColor: ceilingLightPreset === p.id ? '#C17F4E' : '#E8DFD4', color: ceilingLightPreset === p.id ? '#C17F4E' : '#4A3E32', background: ceilingLightPreset === p.id ? '#F5E8DC' : 'transparent' }}>
                   <i className={`fas ${p.icon} mr-0.5`} />{p.label}
                 </button>
               ))}
@@ -2457,7 +2461,7 @@ export default function InteriorStudio() {
           <div className="mt-3">
             <button onClick={ceilingEditMode ? exitCeilingEditMode : enterCeilingEditMode}
               className="w-full py-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer border transition-all"
-              style={{ borderColor: ceilingEditMode ? '#C17F4E' : '#E2DDD4', color: ceilingEditMode ? '#C17F4E' : '#5A4E42', background: ceilingEditMode ? 'rgba(193,127,78,0.1)' : 'transparent' }}>
+              style={{ borderColor: ceilingEditMode ? '#C17F4E' : '#E8DFD4', color: ceilingEditMode ? '#C17F4E' : '#4A3E32', background: ceilingEditMode ? 'rgba(193,127,78,0.1)' : 'transparent' }}>
               <i className="fas fa-lightbulb text-[9px]" />{ceilingEditMode ? 'Exit Light Editor' : 'Edit Ceiling Lights'}
             </button>
           </div>
@@ -2472,7 +2476,7 @@ export default function InteriorStudio() {
             </div>
             <div>
               <p className="text-[13px] font-bold" style={{ color: '#2D2D2D' }}>Skeleton Mode</p>
-              <p className="text-[10px]" style={{ color: '#5A4E42' }}>Original bare structure</p>
+              <p className="text-[10px]" style={{ color: '#7A6E62' }}>Original bare structure</p>
             </div>
           </div>
 
@@ -2484,7 +2488,7 @@ export default function InteriorStudio() {
                 {activeSkin === 'default' ? 'Skeleton Active' : `Skin: ${SKINS_DICTIONARY[activeSkin]?.name || activeSkin}`}
               </p>
             </div>
-            <p className="text-[11px]" style={{ color: '#5A4E42' }}>
+            <p className="text-[11px]" style={{ color: '#7A6E62' }}>
               {activeSkin === 'default'
                 ? 'Your room is in its original skeleton state — no theme skin applied.'
                 : 'A design skin is currently applied. Reset to skeleton to remove it.'}
@@ -2501,14 +2505,14 @@ export default function InteriorStudio() {
           )}
 
           {/* Quick skin preview strip */}
-          <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Quick Apply Skin</p>
+          <p className="int-section-header">Quick Apply Skin</p>
           <div className="grid grid-cols-2 gap-2">
             {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
               <button key={skin.id} onClick={() => applySkin(skin.id)}
                 className="p-2.5 rounded-xl border-2 cursor-pointer transition-all text-left"
                 style={{
-                  borderColor: activeSkin === skin.id ? skin.accent : '#E2DDD4',
-                  background: activeSkin === skin.id ? `${skin.accent}10` : '#FAF8F4',
+                  borderColor: activeSkin === skin.id ? skin.accent : '#E8DFD4',
+                  background: activeSkin === skin.id ? `${skin.accent}10` : '#FFFFFF',
                 }}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: activeSkin === skin.id ? skin.accent : '#F0E8D8', color: activeSkin === skin.id ? '#fff' : '#5A4E42' }}>
@@ -2516,18 +2520,16 @@ export default function InteriorStudio() {
                   </div>
                   <span className="text-[11px] font-bold" style={{ color: activeSkin === skin.id ? skin.accent : '#2D2D2D' }}>{skin.name}</span>
                 </div>
-                <div className="flex gap-0.5">
-                  {Object.values(skin.slots).filter(Boolean).slice(0, 4).map((slot, i) => (
-                    <div key={i} className="w-3 h-3 rounded-full border" style={{ background: (slot as any).color, borderColor: '#E2DDD4' }} />
-                  ))}
-                </div>
+                <div className="int-skin-colorbar" style={{
+                  background: `linear-gradient(90deg, ${Object.values(skin.slots).filter(Boolean).slice(0, 4).map((s: any) => s.color).join(', ')})`
+                }} />
               </button>
             ))}
           </div>
 
           {/* Destructive actions */}
           <div className="mt-4 pt-3 border-t" style={{ borderColor: '#E2DDD4' }}>
-            <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Clear & Reset</p>
+            <p className="int-section-header">Clear & Reset</p>
             <div className="flex gap-2">
               <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); activeSkinRef.current = 'default'; applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
                 className="flex-1 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
@@ -2545,13 +2547,13 @@ export default function InteriorStudio() {
       ),
       presets: (
         <div className="h-full overflow-y-auto int-scrollbar p-3">
-          <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Design Presets</p>
-          <p className="text-[11px] mb-3" style={{ color: '#5A4E42' }}>Tap a preset to instantly load a curated room design</p>
+          <p className="int-section-header">Design Presets</p>
+          <p className="text-[11px] mb-3" style={{ color: '#7A6E62' }}>Tap a preset to instantly load a curated room design</p>
           {/* Room type filter */}
           <div className="flex gap-1.5 mb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => (
               <button key={type} onClick={() => setSelectedRoomType(type)}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
+                className={`cursor-pointer transition-all whitespace-nowrap ${selectedRoomType === type ? 'int-cat-tab-active' : 'int-cat-tab'}`}>
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
             ))}
@@ -2560,15 +2562,16 @@ export default function InteriorStudio() {
           <div className="grid grid-cols-1 gap-2">
             {getPresetsForRoom(selectedRoomType).map(preset => (
               <button key={preset.id} onClick={() => loadPreset(preset)}
-                className="p-3 rounded-xl border-2 cursor-pointer transition-all text-left hover:shadow-sm"
-                style={{ borderColor: preset.accent + '40', background: '#FAF8F4' }}>
+                className="p-4 rounded-2xl border cursor-pointer transition-all text-left hover:shadow-sm relative"
+                style={{ borderColor: preset.accent + '40', background: '#FFFFFF' }}>
+                <div className="int-preset-accent-bar" style={{ background: `linear-gradient(90deg, ${preset.accent}, transparent)` }} />
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
                     <i className={`fas ${preset.icon} text-sm`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
-                    <p className="text-[10px]" style={{ color: '#5A4E42' }}>{preset.description}</p>
+                    <p className="text-[13px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
+                    <p className="text-[11px]" style={{ color: '#7A6E62' }}>{preset.description}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px]" style={{ color: '#5A4E42' }}>{preset.furniture.length} pieces</span>
                       <div className="flex gap-0.5">
@@ -2597,77 +2600,75 @@ export default function InteriorStudio() {
 
   /* ===== DESKTOP SIDEBAR CONTENT ===== */
   const renderDesktopSidebar = () => (
-    <aside className="int-scrollbar h-screen overflow-y-auto" style={{ width: sidebarOpen ? 310 : 0, minWidth: sidebarOpen ? 310 : 0, background: '#FFFFFF', borderRight: sidebarOpen ? '1px solid #E2DDD4' : 'none', overflow: sidebarOpen ? 'auto' : 'hidden', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+    <aside className={`int-scrollbar h-screen overflow-y-auto int-sidebar int-sidebar-glow-${lightMood}`} style={{ width: sidebarOpen ? 320 : 0, minWidth: sidebarOpen ? 320 : 0, borderRight: sidebarOpen ? '1px solid #E8DFD4' : 'none', overflow: sidebarOpen ? 'auto' : 'hidden', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
       {/* Logo */}
-      <div className="p-5 border-b" style={{ borderColor: '#E2DDD4' }}>
+      <div className="p-5 int-logo-border">
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="Instod" className="w-8 h-8 rounded-lg" />
-          <div><h1 className="text-base font-bold leading-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Instod</h1><p className="text-[10px]" style={{ color: '#5A4E42' }}>3D Design Previewer</p></div>
+          <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-xl" />
+          <div><h1 className="text-lg font-bold leading-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Instod</h1><p className="text-[12px]" style={{ color: '#7A6E62' }}>3D Design Previewer</p></div>
         </div>
       </div>
 
       {/* Furniture Library */}
-      <div className="p-4 border-b" style={{ borderColor: '#E2DDD4' }}>
-        <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Furniture Library</p>
+      <div className="p-5">
+        <p className="int-section-header">Furniture Library</p>
         <div className="relative mb-2">
-          <i className="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#5A4E42' }} />
-          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search furniture..." className="w-full pl-7 pr-3 py-1.5 rounded-lg text-xs border" style={{ borderColor: '#E2DDD4', background: '#FAF8F4' }} />
+          <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[13px]" style={{ color: '#7A6E62' }} />
+          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search furniture..." className="int-search-input" />
         </div>
         <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
           {categories.map(cat => (
-            <button key={cat.id} onClick={() => setCurrentCat(cat.id)} className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer transition-all whitespace-nowrap border"
-              style={{ background: currentCat === cat.id ? '#C17F4E' : '#FAF8F4', color: currentCat === cat.id ? '#fff' : '#5A4E42', borderColor: currentCat === cat.id ? '#C17F4E' : 'transparent' }}>
+            <button key={cat.id} onClick={() => setCurrentCat(cat.id)} className={`int-cat-tab ${currentCat === cat.id ? 'int-cat-tab-active' : ''}`}>
               <i className={`fas ${cat.icon} mr-0.5`} />{cat.label}
             </button>
           ))}
         </div>
         <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
           {filteredItems.map(item => (
-            <button key={item.name} onClick={() => addFurniture(item.fn, currentColor, currentMatType)} className="p-2.5 rounded-xl border cursor-pointer transition-all duration-200 text-left hover:-translate-y-1 hover:shadow-lg active:scale-[0.97]"
-              style={{ background: '#FAF8F4', borderColor: '#E8E2DA' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#C17F4E'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(193,127,78,0.12)'; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E8E2DA'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-1 text-sm" style={{ background: '#F0E8D8', color: '#5A4E42' }}><i className={`fas ${item.icon}`} /></div>
-              <p className="text-[12px] font-semibold leading-tight">{item.name}</p>
-              <p className="text-[10px]" style={{ color: '#5A4E42' }}>{item.desc}</p>
+            <button key={item.name} onClick={() => addFurniture(item.fn, currentColor, currentMatType)} className="int-furniture-card">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-1 text-base" style={{ background: '#F0E8D8', color: '#5A4E42' }}><i className={`fas ${item.icon}`} /></div>
+              <p className="text-[13px] font-semibold leading-tight">{item.name}</p>
+              <p className="text-[11px]" style={{ color: '#7A6E62' }}>{item.desc}</p>
             </button>
           ))}
           {filteredItems.length === 0 && <p className="text-xs col-span-2 text-center py-4" style={{ color: '#5A4E42' }}>No items found</p>}
         </div>
       </div>
+      <div className="int-section-divider" />
 
       {/* Material & Color */}
-      <div className="p-4 border-b" style={{ borderColor: '#E2DDD4' }}>
-        <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Material & Color</p>
+      <div className="p-5">
+        <p className="int-section-header">Material & Color</p>
         <div className="flex gap-1 mb-2 flex-wrap">
           {(['fabric', 'leather', 'wood', 'metal'] as MatType[]).map(t => (
-            <button key={t} onClick={() => setCurrentMatType(t)} className="text-[11px] px-3 py-1.5 rounded-full border cursor-pointer transition-all"
-              style={{ borderColor: currentMatType === t ? '#C17F4E' : '#E2DDD4', background: currentMatType === t ? 'rgba(193,127,78,0.1)' : 'transparent', color: currentMatType === t ? '#C17F4E' : '#5A4E42' }}>
+            <button key={t} onClick={() => setCurrentMatType(t)} className={`int-mat-pill ${currentMatType === t ? 'int-mat-pill-active' : ''}`}>
               {t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {(isGuest ? matColors[currentMatType].slice(0, GUEST_COLORS_PER_TYPE) : matColors[currentMatType]).map(c => (
-            <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }} className="w-7 h-7 rounded-lg cursor-pointer transition-all border-2"
-              style={{ background: c, borderColor: currentColor === c ? '#C17F4E' : 'transparent', boxShadow: currentColor === c ? '0 0 0 2px rgba(193,127,78,0.3)' : 'none' }} title={colorNames[c] || c} />
+            <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }} className={`int-color-swatch ${currentColor === c ? 'int-color-swatch-active' : ''}`}
+              style={{ background: c }} aria-label={colorNames[c] || c} role="radio" aria-checked={currentColor === c} />
           ))}
         </div>
-        <div className="flex items-center gap-2 mt-2"><span className="text-[11px]" style={{ color: '#5A4E42' }}>Selected:</span><span className="text-[12px] font-semibold" style={{ color: '#C17F4E' }}>{colorNames[currentColor] || currentColor}</span></div>
+        <div className="flex items-center gap-2 mt-2"><span className="text-[12px]" style={{ color: '#7A6E62' }}>Selected:</span><span className="text-[13px] font-semibold" style={{ color: '#C17F4E' }}>{colorNames[currentColor] || currentColor}</span></div>
       </div>
+      <div className="int-section-divider" />
 
       {/* Room Settings */}
-      <div className="p-4 border-b" style={{ borderColor: '#E2DDD4' }}>
-        <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Room Settings</p>
+      <div className="p-5">
+        <p className="int-section-header">Room Settings</p>
         {[
           { label: 'Width', val: roomW, min: 4, max: 14, step: 0.5, setter: [setRoomW, (v: number) => roomWRef.current = v] },
           { label: 'Depth', val: roomD, min: 4, max: 12, step: 0.5, setter: [setRoomD, (v: number) => roomDRef.current = v] },
           { label: 'Ceiling Height', val: roomH, min: 2.5, max: 5, step: 0.25, setter: [setRoomH, (v: number) => roomHRef.current = v] },
         ].map(({ label, val, min, max, step, setter }) => (
           <div key={label as string} className="mb-2">
-            <div className="flex justify-between mb-0.5 items-center"><span className="text-[11px] font-semibold">{label as string}</span>
+            <div className="flex justify-between mb-0.5 items-center"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>{label as string}</span>
               <div className="flex items-center gap-0.5">
-                <input type="number" className="w-10 text-[11px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); buildRoom(); markUnsaved(); } }} />
-                <span className="text-[11px]" style={{ color: '#5A4E42' }}>m</span>
+                <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); buildRoom(); markUnsaved(); } }} />
+                <span className="text-[12px]" style={{ color: '#5A4E42' }}>m</span>
               </div>
             </div>
             <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} />
@@ -2675,7 +2676,7 @@ export default function InteriorStudio() {
         ))}
 
         {/* Wall Color */}
-        <div className="mb-2"><span className="text-[11px] font-semibold">Wall Color</span>
+        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Wall Color</span>
           <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
             {wallColorOptions.map(wc => (
               <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
@@ -2684,7 +2685,7 @@ export default function InteriorStudio() {
             <div className="relative">
               <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-7 h-7" />
-              <div className="w-7 h-7 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+              <div className="w-7 h-7 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                 <i className="fas fa-eyedropper text-[8px] text-white drop-shadow" />
               </div>
             </div>
@@ -2692,7 +2693,7 @@ export default function InteriorStudio() {
         </div>
 
         {/* Floor Type */}
-        <div className="mb-2"><span className="text-[11px] font-semibold">Flooring</span>
+        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
           <div className="flex gap-1.5 mt-1.5">
             {floorTypeOptions.map(ft => (
               <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; buildRoom(); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
@@ -2702,7 +2703,7 @@ export default function InteriorStudio() {
         </div>
 
         {/* Floor Color */}
-        <div className="mb-2"><span className="text-[11px] font-semibold">Floor Color</span>
+        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Floor Color</span>
           <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
             {floorColorOptions.map(fc => (
               <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
@@ -2711,7 +2712,7 @@ export default function InteriorStudio() {
             <div className="relative">
               <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-7 h-7" />
-              <div className="w-7 h-7 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E2DDD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+              <div className="w-7 h-7 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                 <i className="fas fa-eyedropper text-[8px] text-white drop-shadow" />
               </div>
             </div>
@@ -2719,11 +2720,11 @@ export default function InteriorStudio() {
         </div>
 
         {/* Door */}
-        <div className="mb-2"><span className="text-[11px] font-semibold">Door</span>
+        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
           <div className="flex gap-1 mt-1.5">
             {['none', 'back', 'left', 'right'].map(dw => (
               <button key={dw} onClick={() => { setDoorWall(dw); doorWallRef.current = dw; buildRoom(); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                style={{ borderColor: doorWall === dw ? '#C17F4E' : '#E2DDD4', color: doorWall === dw ? '#C17F4E' : '#5A4E42', background: doorWall === dw ? 'rgba(193,127,78,0.08)' : 'transparent' }}>
+                style={{ borderColor: doorWall === dw ? '#C17F4E' : '#E8DFD4', color: doorWall === dw ? '#C17F4E' : '#4A3E32', background: doorWall === dw ? '#F5E8DC' : 'transparent' }}>
                 {dw === 'none' ? 'None' : dw.charAt(0).toUpperCase() + dw.slice(1)}
               </button>
             ))}
@@ -2732,12 +2733,12 @@ export default function InteriorStudio() {
 
         {/* Windows */}
         <div className="mb-2">
-          <div className="flex justify-between mb-0.5"><span className="text-[11px] font-semibold">Windows</span><span className="text-[10px]" style={{ color: '#5A4E42' }}>{windowCount}</span></div>
+          <div className="flex justify-between mb-0.5"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Windows</span><span className="text-[12px]" style={{ color: '#5A4E42' }}>{windowCount}</span></div>
           <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; buildRoom(); markUnsaved(); }} />
           <div className="flex gap-1 mt-1">
             {['back', 'left', 'right'].map(ww => (
               <button key={ww} onClick={() => { setWindowWall(ww); windowWallRef.current = ww; buildRoom(); markUnsaved(); }} className="px-2 py-0.5 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                style={{ borderColor: windowWall === ww ? '#C17F4E' : '#E2DDD4', color: windowWall === ww ? '#C17F4E' : '#5A4E42' }}>
+                style={{ borderColor: windowWall === ww ? '#C17F4E' : '#E8DFD4', color: windowWall === ww ? '#C17F4E' : '#4A3E32' }}>
                 {ww.charAt(0).toUpperCase() + ww.slice(1)}
               </button>
             ))}
@@ -2745,11 +2746,11 @@ export default function InteriorStudio() {
         </div>
 
         {/* Lighting Mood */}
-        <div><span className="text-[11px] font-semibold">Lighting</span>
+        <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
           <div className="flex gap-1.5 mt-1.5">
             {lightMoodOptions.map(lm => (
               <button key={lm.id} onClick={() => { setLightMood(lm.id); lightMoodRef.current = lm.id; buildRoom(); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E2DDD4', color: lightMood === lm.id ? '#C17F4E' : '#5A4E42', background: lightMood === lm.id ? 'rgba(193,127,78,0.08)' : 'transparent' }}>
+                style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E8DFD4', color: lightMood === lm.id ? '#C17F4E' : '#4A3E32', background: lightMood === lm.id ? '#F5E8DC' : 'transparent' }}>
                 {lm.icon} {lm.label}
               </button>
             ))}
@@ -2758,12 +2759,12 @@ export default function InteriorStudio() {
 
         {/* Ceiling Light Preset */}
         <div className="mb-3">
-          <span className="text-[11px] font-semibold">Ceiling Light Style</span>
+          <span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Ceiling Light Style</span>
           <div className="flex gap-1 mt-1.5 flex-wrap">
             {ceilingLightPresets.map(preset => (
               <button key={preset.id} onClick={() => { setCeilingLightPreset(preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'); ceilingLightPresetRef.current = preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'; const newPositions: Record<string, Array<{ x: number; z: number }>> = { recessed: [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }], chandelier: [{ x: 0, z: 0 }], track: [{ x: -1.2, z: 0 }, { x: -0.4, z: 0 }, { x: 0.4, z: 0 }, { x: 1.2, z: 0 }], panel: [{ x: 0, z: 0 }], pendant: [{ x: -1.2, z: 0 }, { x: 0, z: 0 }, { x: 1.2, z: 0 }] }; ceilingSpotPositionsRef.current = newPositions[preset.id] || [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }]; buildRoom(); markUnsaved(); }}
                 className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                style={{ borderColor: ceilingLightPreset === preset.id ? '#C17F4E' : '#E2DDD4', color: ceilingLightPreset === preset.id ? '#C17F4E' : '#5A4E42', background: ceilingLightPreset === preset.id ? 'rgba(193,127,78,0.08)' : 'transparent' }}>
+                style={{ borderColor: ceilingLightPreset === preset.id ? '#C17F4E' : '#E8DFD4', color: ceilingLightPreset === preset.id ? '#C17F4E' : '#4A3E32', background: ceilingLightPreset === preset.id ? '#F5E8DC' : 'transparent' }}>
                 <i className={`fas ${preset.icon} mr-0.5`} />{preset.label}
               </button>
             ))}
@@ -2774,19 +2775,20 @@ export default function InteriorStudio() {
         <div className="mt-3">
           <button onClick={ceilingEditMode ? exitCeilingEditMode : enterCeilingEditMode}
             className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer border transition-all"
-            style={{ borderColor: ceilingEditMode ? '#C17F4E' : '#E2DDD4', color: ceilingEditMode ? '#C17F4E' : '#5A4E42', background: ceilingEditMode ? 'rgba(193,127,78,0.1)' : 'transparent' }}>
-            <i className="fas fa-lightbulb text-[10px]" />{ceilingEditMode ? 'Exit Light Editor' : 'Edit Ceiling Lights'}
+            style={{ borderColor: ceilingEditMode ? '#C17F4E' : '#E8DFD4', color: ceilingEditMode ? '#C17F4E' : '#4A3E32', background: ceilingEditMode ? 'rgba(193,127,78,0.1)' : 'transparent' }}>
+            <i className="fas fa-lightbulb text-[12px]" />{ceilingEditMode ? 'Exit Light Editor' : 'Edit Ceiling Lights'}
           </button>
         </div>
       </div>
+      <div className="int-section-divider" />
 
       {/* Design Presets */}
-      <div className="p-4 border-t" style={{ borderColor: '#E2DDD4' }}>
-        <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Design Presets</p>
+      <div className="p-5">
+        <p className="int-section-header">Design Presets</p>
         <div className="flex gap-1.5 mb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => (
             <button key={type} onClick={() => setSelectedRoomType(type)}
-              className={`px-2.5 py-1.5 rounded-md text-[11px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
+              className={`px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
           ))}
@@ -2794,39 +2796,41 @@ export default function InteriorStudio() {
         <div className="space-y-1.5 max-h-40 overflow-y-auto int-scrollbar">
           {getPresetsForRoom(selectedRoomType).map(preset => (
             <button key={preset.id} onClick={() => loadPreset(preset)}
-              className="w-full p-3 rounded-xl border cursor-pointer transition-all text-left hover:shadow-md hover:-translate-y-0.5"
-              style={{ borderColor: preset.accent + '30', background: '#FAF8F4' }}>
+              className="w-full p-4 rounded-2xl border cursor-pointer transition-all text-left hover:shadow-lg hover:-translate-y-1"
+              style={{ borderColor: preset.accent + '30', background: '#FFFFFF' }}>
+              <div className="int-preset-accent-bar" style={{ background: `linear-gradient(90deg, ${preset.accent}, transparent)` }} />
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
-                  <i className={`fas ${preset.icon} text-[11px]`} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
+                  <i className={`fas ${preset.icon} text-[14px]`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
-                  <p className="text-[10px] truncate" style={{ color: '#5A4E42' }}>{preset.description}</p>
+                  <p className="text-[13px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
+                  <p className="text-[11px] truncate" style={{ color: '#7A6E62' }}>{preset.description}</p>
                 </div>
               </div>
             </button>
           ))}
         </div>
       </div>
+      <div className="int-section-divider" />
 
       {/* Design Skins */}
-      <div className="p-4 border-t" style={{ borderColor: '#E2DDD4' }}>
-        <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Design Skins</p>
+      <div className="p-5">
+        <p className="int-section-header">Design Skins</p>
         {/* Skeleton button - always prominent at top */}
         <button onClick={() => applySkin('default')}
           className="w-full p-3 rounded-xl border-2 cursor-pointer transition-all text-left mb-2 hover:shadow-md"
           style={{
-            borderColor: activeSkin === 'default' ? '#5C4033' : '#E2DDD4',
-            background: activeSkin === 'default' ? 'rgba(92,64,51,0.08)' : '#FAF8F4',
+            borderColor: activeSkin === 'default' ? '#5C4033' : '#E8DFD4',
+            background: activeSkin === 'default' ? 'rgba(92,64,51,0.08)' : '#FFFFFF',
           }}>
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: activeSkin === 'default' ? '#5C4033' : '#F0E8D8', color: activeSkin === 'default' ? '#fff' : '#5A4E42' }}>
-              <i className="fas fa-bone text-[12px]" />
+              <i className="fas fa-bone text-[14px]" />
             </div>
             <div>
-              <span className="text-[12px] font-bold" style={{ color: activeSkin === 'default' ? '#5C4033' : '#2D2D2D' }}>Skeleton</span>
-              <p className="text-[10px]" style={{ color: '#5A4E42' }}>Original bare structure</p>
+              <span className="text-[13px] font-bold" style={{ color: activeSkin === 'default' ? '#5C4033' : '#2D2D2D' }}>Skeleton</span>
+              <p className="text-[11px]" style={{ color: '#7A6E62' }}>Original bare structure</p>
             </div>
             {activeSkin === 'default' && (
               <i className="fas fa-check-circle text-[10px] ml-auto" style={{ color: '#5C4033' }} />
@@ -2838,56 +2842,47 @@ export default function InteriorStudio() {
             <button key={skin.id} onClick={() => applySkin(skin.id)}
               className="p-3 rounded-xl border-2 cursor-pointer transition-all text-left hover:shadow-md"
               style={{
-                borderColor: activeSkin === skin.id ? skin.accent : '#E2DDD4',
-                background: activeSkin === skin.id ? `${skin.accent}10` : '#FAF8F4',
+                borderColor: activeSkin === skin.id ? skin.accent : '#E8DFD4',
+                background: activeSkin === skin.id ? `${skin.accent}10` : '#FFFFFF',
               }}>
               <div className="flex items-center gap-1.5 mb-1">
-                <i className={`fas ${skin.icon} text-[12px]`} style={{ color: activeSkin === skin.id ? skin.accent : '#5A4E42' }} />
-                <span className="text-[12px] font-semibold" style={{ color: activeSkin === skin.id ? skin.accent : '#2D2D2D' }}>{skin.name}</span>
+                <i className={`fas ${skin.icon} text-[14px]`} style={{ color: activeSkin === skin.id ? skin.accent : '#5A4E42' }} />
+                <span className="text-[13px] font-bold" style={{ color: activeSkin === skin.id ? skin.accent : '#2D2D2D' }}>{skin.name}</span>
               </div>
-              <div className="flex gap-0.5">
-                {Object.values(skin.slots).filter(Boolean).slice(0, 4).map((slot, i) => (
-                  <div key={i} className="w-2.5 h-2.5 rounded-full border" style={{ background: (slot as any).color, borderColor: '#E2DDD4' }} />
-                ))}
-              </div>
+              <div className="int-skin-colorbar" style={{
+                background: `linear-gradient(90deg, ${Object.values(skin.slots).filter(Boolean).slice(0, 5).map((s: any) => s.color).join(', ')})`
+              }} />
             </button>
           ))}
         </div>
         {/* Clear & Reset */}
-        <div className="mt-3 pt-2 border-t" style={{ borderColor: '#F0E8D8' }}>
-          <p className="text-[10px] font-bold uppercase tracking-[2px] mb-1.5" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Clear & Reset</p>
+        <div className="mt-3 pt-2">
           <div className="flex gap-1.5">
             <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); activeSkinRef.current = 'default'; applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
-              className="flex-1 py-2 rounded-xl text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
-              style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
-              <i className="fas fa-eraser text-[9px]" />Clear
-            </button>
+              className="int-btn-danger flex-1"><i className="fas fa-eraser" />Clear</button>
             <button onClick={() => { if (confirm('Reset the entire room?')) resetRoom(); }}
-              className="flex-1 py-2 rounded-xl text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
-              style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
-              <i className="fas fa-trash-alt text-[9px]" />Reset
-            </button>
+              className="int-btn-danger flex-1"><i className="fas fa-trash-alt" />Reset</button>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="p-4">
-        <p className="text-[11px] font-bold uppercase tracking-[2px] mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Actions</p>
+      <div className="p-5">
+        <p className="int-section-header">Actions</p>
         <div className="flex flex-col gap-1.5">
-          <button onClick={saveRoom} className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer border-none" style={{ background: '#7A8B6F', color: '#fff' }}><i className="fas fa-save text-[10px]" />Save Room</button>
+          <button onClick={saveRoom} className="int-btn-primary w-full"><i className="fas fa-save text-[12px]" />Save Room</button>
           {!isGuest && (
-            <button onClick={() => window.location.href = '/dashboard'} className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer" style={{ background: '#FAF8F4', color: '#C17F4E', border: '1px solid #E2DDD4' }}><i className="fas fa-th-large text-[10px]" />Go to Dashboard</button>
+            <button onClick={() => window.location.href = '/dashboard'} className="int-btn-secondary w-full"><i className="fas fa-th-large text-[12px]" />Go to Dashboard</button>
           )}
           <div className="flex gap-1.5">
-            <button onClick={() => setShowSnapshots(true)} className="flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#C17F4E', border: '1px solid #E2DDD4' }}><i className="fas fa-camera-retro text-[10px]" />Snapshots</button>
-            <button onClick={takeScreenshot} className="flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#2D2D2D', border: '1px solid #E2DDD4' }}><i className="fas fa-camera text-[10px]" />Screenshot</button>
+            <button onClick={() => setShowSnapshots(true)} className="int-btn-secondary flex-1"><i className="fas fa-camera-retro text-[12px]" />Snapshots</button>
+            <button onClick={takeScreenshot} className="int-btn-secondary flex-1"><i className="fas fa-camera text-[12px]" />Screenshot</button>
           </div>
           <div className="flex gap-1.5">
-            <button onClick={exportHD} className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#5A4E42', border: '1px solid #E2DDD4' }}><i className="fas fa-expand text-[10px]" />Export HD</button>
-            <button onClick={exportFloorPlan} className="flex-1 py-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#FAF8F4', color: '#5A4E42', border: '1px solid #E2DDD4' }}><i className="fas fa-drafting-compass text-[10px]" />Floor Plan</button>
+            <button onClick={exportHD} className="int-btn-secondary flex-1"><i className="fas fa-expand text-[12px]" />Export HD</button>
+            <button onClick={exportFloorPlan} className="int-btn-secondary flex-1"><i className="fas fa-drafting-compass text-[12px]" />Floor Plan</button>
           </div>
-          <button onClick={deleteSelected} className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer" style={{ background: '#fff', color: '#c0392b', border: '1px solid #e8d0d0' }}><i className="fas fa-trash-alt text-[10px]" />Delete Selected</button>
+          <button onClick={deleteSelected} className="int-btn-danger w-full"><i className="fas fa-trash-alt text-[12px]" />Delete Selected</button>
         </div>
       </div>
     </aside>
