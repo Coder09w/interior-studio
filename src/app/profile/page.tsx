@@ -285,7 +285,7 @@ function ProfileContent() {
               className="text-lg font-bold tracking-tight hidden sm:inline"
               style={{ color: '#2D2D2D' }}
             >
-              Interior Studio
+              Instod
             </span>
           </div>
 

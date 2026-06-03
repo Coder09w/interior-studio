@@ -1,23 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import SiteNav from '@/components/site-nav';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
   Sofa,
   Check,
   ChevronRight,
   ArrowLeft,
-  Loader2,
   Zap,
   Building2,
   Crown,
   Eye,
   Layout,
-  Calculator,
-  Presentation,
   GitBranch,
   Palette,
   Sparkles,
@@ -159,15 +161,6 @@ const PLAN_CARDS = [
 export default function PricingPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  const handleCtaClick = (planKey: PlanKey) => {
-    if (session) {
-      router.push('/dashboard');
-    } else {
-      router.push('/auth/signup');
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F5F0E8' }}>
@@ -279,7 +272,7 @@ export default function PricingPage() {
               if (session) {
                 router.push('/dashboard');
               } else {
-                router.push('/auth/signup');
+                router.push('/editor');
               }
             }}
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
@@ -476,7 +469,7 @@ export default function PricingPage() {
               if (session) {
                 router.push('/dashboard');
               } else {
-                router.push('/auth/signup');
+                router.push('/editor');
               }
             }}
             className="mt-6 inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
@@ -493,39 +486,58 @@ export default function PricingPage() {
         <h2 className="text-2xl font-bold text-center mb-8 pt-12" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           Frequently Asked Questions
         </h2>
-        <div className="max-w-2xl mx-auto space-y-4">
-          {[
-            {
-              q: 'Is it really free? What\'s the catch?',
-              a: 'No catch! We\'re in Early Access Beta, which means we\'re still building and improving the product. We want real users to experience everything and give us feedback. All premium features are completely free during this period.',
-            },
-            {
-              q: 'What happens when beta ends?',
-              a: 'We\'ll give you plenty of notice before introducing paid plans. Your existing projects will always be safe, and early adopters will receive exclusive discounts and extended premium access. You won\'t lose any of your work.',
-            },
-            {
-              q: 'Do I need a credit card to sign up?',
-              a: 'No. No credit card, no payment info, no hidden charges. Just create an account and start designing.',
-            },
-            {
-              q: 'What features do I get access to?',
-              a: 'During beta, you get access to all Pro and Studio features: unlimited projects, all furniture items, revision snapshots, mood boards, share links, exports, floor plans, and more. Everything is unlocked.',
-            },
-            {
-              q: 'Can I use the 3D editor without signing up?',
-              a: 'Yes! You can start designing immediately without an account. Sign up only when you want to save your projects.',
-            },
-            {
-              q: 'What about early adopter perks?',
-              a: 'Users who join during beta will receive special benefits when premium plans launch — including extended free access, exclusive discounts, and founding member status. The earlier you join, the better the perks.',
-            },
-          ].map(({ q, a }) => (
-            <div key={q} className="rounded-xl border p-5" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
-              <h4 className="font-semibold text-sm" style={{ color: '#2D2D2D' }}>{q}</h4>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: '#5A4E42' }}>{a}</p>
+        <div className="max-w-2xl mx-auto">
+            <div className="rounded-2xl border overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
+              <Accordion type="single" collapsible className="px-6">
+                {[
+                  {
+                    q: 'Is it really free? What\'s the catch?',
+                    a: 'No catch! We\'re in Early Access Beta, which means we\'re still building and improving the product. We want real users to experience everything and give us feedback. All premium features are completely free during this period.',
+                  },
+                  {
+                    q: 'What happens when beta ends?',
+                    a: 'We\'ll give you plenty of notice before introducing paid plans. Your existing projects will always be safe, and early adopters will receive exclusive discounts and extended premium access. You won\'t lose any of your work.',
+                  },
+                  {
+                    q: 'Do I need a credit card to sign up?',
+                    a: 'No. No credit card, no payment info, no hidden charges. Just create an account and start designing.',
+                  },
+                  {
+                    q: 'What features do I get access to?',
+                    a: 'During beta, you get access to all Pro and Studio features: unlimited projects, all furniture items, revision snapshots, mood boards, share links, exports, floor plans, and more. Everything is unlocked.',
+                  },
+                  {
+                    q: 'Can I use the 3D editor without signing up?',
+                    a: 'Yes! You can start designing immediately without an account. Sign up only when you want to save your projects.',
+                  },
+                  {
+                    q: 'What about early adopter perks?',
+                    a: 'Users who join during beta will receive special benefits when premium plans launch — including extended free access, exclusive discounts, and founding member status. The earlier you join, the better the perks.',
+                  },
+                ].map(({ q, a }, index) => (
+                  <AccordionItem
+                    key={q}
+                    value={`faq-${index}`}
+                    className="border-b last:border-b-0"
+                    style={{ borderColor: '#E2DDD4' }}
+                  >
+                    <AccordionTrigger
+                      className="text-left text-sm font-semibold py-5 hover:no-underline"
+                      style={{ color: '#2D2D2D', fontFamily: "'Outfit', sans-serif" }}
+                    >
+                      {q}
+                    </AccordionTrigger>
+                    <AccordionContent
+                      className="text-sm leading-relaxed pb-5"
+                      style={{ color: '#5A4E42' }}
+                    >
+                      {a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
-          ))}
-        </div>
+          </div>
       </div>
     </div>
   );

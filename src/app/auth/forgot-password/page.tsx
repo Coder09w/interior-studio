@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
             className="text-2xl font-bold tracking-tight"
             style={{ color: '#2D2D2D' }}
           >
-            Interior Studio
+            Instod
           </h1>
         </div>
 

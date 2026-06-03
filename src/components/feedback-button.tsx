@@ -122,7 +122,7 @@ export function FeedbackButton() {
                   Share Your Feedback
                 </h3>
                 <p className="text-[11px]" style={{ color: '#5A4E42' }}>
-                  Help us improve Interior Studio
+                  Help us improve Instod
                 </p>
               </div>
             </div>

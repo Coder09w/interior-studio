@@ -64,6 +64,17 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Manual validation for subject since Select's required prop is unreliable
+    if (!formData.subject) {
+      toast({
+        title: 'Please select a subject',
+        description: 'Choose a subject from the dropdown so we can route your message correctly.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -192,7 +203,7 @@ export default function ContactPage() {
                 </div>
               </div>
               <p className="text-sm" style={{ color: '#555' }}>
-                Interior Studio<br />
+                Instod<br />
                 Remote-first team<br />
                 Worldwide
               </p>
@@ -328,7 +339,7 @@ export default function ContactPage() {
               Frequently Asked Questions
             </h2>
             <p className="mt-3 text-base max-w-lg mx-auto" style={{ color: '#5A4E42' }}>
-              Find quick answers to common questions about Interior Studio.
+              Find quick answers to common questions about Instod.
             </p>
           </div>
 
@@ -371,7 +382,7 @@ export default function ContactPage() {
                 <Sofa className="w-4 h-4 text-white" />
               </div>
               <span className="text-sm font-semibold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-                Interior Studio
+                Instod
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm" style={{ color: '#5A4E42' }}>
@@ -380,7 +391,7 @@ export default function ContactPage() {
               <Link href="/contact" className="font-medium" style={{ color: '#C17F4E' }}>Contact Us</Link>
             </div>
             <p className="text-xs" style={{ color: '#5A4E42' }}>
-              &copy; {new Date().getFullYear()} Interior Studio. All rights reserved.
+              &copy; {new Date().getFullYear()} Instod. All rights reserved.
             </p>
           </div>
         </div>

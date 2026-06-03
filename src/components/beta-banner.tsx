@@ -5,16 +5,16 @@ import { useState, useEffect } from 'react';
 
 /**
  * BetaBanner — Shows an "Early Access Beta" banner at the top of the app.
- * Dismissible per session (stored in sessionStorage).
+ * Dismissible permanently (stored in localStorage).
  * Only renders when NEXT_PUBLIC_BETA_MODE is 'true'.
  */
 export function BetaBanner() {
   const [dismissed, setDismissed] = useState(true); // Start true to avoid flash
 
   useEffect(() => {
-    // Only show if beta mode is enabled and not dismissed this session
+    // Only show if beta mode is enabled and not dismissed
     const isBeta = process.env.NEXT_PUBLIC_BETA_MODE === 'true';
-    const wasDismissed = sessionStorage.getItem('beta-banner-dismissed') === 'true';
+    const wasDismissed = localStorage.getItem('beta-banner-dismissed') === 'true';
     if (isBeta && !wasDismissed) {
       setDismissed(false);
     }
@@ -41,7 +41,7 @@ export function BetaBanner() {
         <button
           onClick={() => {
             setDismissed(true);
-            sessionStorage.setItem('beta-banner-dismissed', 'true');
+            localStorage.setItem('beta-banner-dismissed', 'true');
           }}
           className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:opacity-80 transition-opacity"
           aria-label="Dismiss banner"

@@ -404,7 +404,7 @@ function HeroSection() {
                   className="flex-1 text-center text-xs font-medium rounded-md py-1 mx-8"
                   style={{ background: '#F5F0E8', color: '#5A4E42' }}
                 >
-                  Interior Studio — Living Room
+                  Instod — Living Room
                 </div>
               </div>
 
@@ -1003,6 +1003,7 @@ function ShowcaseBannerSection() {
               <h2
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight"
                 style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
+                aria-label="See Your Designs Come Alive"
               >
                 See Your Designs{' '}
                 <span style={{ color: '#C17F4E' }}>Come Alive</span>
@@ -1066,7 +1067,7 @@ function ShowcaseBannerSection() {
                   className="flex-1 text-center text-xs font-medium rounded-md py-1 mx-8"
                   style={{ background: '#F5F0E8', color: '#5A4E42' }}
                 >
-                  Interior Studio — Living Room
+                  Instod — Living Room
                 </div>
               </div>
 

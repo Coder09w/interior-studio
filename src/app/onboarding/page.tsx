@@ -231,7 +231,7 @@ function OnboardingContent() {
               className="text-3xl sm:text-4xl font-bold mb-3"
               style={{ color: '#2D2D2D' }}
             >
-              Welcome to Interior Studio{userName ? `, ${userName}` : ''}!
+              Welcome to Instod{userName ? `, ${userName}` : ''}!
             </h1>
             <p
               className="text-lg mb-8"

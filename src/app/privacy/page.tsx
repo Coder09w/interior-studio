@@ -6,7 +6,7 @@ import SiteNav from '@/components/site-nav';
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
-    'Learn how Interior Studio collects, uses, and protects your personal data. Our privacy policy outlines your rights and our commitments to data security.',
+    'Learn how Instod collects, uses, and protects your personal data. Our privacy policy outlines your rights and our commitments to data security.',
 };
 
 const sections = [
@@ -14,7 +14,7 @@ const sections = [
     id: 'information-we-collect',
     icon: Database,
     title: '1. Information We Collect',
-    content: `When you use Interior Studio, we collect certain information to provide and improve our services. This includes personal information you provide directly, such as your name, email address, and account credentials when you register for an account. We also collect information about the room designs you create, including layout configurations, furniture placements, material selections, and color choices — this data is essential for saving and rendering your design projects across sessions.
+    content: `When you use Instod, we collect certain information to provide and improve our services. This includes personal information you provide directly, such as your name, email address, and account credentials when you register for an account. We also collect information about the room designs you create, including layout configurations, furniture placements, material selections, and color choices — this data is essential for saving and rendering your design projects across sessions.
 
 In addition to the information you provide, we automatically collect certain technical data when you interact with our platform. This includes your IP address, browser type, operating system, device identifiers, and pages visited within the application. We also record usage patterns such as the features you use most frequently, the time spent in the 3D editor, and the actions you perform within a design session. This information helps us understand how our users engage with the platform and enables us to prioritize feature development and bug fixes effectively.`,
   },
@@ -22,7 +22,7 @@ In addition to the information you provide, we automatically collect certain tec
     id: 'cookies-and-analytics',
     icon: Cookie,
     title: '2. Cookies and Analytics',
-    content: `Interior Studio uses cookies and similar tracking technologies to enhance your browsing experience and collect analytical data. Essential cookies are used to maintain your session state, remember your login credentials, and preserve your design preferences between visits. These cookies are necessary for the core functionality of the platform and cannot be disabled without affecting your ability to use certain features.
+    content: `Instod uses cookies and similar tracking technologies to enhance your browsing experience and collect analytical data. Essential cookies are used to maintain your session state, remember your login credentials, and preserve your design preferences between visits. These cookies are necessary for the core functionality of the platform and cannot be disabled without affecting your ability to use certain features.
 
 We also utilize analytics cookies powered by services such as Google Analytics to gather aggregated, non-personally identifiable information about how users interact with our website. This includes data on page views, session duration, navigation paths, and feature adoption rates. The insights derived from analytics help us optimize the user interface, improve performance, and identify areas where users may encounter difficulties. You may choose to opt out of analytics cookies through your browser settings or through cookie preference tools provided on our platform. However, disabling analytics cookies will not affect the core functionality of the 3D editor or your ability to save and manage designs.`,
   },
@@ -30,7 +30,7 @@ We also utilize analytics cookies powered by services such as Google Analytics t
     id: 'third-party-services',
     icon: Users,
     title: '3. Third-Party Services',
-    content: `Interior Studio integrates with trusted third-party services to deliver core functionality. We use NextAuth.js for authentication, which handles your login credentials securely. Your authentication data is processed according to our strict data protection standards, and we only collect the minimum information necessary to identify your account — typically your name and email address.
+    content: `Instod integrates with trusted third-party services to deliver core functionality. We use NextAuth.js for authentication, which handles your login credentials securely. Your authentication data is processed according to our strict data protection standards, and we only collect the minimum information necessary to identify your account — typically your name and email address.
 
 Our application data is stored in a secure, encrypted database with robust access controls. This ensures that your design projects, account information, and preferences are stored safely on our infrastructure. We do not share your personal data or design content with advertising networks, data brokers, or any third parties for marketing purposes. When we engage subprocessors to assist with operations such as hosting, email delivery, or customer support, we ensure they adhere to data protection standards equivalent to our own and process data only under our instructions.`,
   },
@@ -93,7 +93,7 @@ export default function PrivacyPolicyPage() {
           Privacy Policy
         </h1>
         <p className="mt-4 text-lg max-w-xl mx-auto" style={{ color: '#5A4E42' }}>
-          Your privacy matters to us. This policy explains how Interior Studio collects, uses, and protects your personal information.
+          Your privacy matters to us. This policy explains how Instod collects, uses, and protects your personal information.
         </p>
         <p className="mt-3 text-sm" style={{ color: '#5A4E42' }}>
           Last updated: March 4, 2026
@@ -159,7 +159,7 @@ export default function PrivacyPolicyPage() {
                 <Sofa className="w-4 h-4 text-white" />
               </div>
               <span className="text-sm font-semibold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-                Interior Studio
+                Instod
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm" style={{ color: '#5A4E42' }}>
@@ -168,7 +168,7 @@ export default function PrivacyPolicyPage() {
               <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact Us</Link>
             </div>
             <p className="text-xs" style={{ color: '#5A4E42' }}>
-              &copy; 2026 Interior Studio. All rights reserved.
+              &copy; 2026 Instod. All rights reserved.
             </p>
           </div>
         </div>

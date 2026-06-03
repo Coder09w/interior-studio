@@ -39,7 +39,7 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      if (result?.error) {
+      if (result?.error || !result?.ok) {
         setError('Invalid email or password. Please try again.');
         setIsLoading(false);
         return;
@@ -64,7 +64,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <Image
           src="/images/auth-interior.png"
-          alt="Beautiful modern living room designed with Interior Studio"
+          alt="Beautiful modern living room designed with Instod"
           fill
           className="object-cover"
           priority
@@ -89,7 +89,7 @@ export default function LoginPage() {
               <Sofa className="w-5 h-5 text-white" />
             </div>
             <span className="text-white font-bold text-lg" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              Interior Studio
+              Instod
             </span>
           </div>
           <h2 className="text-white text-2xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
@@ -123,7 +123,7 @@ export default function LoginPage() {
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: '#C17F4E' }}>
                 <Sofa className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Interior Studio</h1>
+              <h1 className="text-xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Instod</h1>
             </div>
 
             {/* Header */}

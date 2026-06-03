@@ -328,7 +328,7 @@ function DashboardContent() {
               className="text-lg font-bold tracking-tight hidden sm:inline"
               style={{ color: '#2D2D2D' }}
             >
-              Interior Studio
+              Instod
             </span>
             <span
               className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded-full text-white hidden sm:inline"

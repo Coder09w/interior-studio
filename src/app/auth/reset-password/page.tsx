@@ -106,7 +106,7 @@ function ResetPasswordForm() {
               className="text-2xl font-bold tracking-tight"
               style={{ color: '#2D2D2D' }}
             >
-              Interior Studio
+              Instod
             </h1>
           </div>
 
@@ -182,7 +182,7 @@ function ResetPasswordForm() {
               className="text-2xl font-bold tracking-tight"
               style={{ color: '#2D2D2D' }}
             >
-              Interior Studio
+              Instod
             </h1>
           </div>
 
@@ -245,7 +245,7 @@ function ResetPasswordForm() {
             className="text-2xl font-bold tracking-tight"
             style={{ color: '#2D2D2D' }}
           >
-            Interior Studio
+            Instod
           </h1>
         </div>
 

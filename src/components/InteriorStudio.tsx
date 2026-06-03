@@ -2029,7 +2029,7 @@ export default function InteriorStudio() {
 
   const rotateSelected = useCallback((dir: 'left' | 'right') => { if (selectedObjRef.current) { pushHistory(); selectedObjRef.current.rotation.y += dir === 'left' ? Math.PI / 12 : -Math.PI / 12; markUnsaved(); markSceneDirty(); } }, [pushHistory, markUnsaved, markSceneDirty]);
 
-  const shareRoom = useCallback(() => { if (currentRoomId) { navigator.clipboard.writeText(`${window.location.origin}/view/${currentRoomId}`); showToast('Share link copied!'); } }, [currentRoomId, showToast]);
+  const shareRoom = useCallback(() => { if (currentRoomId) { navigator.clipboard.writeText(`${window.location.origin}/view/${currentRoomId}`); showToast('Share link copied!'); } else { showToast('Save the room first to share it'); } }, [currentRoomId, showToast]);
 
   /* ===== SNAPSHOT ===== */
   const takeSnapshot = useCallback(() => {

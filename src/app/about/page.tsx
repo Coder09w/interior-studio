@@ -28,7 +28,7 @@ export default function AboutPage() {
             Making Interior Design <span style={{ color: '#C17F4E' }}>Accessible to Everyone</span>
           </h1>
           <p className="mt-5 text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#5A4E42' }}>
-            Interior Studio was born from a simple idea: everyone deserves to visualize their dream space before committing to it. We believe great design shouldn't require expensive software or a professional degree.
+            Instod was born from a simple idea: everyone deserves to visualize their dream space before committing to it. We believe great design shouldn't require expensive software or a professional degree.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default function AboutPage() {
             {
               icon: Globe,
               title: 'Zero Installations',
-              description: 'No downloads, no plugins, no compatibility issues. Interior Studio runs entirely in your web browser using cutting-edge WebGL technology. Design from any device.',
+              description: 'No downloads, no plugins, no compatibility issues. Instod runs entirely in your web browser using cutting-edge WebGL technology. Design from any device.',
               color: '#6B8E6B',
             },
           ].map(({ icon: Icon, title, description, color }) => (
@@ -74,7 +74,7 @@ export default function AboutPage() {
               <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Meet the Founder</h2>
               <p className="text-sm font-semibold mb-3" style={{ color: '#C17F4E' }}>Arjun Mehta — Founder & Lead Developer</p>
               <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>
-                Interior Studio started as a personal frustration: why is visualizing a room redesign so expensive and complicated? After years of working with 3D web technologies, I set out to build a tool that makes professional-quality room visualization accessible to everyone — no downloads, no subscriptions during beta, no design degree required. What began as a side project has grown into a platform used by thousands of early adopters, and I am incredibly grateful for every piece of feedback that shapes its future.
+                Instod started as a personal frustration: why is visualizing a room redesign so expensive and complicated? After years of working with 3D web technologies, I set out to build a tool that makes professional-quality room visualization accessible to everyone — no downloads, no subscriptions during beta, no design degree required. What began as a side project has grown into a platform used by thousands of early adopters, and I am incredibly grateful for every piece of feedback that shapes its future.
               </p>
             </div>
           </div>
@@ -84,7 +84,7 @@ export default function AboutPage() {
         <div className="rounded-2xl border p-8 mb-16" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
           <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Built With Modern Technology</h2>
           <p className="text-sm leading-relaxed mb-6" style={{ color: '#5A4E42' }}>
-            Interior Studio leverages the latest web technologies to deliver a desktop-class 3D design experience directly in your browser. Our real-time rendering engine uses PBR (Physically Based Rendering) materials and dynamic lighting to create stunningly realistic room previews.
+            Instod leverages the latest web technologies to deliver a desktop-class 3D design experience directly in your browser. Our real-time rendering engine uses PBR (Physically Based Rendering) materials and dynamic lighting to create stunningly realistic room previews.
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
@@ -113,7 +113,7 @@ export default function AboutPage() {
           </div>
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>We're in Early Access Beta</h2>
           <p className="text-sm leading-relaxed max-w-lg mx-auto" style={{ color: '#5A4E42' }}>
-            Interior Studio is actively being developed and improved. During this beta phase, all premium features are completely free. We're building this with our community — your feedback shapes the product.
+            Instod is actively being developed and improved. During this beta phase, all premium features are completely free. We're building this with our community — your feedback shapes the product.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
@@ -137,7 +137,7 @@ export default function AboutPage() {
       {/* Footer */}
       <footer className="py-8 text-center border-t" style={{ borderColor: '#E2DDD4' }}>
         <p className="text-sm" style={{ color: '#5A4E42' }}>
-          &copy; {new Date().getFullYear()} Interior Studio. All rights reserved.
+          &copy; {new Date().getFullYear()} Instod. All rights reserved.
         </p>
       </footer>
     </div>

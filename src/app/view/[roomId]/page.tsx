@@ -680,7 +680,7 @@ export default function ViewRoomPage() {
               className="text-xs font-medium"
               style={{ color: '#5A4E42' }}
             >
-              Interior Studio
+              Instod
             </span>
           </div>
         </div>
@@ -693,7 +693,7 @@ export default function ViewRoomPage() {
               style={{ backgroundColor: '#C17F4E' }}
             >
               <Sofa className="w-4 h-4 mr-1.5" />
-              Open in Interior Studio
+              Open in Instod
               <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
             </Button>
           </Link>
