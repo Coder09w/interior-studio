@@ -54,9 +54,9 @@ Depending on your jurisdiction, you may have additional rights under data protec
     id: 'contact-information',
     icon: Mail,
     title: '6. Contact Us',
-    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data handling practices, we encourage you to reach out to our dedicated privacy team. We are committed to addressing your inquiries promptly and transparently. You may contact us via email at privacy@interiorstudio.app for all privacy-related matters, including data access requests, deletion requests, and questions about how your information is processed.
+    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data handling practices, we encourage you to reach out to us. We are committed to addressing your inquiries promptly and transparently. You may contact us through our contact form at https://instod.vercel.app/contact for all privacy-related matters, including data access requests, deletion requests, and questions about how your information is processed.
 
-For general support inquiries, account-related issues, or technical assistance, please email hello@interiorstudio.app. Our team typically responds within 24 to 48 business hours. If you are not satisfied with our response to a privacy concern, you have the right to lodge a complaint with your local data protection authority. We value your trust and are continuously working to ensure that your data is handled with the care and respect it deserves.`,
+For general support inquiries, account-related issues, or technical assistance, please also use our contact form at https://instod.vercel.app/contact. Our team typically responds within 24 to 48 hours. If you are not satisfied with our response to a privacy concern, you have the right to lodge a complaint with your local data protection authority. We value your trust and are continuously working to ensure that your data is handled with the care and respect it deserves.`,
   },
 ];
 

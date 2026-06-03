@@ -156,3 +156,16 @@ model Room {
 
   @@unique([id])
 }
+
+model Feedback {
+  id        String   @id @default(cuid())
+  category  String   @default("general") // bug, feature, general, support, partnership, feedback, question
+  subject   String?
+  message   String
+  email     String?
+  name      String?
+  page      String?
+  createdAt DateTime @default(now())
+
+  @@unique([id])
+}

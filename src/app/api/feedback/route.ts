@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
 
 /**
  * POST /api/feedback
  * Receives user feedback during beta (bug reports, feature requests, general, contact).
- * Validates and logs feedback. In production, replace with database storage.
+ * Validates and stores feedback in the database.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -27,18 +28,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const feedbackEntry = {
-      category: validCategory,
-      subject: subject || null,
-      message: message.trim().slice(0, 2000),
-      email: email || '(not provided)',
-      name: name || '(not provided)',
-      page: page || '(unknown)',
-      timestamp: timestamp || new Date().toISOString(),
-    };
-
-    // Structured log for server monitoring / log aggregation
-    console.log('[FEEDBACK]', JSON.stringify(feedbackEntry));
+    // Store feedback in the database
+    await db.feedback.create({
+      data: {
+        category: validCategory,
+        subject: subject || null,
+        message: message.trim().slice(0, 2000),
+        email: email || null,
+        name: name || null,
+        page: page || null,
+      },
+    });
 
     return NextResponse.json(
       { success: true, message: 'Feedback received. Thank you!' },
