@@ -1040,6 +1040,11 @@ export default function InteriorStudio() {
 
   const addCeilingLight = useCallback(() => {
     const positions = ceilingSpotPositionsRef.current;
+    const MAX_CEILING_LIGHTS = 6;
+    if (positions.length >= MAX_CEILING_LIGHTS) {
+      showToast(`Maximum ${MAX_CEILING_LIGHTS} ceiling lights allowed`);
+      return;
+    }
     const w = roomWRef.current;
     const d = roomDRef.current;
     const h = roomHRef.current;
@@ -1545,6 +1550,9 @@ export default function InteriorStudio() {
       camera.updateProjectionMatrix();
     };
     onResize(); window.addEventListener('resize', onResize);
+    // Use ResizeObserver for container-aware resizing (prevents flicker on panel toggle)
+    const resizeObserver = new ResizeObserver(() => { onResize(); });
+    if (canvas.parentElement) resizeObserver.observe(canvas.parentElement);
 
     const getMeshes = (): THREE.Mesh[] => { const m: THREE.Mesh[] = []; placedItemsRef.current.forEach(g => g.traverse(c => { if (c instanceof THREE.Mesh) m.push(c); })); return m; };
 
@@ -1913,6 +1921,7 @@ export default function InteriorStudio() {
     return () => {
       cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', onResize);
+      resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', onPointerDown); canvas.removeEventListener('pointermove', onPointerMove); canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('touchstart', onTouchStart); canvas.removeEventListener('touchmove', onTouchMove); canvas.removeEventListener('touchend', onTouchEnd);
       canvas.removeEventListener('pointerdown', markDirty); canvas.removeEventListener('pointermove', markDirty);
@@ -1922,12 +1931,12 @@ export default function InteriorStudio() {
     };
   }, []);
 
-  // Resize on sidebar/panel toggle
+  // Resize on sidebar/panel toggle — fast response for mobile panel changes
   useEffect(() => {
     const t = setTimeout(() => {
       const c = canvasRef.current, r = rendererRef.current, cam = cameraRef.current, p = c?.parentElement;
       if (c && r && cam && p) { r.setSize(p.clientWidth, p.clientHeight); cam.aspect = p.clientWidth / p.clientHeight; cam.updateProjectionMatrix(); }
-    }, 420);
+    }, 100);
     return () => clearTimeout(t);
   }, [sidebarOpen, mobilePanel]);
 
@@ -2210,13 +2219,19 @@ export default function InteriorStudio() {
           </div>
           {/* Items grid */}
           <div className="grid grid-cols-3 gap-1.5 p-3">
-            {filteredItems.map(item => (
-              <button key={item.name} onClick={() => { addFurniture(item.fn, currentColor, currentMatType); }} className="p-2 rounded-lg border cursor-pointer transition-all text-center"
-                style={{ background: '#FAF8F4', borderColor: '#E2DDD4' }}>
-                <div className="w-8 h-8 rounded flex items-center justify-center mx-auto mb-1 text-sm" style={{ background: '#F0E8D8', color: '#5A4E42' }}><i className={`fas ${item.icon}`} /></div>
-                <p className="text-[9px] font-semibold leading-tight">{item.name}</p>
+            {filteredItems.map(item => {
+              const isLocked = isGuest && !GUEST_ALLOWED_FURNITURE.has(item.fn);
+              return (
+              <button key={item.name} onClick={() => { addFurniture(item.fn, currentColor, currentMatType); }} className="p-2 rounded-lg border cursor-pointer transition-all text-center relative"
+                style={{ background: isLocked ? '#F8F6F2' : '#FAF8F4', borderColor: '#E2DDD4', opacity: isLocked ? 0.6 : 1 }}>
+                <div className="w-8 h-8 rounded flex items-center justify-center mx-auto mb-1 text-sm relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}>
+                  <i className={`fas ${item.icon}`} />
+                  {isLocked && <i className="fas fa-lock absolute -top-1 -right-1 text-[7px]" style={{ color: '#C17F4E', background: '#fff', borderRadius: '50%', width: 12, height: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #E2DDD4' }} />}
+                </div>
+                <p className="text-[9px] font-semibold leading-tight" style={{ color: isLocked ? '#A09080' : '#2D2D2D' }}>{item.name}</p>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       ),
@@ -3115,8 +3130,8 @@ export default function InteriorStudio() {
         </div>
       )}
 
-      {/* Guest Upsell Banner */}
-      {isGuest && !showOnboarding && (
+      {/* Guest Upsell — compact pill in top bar on mobile, banner on desktop */}
+      {isGuest && !showOnboarding && !isMobile && (
         <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-center py-1.5" style={{ background: 'linear-gradient(90deg, #C17F4E, #A86A3D)', color: '#fff', fontSize: 11 }}>
           <i className="fas fa-lock mr-1.5 text-[9px]" />
           <span className="font-semibold">Guest Mode</span>
@@ -3292,14 +3307,22 @@ export default function InteriorStudio() {
             <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} style={{ borderColor: '#E2DDD4', color: '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
           </div>
 
-          {/* Mobile right actions */}
+          {/* Mobile right actions — scrollable with chevron */}
           {isMobile && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none', flexShrink: 0 }}>
+              {isGuest && (
+                <a href="/auth/signup" className="px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap no-underline flex items-center gap-1" style={{ background: '#C17F4E', color: '#fff' }}>
+                  <i className="fas fa-lock text-[8px]" />Sign Up
+                </a>
+              )}
+              <button onClick={saveRoom} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#7A8B6F', color: '#fff' }} aria-label="Save design" title="Save"><i className="fas fa-save text-sm" /></button>
               <button onClick={takeScreenshot} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'rgba(255,255,255,0.5)' }} aria-label="Capture screenshot" title="Capture"><i className="fas fa-camera text-sm" /></button>
+              <button onClick={undo} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'rgba(255,255,255,0.5)' }} aria-label="Undo" title="Undo"><i className="fas fa-undo text-sm" /></button>
+              <button onClick={redo} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'rgba(255,255,255,0.5)' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-sm" /></button>
               {!isGuest && (
                 <button onClick={() => window.location.href = '/dashboard'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.08)' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-sm" /></button>
               )}
-              <button onClick={saveRoom} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#7A8B6F', color: '#7A8B6F', background: 'rgba(122,139,111,0.08)' }} aria-label="Save design" title="Save"><i className="fas fa-save text-sm" /></button>
+              <button onClick={shareRoom} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'rgba(255,255,255,0.5)' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-sm" /></button>
             </div>
           )}
 
@@ -3320,24 +3343,27 @@ export default function InteriorStudio() {
 
         <canvas ref={canvasRef} role="application" aria-label="3D Room Editor — use mouse to orbit, scroll to zoom" style={{ width: '100%', height: '100%', display: 'block', cursor: ceilingEditMode ? 'crosshair' : 'grab' }} />
 
-        {/* Ceiling Edit Mode Floating Panel */}
+        {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
-          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-30 rounded-xl p-3 border" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', borderColor: '#C17F4E', minWidth: 280 }}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.15)' }}><i className="fas fa-lightbulb text-[10px]" style={{ color: '#C17F4E' }} /></div>
-                <h3 className="text-xs font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#C17F4E' }}>Ceiling Light Editor</h3>
+          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-30' : 'absolute top-14 left-1/2 -translate-x-1/2 z-30 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #C17F4E' : '1px solid #C17F4E', ...(isMobile ? { paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+            {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.15)' }}><i className="fas fa-lightbulb text-[10px]" style={{ color: '#C17F4E' }} /></div>
+                  <h3 className="text-xs font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#C17F4E' }}>Ceiling Light Editor</h3>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(193,127,78,0.1)', color: '#C17F4E' }}>{ceilingSpotPositionsRef.current.length}/6</span>
+                </div>
+                <button onClick={exitCeilingEditMode} aria-label="Exit ceiling editor" className="w-6 h-6 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-[9px]" /></button>
               </div>
-              <button onClick={exitCeilingEditMode} aria-label="Exit ceiling editor" className="w-6 h-6 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-[9px]" /></button>
-            </div>
-            <div className="flex gap-1.5 mb-2">
-              <button onClick={addCeilingLight} className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#C17F4E', color: '#fff', border: 'none' }}>
-                <i className="fas fa-plus text-[8px]" />Add Light
-              </button>
-              <button onClick={deleteSelectedCeilingLight} className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#fff', color: selectedCeilingLightIdx >= 0 ? '#c0392b' : '#5A4E42', border: `1px solid ${selectedCeilingLightIdx >= 0 ? '#e8d0d0' : '#E2DDD4'}` }} disabled={selectedCeilingLightIdx < 0}>
-                <i className="fas fa-trash-alt text-[8px]" />Delete
-              </button>
-            </div>
+              <div className="flex gap-1.5 mb-2">
+                <button onClick={addCeilingLight} className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#C17F4E', color: '#fff', border: 'none' }}>
+                  <i className="fas fa-plus text-[8px]" />Add Light
+                </button>
+                <button onClick={deleteSelectedCeilingLight} className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#fff', color: selectedCeilingLightIdx >= 0 ? '#c0392b' : '#5A4E42', border: `1px solid ${selectedCeilingLightIdx >= 0 ? '#e8d0d0' : '#E2DDD4'}` }} disabled={selectedCeilingLightIdx < 0}>
+                  <i className="fas fa-trash-alt text-[8px]" />Delete
+                </button>
+              </div>
             {selectedCeilingLightIdx >= 0 && (
               <div className="p-2 rounded-lg mb-1" style={{ background: '#FAF8F4' }}>
                 <p className="text-[9px] font-bold mb-1" style={{ color: '#5A4E42' }}>LIGHT #{selectedCeilingLightIdx + 1} POSITION</p>
@@ -3384,6 +3410,7 @@ export default function InteriorStudio() {
             <p className="text-[8px] text-center" style={{ color: '#5A4E42' }}>
               {selectedCeilingLightIdx >= 0 ? 'Drag light or use sliders to reposition' : 'Click ceiling to add • Click light to select'}
             </p>
+            </div>{/* end p-3 wrapper */}
           </div>
         )}
 
@@ -3413,7 +3440,7 @@ export default function InteriorStudio() {
 
         {/* Selected item panel — bottom sheet on mobile, floating card on desktop */}
         {itemPanelVisible && (
-          <div className={`z-10 border ${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl p-4 max-h-[50vh] overflow-y-auto' : 'absolute bottom-5 left-5 rounded-xl p-3'}`} style={{ background: isMobile ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: isMobile ? '#E2DDD4' : '#E2DDD4', minWidth: isMobile ? 'auto' : 200, paddingBottom: isMobile ? 'calc(16px + env(safe-area-inset-bottom, 0px))' : undefined }}>
+          <div className={`z-10 border ${isMobile ? 'fixed left-0 right-0 rounded-t-2xl p-4 overflow-y-auto int-scrollbar' : 'absolute bottom-5 left-5 rounded-xl p-3'}`} style={{ background: isMobile ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: isMobile ? '#E2DDD4' : '#E2DDD4', minWidth: isMobile ? 'auto' : 200, ...(isMobile ? { bottom: 56, maxHeight: '42vh', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' } : {}) }}>
             {isMobile && (
               <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: '#D4D0C8' }} />
             )}
