@@ -146,6 +146,64 @@
   border-radius: 4px;
 }
 
+/* Editor card hover glow */
+.int-card-hover {
+  transition: all 0.2s ease;
+}
+.int-card-hover:hover {
+  box-shadow: 0 4px 16px rgba(193, 127, 78, 0.12);
+  border-color: #C17F4E;
+}
+.int-card-hover:active {
+  transform: scale(0.97);
+}
+
+/* Editor section header */
+.int-section-header {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #5A4E42;
+}
+
+/* Editor button base */
+.int-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.int-btn:active {
+  transform: scale(0.96);
+}
+.int-btn-primary {
+  background: #C17F4E;
+  color: #fff;
+  border: none;
+}
+.int-btn-primary:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(193, 127, 78, 0.25);
+}
+.int-btn-secondary {
+  background: #FAF8F4;
+  color: #2D2D2D;
+  border: 1px solid #E2DDD4;
+}
+.int-btn-secondary:hover {
+  border-color: #C17F4E;
+  color: #C17F4E;
+  box-shadow: 0 2px 8px rgba(193, 127, 78, 0.1);
+}
+
 input[type="range"].int-range {
   -webkit-appearance: none;
   width: 100%;

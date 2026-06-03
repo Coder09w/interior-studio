@@ -230,6 +230,9 @@ export default function EditorLoader() {
           <IsometricRoom progress={progress} />
         </div>
 
+        {/* Logo */}
+        <img src="/logo.svg" alt="Instod" style={{ width: '56px', height: '56px', borderRadius: '16px', margin: '0 auto 12px', display: 'block' }} />
+
         {/* Brand name with letter-by-letter animation */}
         <h1 style={{
           fontFamily: "'Outfit', sans-serif",
