@@ -44,17 +44,16 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110"
-              style={{ background: '#C17F4E' }}
-            >
-              <Sofa className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/logo.svg"
+              alt="Instod"
+              className="w-9 h-9 rounded-lg transition-transform group-hover:scale-110"
+            />
             <span
               className="text-xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
             >
-              Interior Studio
+              Instod
             </span>
             {showBeta && (
               <span

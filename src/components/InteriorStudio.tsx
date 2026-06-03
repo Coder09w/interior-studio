@@ -2601,8 +2601,8 @@ export default function InteriorStudio() {
       {/* Logo */}
       <div className="p-5 border-b" style={{ borderColor: '#E2DDD4' }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#C17F4E' }}><i className="fas fa-couch text-white text-xs" /></div>
-          <div><h1 className="text-base font-bold leading-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Interior Studio</h1><p className="text-[10px]" style={{ color: '#5A4E42' }}>3D Design Previewer</p></div>
+          <img src="/logo.svg" alt="Instod" className="w-8 h-8 rounded-lg" />
+          <div><h1 className="text-base font-bold leading-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Instod</h1><p className="text-[10px]" style={{ color: '#5A4E42' }}>3D Design Previewer</p></div>
         </div>
       </div>
 

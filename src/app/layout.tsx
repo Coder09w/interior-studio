@@ -31,8 +31,8 @@ export const metadata: Metadata = {
     process.env.NEXTAUTH_URL || "https://instod.vercel.app"
   ),
   title: {
-    default: "Interior Studio — 3D Design Previewer",
-    template: "%s | Interior Studio",
+    default: "Instod — 3D Design Previewer",
+    template: "%s | Instod",
   },
   description:
     "Interactive 3D interior design previewer with furniture library, material system, and real-time controls. Design your dream space in minutes.",
@@ -44,11 +44,11 @@ export const metadata: Metadata = {
     "furniture",
     "home design",
     "3D preview",
-    "interior studio",
+    "instod",
   ],
-  authors: [{ name: "Interior Studio" }],
-  creator: "Interior Studio",
-  publisher: "Interior Studio",
+  authors: [{ name: "Instod" }],
+  creator: "Instod",
+  publisher: "Instod",
   robots: {
     index: true,
     follow: true,
@@ -64,8 +64,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://instod.vercel.app",
-    siteName: "Interior Studio",
-    title: "Interior Studio — 3D Design Previewer",
+    siteName: "Instod",
+    title: "Instod — 3D Design Previewer",
     description:
       "Design your dream space in 3D. Drag furniture, swap materials, and see your vision come to life.",
     images: [
@@ -73,13 +73,13 @@ export const metadata: Metadata = {
         url: "/images/hero-living-room.png",
         width: 1200,
         height: 630,
-        alt: "Interior Studio — 3D Interior Design Previewer",
+        alt: "Instod — 3D Interior Design Previewer",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Interior Studio — 3D Design Previewer",
+    title: "Instod — 3D Design Previewer",
     description:
       "Design your dream space in 3D. Drag furniture, swap materials, and see your vision come to life.",
     images: ["/images/hero-living-room.png"],
@@ -87,6 +87,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/logo.png", type: "image/png", sizes: "1024x1024" },
       { url: "/favicon.ico", sizes: "any" },
     ],
     apple: "/logo.svg",

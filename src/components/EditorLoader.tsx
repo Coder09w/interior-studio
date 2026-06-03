@@ -239,7 +239,7 @@ export default function EditorLoader() {
           letterSpacing: '-0.02em',
           marginBottom: '4px',
         }}>
-          <AnimatedTitle text="Interior Studio" delay={0.3} />
+          <AnimatedTitle text="Instod" delay={0.3} />
         </h1>
 
         {/* Subtitle */}

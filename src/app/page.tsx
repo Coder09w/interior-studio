@@ -147,17 +147,12 @@ function Navbar() {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110"
-              style={{ background: '#C17F4E' }}
-            >
-              <Sofa className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-lg transition-transform group-hover:scale-110" />
             <span
               className="text-xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
             >
-              Interior Studio
+              Instod
             </span>
             <span
               className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
@@ -993,7 +988,7 @@ function ShowcaseBannerSection() {
     <section
       className="py-20 sm:py-28 overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%)',
+        background: '#FAF8F4',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1001,18 +996,18 @@ function ShowcaseBannerSection() {
           {/* Left: text content */}
           <FadeInWhenVisible>
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.08)', borderColor: 'rgba(193,127,78,0.2)' }}>
                 <Eye className="w-4 h-4" style={{ color: '#C17F4E' }} />
                 <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>LIVE PREVIEW</span>
               </div>
               <h2
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight"
-                style={{ fontFamily: "'Outfit', sans-serif" }}
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight"
+                style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
               >
                 See Your Designs{' '}
                 <span style={{ color: '#C17F4E' }}>Come Alive</span>
               </h2>
-              <p className="mt-5 text-base sm:text-lg leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <p className="mt-5 text-base sm:text-lg leading-relaxed" style={{ color: '#5A4E42' }}>
                 Watch your ideas transform into stunning 3D spaces in real time.
                 Every detail, every texture, every shadow — rendered instantly as you design.
               </p>
@@ -1037,11 +1032,11 @@ function ShowcaseBannerSection() {
                   <div key={text} className="flex items-center gap-2.5">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ background: 'rgba(193,127,78,0.15)' }}
+                      style={{ background: 'rgba(193,127,78,0.1)' }}
                     >
                       <FIcon className="w-4 h-4" style={{ color: '#C17F4E' }} />
                     </div>
-                    <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{text}</span>
+                    <span className="text-sm" style={{ color: '#5A4E42' }}>{text}</span>
                   </div>
                 ))}
               </div>
@@ -1053,14 +1048,14 @@ function ShowcaseBannerSection() {
             <div
               className="rounded-2xl border-2 shadow-2xl overflow-hidden"
               style={{
-                borderColor: 'rgba(255,255,255,0.1)',
-                background: '#1A1A1A',
+                borderColor: '#E2DDD4',
+                background: '#FFFFFF',
               }}
             >
               {/* Window chrome */}
               <div
                 className="flex items-center gap-2 px-4 py-3 border-b"
-                style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#252525' }}
+                style={{ borderColor: '#E2DDD4', background: '#FAF8F4' }}
               >
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full" style={{ background: '#FF5F57' }} />
@@ -1069,7 +1064,7 @@ function ShowcaseBannerSection() {
                 </div>
                 <div
                   className="flex-1 text-center text-xs font-medium rounded-md py-1 mx-8"
-                  style={{ background: '#1A1A1A', color: 'rgba(255,255,255,0.4)' }}
+                  style={{ background: '#F5F0E8', color: '#5A4E42' }}
                 >
                   Interior Studio — Living Room
                 </div>
@@ -1079,7 +1074,7 @@ function ShowcaseBannerSection() {
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img
                   src="/images/hero-living-room.png"
-                  alt="Interior Studio 3D room preview"
+                  alt="Instod 3D room preview"
                   loading="lazy"
                   className="w-full h-full object-cover"
                 />
@@ -1092,7 +1087,7 @@ function ShowcaseBannerSection() {
                   viewport={{ once: true }}
                   transition={{ delay: 0.5, duration: 0.5 }}
                   className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg"
-                  style={{ background: 'rgba(26,26,26,0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', border: '1px solid #E2DDD4' }}
                 >
                   {[
                     { icon: MousePointerClick, label: 'Select' },
@@ -1102,11 +1097,11 @@ function ShowcaseBannerSection() {
                   ].map(({ icon: TIcon, label }) => (
                     <button
                       key={label}
-                      className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
+                      className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors hover:bg-[#F5F0E8]"
                       title={label}
                     >
-                      <TIcon className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
-                      <span className="text-[9px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      <TIcon className="w-4 h-4" style={{ color: '#5A4E42' }} />
+                      <span className="text-[9px] font-medium" style={{ color: '#5A4E42' }}>
                         {label}
                       </span>
                     </button>
@@ -1127,28 +1122,21 @@ function TestimonialsSection() {
     <section
       className="py-20 sm:py-28 relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%)',
+        background: '#FFFFFF',
       }}
     >
-      {/* Accent gradient overlays */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at 10% 20%, rgba(193,127,78,0.08) 0%, transparent 50%), radial-gradient(ellipse at 90% 80%, rgba(193,127,78,0.06) 0%, transparent 50%)',
-        }}
-      />
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <FadeInWhenVisible>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.08)', borderColor: 'rgba(193,127,78,0.2)' }}>
             <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
             <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>EARLY ACCESS</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
             Be a <span style={{ color: '#C17F4E' }}>Founding Member</span>
           </h2>
-          <p className="mt-4 text-base max-w-2xl mx-auto" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Interior Studio is in Early Access Beta. As one of our first users, your feedback directly shapes the product.
+          <p className="mt-4 text-base max-w-2xl mx-auto" style={{ color: '#5A4E42' }}>
+            Instod is in Early Access Beta. As one of our first users, your feedback directly shapes the product.
             Join now and get full premium access for free while we build the future of interior design.
           </p>
         </FadeInWhenVisible>
@@ -1174,21 +1162,21 @@ function TestimonialsSection() {
             ].map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
-                className="p-6 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1"
+                className="p-6 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  borderColor: 'rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(10px)',
+                  background: '#FFFFFF',
+                  borderColor: '#E2DDD4',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 }}
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                  style={{ background: 'rgba(193,127,78,0.15)' }}
+                  style={{ background: 'rgba(193,127,78,0.1)' }}
                 >
                   <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-2">{title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                <h3 className="text-sm font-semibold mb-2" style={{ color: '#2D2D2D' }}>{title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: '#5A4E42' }}>
                   {description}
                 </p>
               </div>
@@ -1206,26 +1194,26 @@ function CTASection() {
     <section
       className="py-20 sm:py-28"
       style={{
-        background: 'linear-gradient(135deg, #2D2D2D 0%, #3D3D3D 50%, #2D2D2D 100%)',
+        background: '#F5F0E8',
       }}
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <FadeInWhenVisible>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
-            <Sparkles className="w-4 h-4" style={{ color: '#D4A76A' }} />
-            <span className="text-xs font-semibold tracking-wide" style={{ color: '#D4A76A' }}>NO SIGN-UP REQUIRED</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.08)', borderColor: 'rgba(193,127,78,0.2)' }}>
+            <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
+            <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>NO SIGN-UP REQUIRED</span>
           </div>
         </FadeInWhenVisible>
         <FadeInWhenVisible delay={0.1}>
           <h2
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white"
-            style={{ fontFamily: "'Outfit', sans-serif" }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight"
+            style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
           >
             Ready to Design Your Dream Space?
           </h2>
         </FadeInWhenVisible>
         <FadeInWhenVisible delay={0.2}>
-          <p className="mt-4 text-base sm:text-lg max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <p className="mt-4 text-base sm:text-lg max-w-xl mx-auto" style={{ color: '#5A4E42' }}>
             Jump right into the 3D editor and start creating. No account needed to explore and design.
           </p>
         </FadeInWhenVisible>
@@ -1241,15 +1229,15 @@ function CTASection() {
             </Link>
             <Link
               href="/auth/signup"
-              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl font-semibold text-lg border-2 transition-all hover:bg-white/5"
-              style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl font-semibold text-lg border-2 transition-all hover:shadow-sm"
+              style={{ borderColor: '#E2DDD4', color: '#2D2D2D' }}
             >
               Sign Up to Save
             </Link>
           </div>
         </FadeInWhenVisible>
         <FadeInWhenVisible delay={0.4}>
-          <div className="mt-6 flex items-center justify-center gap-6 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          <div className="mt-6 flex items-center justify-center gap-6 text-sm" style={{ color: '#5A4E42' }}>
             <div className="flex items-center gap-1.5">
               <Check className="w-4 h-4" style={{ color: '#C17F4E' }} />
               Free during beta
@@ -1278,17 +1266,12 @@ function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center"
-                style={{ background: '#C17F4E' }}
-              >
-                <Sofa className="w-5 h-5 text-white" />
-              </div>
+              <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-lg" />
               <span
                 className="text-lg font-bold"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                Interior Studio
+                Instod
               </span>
             </div>
             <p className="text-sm leading-relaxed text-gray-400 max-w-xs">
@@ -1367,7 +1350,7 @@ function Footer() {
           style={{ borderColor: 'rgba(255,255,255,0.1)' }}
         >
           <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Interior Studio. All rights reserved.
+            &copy; {new Date().getFullYear()} Instod. All rights reserved.
           </p>
         </div>
       </div>
