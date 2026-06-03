@@ -215,8 +215,7 @@ function applySlot(mat: THREE.MeshStandardMaterial, slot: SkinMaterialSlot | und
     mat.emissive.set(slot.emissive);
     mat.emissiveIntensity = slot.emissiveIntensity ?? 0;
   }
-  // Don't reset emissive if the skin doesn't define it — keep original
-  mat.needsUpdate = true;
+  // Don't set needsUpdate here — batch it after all materials are updated
 }
 
 export function applySkinToSkeleton(
@@ -317,6 +316,22 @@ export function applySkinToSkeleton(
       fillLight.intensity = (l.dirIntensity || 1.0) * 0.2;
     }
   }
+
+  // 4. Batch needsUpdate — mark all modified materials once, then render once
+  // This avoids per-material shader recompilation spikes
+  const updatedMats = new Set<THREE.MeshStandardMaterial>();
+  const collectMats = (obj: THREE.Object3D) => {
+    obj.traverse(child => {
+      if (!(child instanceof THREE.Mesh)) return;
+      const mat = child.material as THREE.MeshStandardMaterial;
+      if (mat && !updatedMats.has(mat)) {
+        updatedMats.add(mat);
+        mat.needsUpdate = true;
+      }
+    });
+  };
+  roomGroup.traverse(collectMats as any);
+  placedItems.forEach(collectMats as any);
 }
 
 export const SKINS_LIST: SkinDefinition[] = Object.values(SKINS_DICTIONARY);

@@ -42,17 +42,23 @@ function isMobileDevice(): boolean {
 }
 
 /* ===== FLOOR TEXTURE GENERATORS (OPTIMIZED) ===== */
+const TEX_CACHE_MAX = 20;
 const texCache = new Map<string, THREE.CanvasTexture>();
 function getCachedTex(key: string, gen: () => THREE.CanvasTexture): THREE.CanvasTexture {
   const existing = texCache.get(key);
   if (existing) return existing;
-  // Evict stale entries for the same texture type (e.g. all hw_* when adding a new hw_)
-  const typePrefix = key.split('_')[0] + '_'; // e.g. "hw_" from "hw_8_6", "cp_" from "cp_8_6_#B8956A"
+  // Evict stale entries for the same texture type
+  const typePrefix = key.split('_')[0] + '_';
   for (const [k, v] of texCache) {
     if (k.startsWith(typePrefix) && k !== key) {
       v.dispose();
       texCache.delete(k);
     }
+  }
+  // LRU eviction if cache is too large
+  if (texCache.size >= TEX_CACHE_MAX) {
+    const oldest = texCache.keys().next().value;
+    if (oldest) { texCache.get(oldest)?.dispose(); texCache.delete(oldest); }
   }
   const t = gen();
   texCache.set(key, t);
@@ -104,7 +110,7 @@ function makeConcreteTexture(w: number, d: number): THREE.CanvasTexture {
     const c = document.createElement('canvas'); c.width = 256; c.height = 256;
     const ctx = c.getContext('2d')!;
     ctx.fillStyle = '#B8B4B0'; ctx.fillRect(0, 0, 256, 256);
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 200; i++) {
       const x = Math.random() * 256; const y = Math.random() * 256;
       ctx.fillStyle = `rgba(${130 + Math.random() * 30},${125 + Math.random() * 30},${120 + Math.random() * 30},${Math.random() * 0.15})`;
       ctx.fillRect(x, y, Math.random() * 3, Math.random() * 3);
@@ -225,6 +231,7 @@ export default function InteriorStudio() {
   const [shadowsEnabled, setShadowsEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [designName, setDesignName] = useState('Untitled Room');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [itemCount, setItemCount] = useState(0);
@@ -365,7 +372,12 @@ export default function InteriorStudio() {
     placedItemsRef.current.forEach(item => {
       sceneRef.current?.remove(item);
       item.traverse(c => {
-        if (c instanceof THREE.Mesh) { c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material?.dispose(); }
+        if (c instanceof THREE.Mesh) {
+          const mat = c.material as THREE.MeshStandardMaterial;
+          mat.map?.dispose();
+          c.geometry?.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => { (m as THREE.MeshStandardMaterial).map?.dispose(); m.dispose(); }); else c.material?.dispose();
+        }
       });
     });
     placedItemsRef.current = [];
@@ -1237,7 +1249,7 @@ export default function InteriorStudio() {
     pushHistory();
     const name = selected.userData.name;
     sceneRef.current?.remove(selected); placedItemsRef.current = placedItemsRef.current.filter(i => i !== selected);
-    selected.traverse(c => { if (c instanceof THREE.Mesh) { c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material?.dispose(); } });
+    selected.traverse(c => { if (c instanceof THREE.Mesh) { const mat = c.material as THREE.MeshStandardMaterial; mat.map?.dispose(); c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => { (m as THREE.MeshStandardMaterial).map?.dispose(); m.dispose(); }); else c.material?.dispose(); } });
     meshCacheRef.current = []; // Invalidate mesh cache
     selectedObjRef.current = null; setItemPanelVisible(false); setItemCount(placedItemsRef.current.length);
     markUnsaved(); markSceneDirty(); showToast(`Removed ${name}`);
@@ -1901,9 +1913,10 @@ export default function InteriorStudio() {
       // Immediately persist current state to localStorage before it's lost
       try {
         const rid = currentRoomIdRef.current;
-      roomStatesRef.current.set(rid, serializeFurniture());
+        const furnitureData = serializeFurniture();
+        roomStatesRef.current.set(rid, furnitureData);
         const roomData = {
-          furniture: JSON.stringify(serializeFurniture()),
+          furniture: JSON.stringify(furnitureData),
           width: roomWRef.current, depth: roomDRef.current, height: roomHRef.current,
           wallColor: wallColRef.current, floorType: floorTypeRef.current, floorColor: floorColorRef.current,
           doorWall: doorWallRef.current, windowCount: windowCountRef.current, windowWall: windowWallRef.current,
@@ -3229,7 +3242,7 @@ export default function InteriorStudio() {
             </div>
             <div className="space-y-2 max-h-72 overflow-y-auto int-scrollbar">
               {rooms.map(room => {
-                const roomItemCount = room.id === currentRoomId ? itemCount : 0;
+                const roomItemCount = room.id === currentRoomId ? itemCount : (roomStatesRef.current.get(room.id)?.length || 0);
                 const typeLabel: Record<string, string> = { living: 'Living Room', bedroom: 'Bedroom', kitchen: 'Kitchen', bathroom: 'Bathroom', office: 'Office', dining: 'Dining Room' };
                 const isEditing = editingRoomName === room.id;
                 return (
@@ -3316,7 +3329,7 @@ export default function InteriorStudio() {
       {/* ===== Main 3D Viewer ===== */}
       <main className="flex-1 relative min-h-0" style={{ background: '#FAF8F4' }}>
         {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #E2DDD4' }}>
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #E2DDD4', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined }}>
           {!isMobile && (
             <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-bars text-xs" /></button>
           )}
@@ -3466,23 +3479,20 @@ export default function InteriorStudio() {
           </div>
         )}
 
-        {/* Selected item panel — compact floating card on mobile, floating card on desktop */}
-        {itemPanelVisible && !mobilePanel && (
-          <div className={`z-10 border ${isMobile ? 'absolute bottom-2 left-3 right-3 rounded-xl p-3 overflow-y-auto int-scrollbar' : 'absolute bottom-5 left-5 rounded-xl p-3'}`} style={{ background: isMobile ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: '#E2DDD4', minWidth: isMobile ? 'auto' : 200, ...(isMobile ? { maxHeight: '30vh' } : {}) }}>
+        {/* Selected item panel — slim compact bar on mobile, floating card on desktop */}
+        {itemPanelVisible && !mobilePanel && !isMobile && (
+          <div className="z-10 border absolute bottom-5 left-5 rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: '#E2DDD4', minWidth: 200 }}>
             <div className="flex items-center justify-between mb-1">
               <h4 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>{selectedName}</h4>
               <button onClick={deselectAll} aria-label="Deselect item" className="text-xs cursor-pointer" style={{ color: '#5A4E42' }}><i className="fas fa-times" /></button>
             </div>
             <p className="text-[10px]" style={{ color: '#5A4E42' }}>{selectedDesc}</p>
-            <div className={`flex gap-1.5 mt-2 ${isMobile ? 'justify-center' : ''}`}>
-              <button onClick={() => rotateSelected('left')} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#E2DDD4', fontSize: isMobile ? 14 : 10 }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
-              <button onClick={() => rotateSelected('right')} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#E2DDD4', fontSize: isMobile ? 14 : 10 }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
-              <button onClick={duplicateSelected} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#E2DDD4', fontSize: isMobile ? 14 : 10 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
-              <button onClick={deleteSelected} className={`${isMobile ? 'w-11 h-11' : 'w-8 h-8'} rounded-lg flex items-center justify-center cursor-pointer border`} style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: isMobile ? 14 : 10 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
+            <div className="flex gap-1.5 mt-2">
+              <button onClick={() => rotateSelected('left')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', fontSize: 10 }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+              <button onClick={() => rotateSelected('right')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', fontSize: 10 }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+              <button onClick={duplicateSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', fontSize: 10 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
+              <button onClick={deleteSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 10 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
             </div>
-            {isMobile && (
-              <p className="text-[9px] mt-1.5" style={{ color: '#5A4E42' }}><i className="fas fa-hand-pointer mr-1" />Two fingers to rotate</p>
-            )}
           </div>
         )}
 
@@ -3492,28 +3502,48 @@ export default function InteriorStudio() {
             <i className="fas fa-hand-pointer mr-1" />Tap to select &bull; Two fingers to rotate
           </div>
         )}
+
+        {/* Mobile: Floating side action panel (collapsed by default, expands on tap) */}
+        {isMobile && !mobilePanel && !ceilingEditMode && (
+          <div className="absolute right-2 z-20" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+            {/* Toggle button */}
+            <button
+              onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
+              className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+              style={{ background: mobileActionsOpen ? '#C17F4E' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: mobileActionsOpen ? 'none' : '1px solid #E2DDD4', color: mobileActionsOpen ? '#fff' : '#5A4E42', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+              aria-label="Actions"
+            >
+              <i className={`fas ${mobileActionsOpen ? 'fa-times' : 'fa-ellipsis-v'}`} style={{ fontSize: 13 }} />
+            </button>
+            {/* Expanded action buttons */}
+            {mobileActionsOpen && (
+              <div className="flex flex-col gap-1.5 mt-1.5 items-center">
+                <button onClick={() => { saveRoom(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
+                <button onClick={() => { undo(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Undo" title="Undo"><i className="fas fa-undo text-[11px]" /></button>
+                <button onClick={() => { redo(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-[11px]" /></button>
+                <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>
+                <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[11px]" /></button>
+                {!isGuest && (
+                  <button onClick={() => { window.location.href = '/dashboard'; }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid #C17F4E', color: '#C17F4E' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
         <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '38vh' : 'auto', paddingBottom: 'env(safe-area-inset-bottom, 0px)', flexShrink: 0 }}>
-          {/* Action toolbar row — horizontally scrollable with ">" scroll indicator */}
-          {!mobilePanel && (
-            <div className="relative flex items-center border-b" style={{ borderColor: '#F0E8D8', height: 44 }}>
-              <div className="flex items-center gap-1 overflow-x-auto px-2 flex-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }} ref={el => { if (el) { const handleScroll = () => { const chev = el.parentElement?.querySelector('.scroll-chevron') as HTMLElement; if (chev) chev.style.opacity = el.scrollLeft + el.clientWidth < el.scrollWidth - 10 ? '1' : '0'; }; el.addEventListener('scroll', handleScroll); setTimeout(() => { const chev = el.parentElement?.querySelector('.scroll-chevron') as HTMLElement; if (chev) chev.style.opacity = el.scrollLeft + el.clientWidth < el.scrollWidth - 10 ? '1' : '0'; }, 100); } }}>
-                <button onClick={saveRoom} className="shrink-0 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-[10px] font-semibold cursor-pointer" style={{ background: '#7A8B6F', color: '#fff' }} aria-label="Save design"><i className="fas fa-save text-[10px]" />Save</button>
-                <button onClick={undo} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Undo"><i className="fas fa-undo text-xs" /></button>
-                <button onClick={redo} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Redo"><i className="fas fa-redo text-xs" /></button>
-                <button onClick={takeScreenshot} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Screenshot"><i className="fas fa-camera text-xs" /></button>
-                <button onClick={shareRoom} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }} aria-label="Share"><i className="fas fa-share-alt text-xs" /></button>
-                {!isGuest && (
-                  <button onClick={() => window.location.href = '/dashboard'} className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.08)' }} aria-label="Dashboard"><i className="fas fa-th-large text-xs" /></button>
-                )}
-              </div>
-              {/* Scroll chevron indicator */}
-              <div className="scroll-chevron absolute right-0 top-0 bottom-0 flex items-center justify-end pr-1 pointer-events-none" style={{ background: 'linear-gradient(to right, transparent, white 70%)', width: 36, opacity: 1, transition: 'opacity 0.2s' }}>
-                <i className="fas fa-chevron-right text-[10px]" style={{ color: '#C17F4E' }} />
-              </div>
+
+          {/* Selected item slim bar — name + rotate + delete, only when item is selected and no panel open */}
+          {itemPanelVisible && !mobilePanel && (
+            <div className="flex items-center gap-1.5 px-2 border-b" style={{ height: 38, borderColor: '#F0E8D8', background: '#FAF8F4' }}>
+              <span className="text-[11px] font-semibold truncate flex-1" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>{selectedName}</span>
+              <button onClick={() => rotateSelected('left')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', fontSize: 12, background: '#fff' }} aria-label="Rotate Left"><i className="fas fa-undo" /></button>
+              <button onClick={() => rotateSelected('right')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', fontSize: 12, background: '#fff' }} aria-label="Rotate Right"><i className="fas fa-redo" /></button>
+              <button onClick={deleteSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 12, background: '#fff' }} aria-label="Delete"><i className="fas fa-trash-alt" /></button>
+              <button onClick={deselectAll} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 10 }} aria-label="Deselect"><i className="fas fa-times" /></button>
             </div>
           )}
 
@@ -3527,7 +3557,7 @@ export default function InteriorStudio() {
               { id: 'presets' as const, icon: 'fa-magic', label: 'Presets', color: '#C17F4E' },
               { id: 'skeleton' as const, icon: 'fa-bone', label: 'More', color: '#5C4033' },
             ]).map(({ id, icon, label, color }) => (
-              <button key={id} onClick={() => setMobilePanel(mobilePanel === id ? null : id)}
+              <button key={id} onClick={() => { setMobilePanel(mobilePanel === id ? null : id); setMobileActionsOpen(false); }}
                 role="tab" aria-selected={mobilePanel === id}
                 className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
                 style={{ color: mobilePanel === id ? color : '#5A4E42', background: mobilePanel === id ? `${color}0A` : 'transparent' }}>
@@ -3551,7 +3581,7 @@ export default function InteriorStudio() {
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (mobilePanel ? '40vh' : 100) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (mobilePanel ? '40vh' : (itemPanelVisible ? 96 : 58)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div role="status" aria-live="polite" className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff' }}>{toastMsg}</div>
       </div>
       </>

@@ -757,19 +757,19 @@ export function createKitchenCart(col: string, _mtype: MatType): THREE.Group {
 export function createFloorMirror(col: string, _mtype: MatType): THREE.Group {
   const g = new THREE.Group();
   const m = makeMat(col || '#B8956A', 'wood');
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.6, 0.05), m);
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.6, 0.04), m);
   frame.position.y = 0.8; frame.castShadow = true; g.add(frame);
   // Mirror glass
   const mirrorMat = new THREE.MeshStandardMaterial({ color: 0xc8d8e0, roughness: 0.1, metalness: 0.7 });
   (mirrorMat as any)._isStruct = true;
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 1.5), mirrorMat);
-  glass.position.set(0, 0.8, 0.03); g.add(glass);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 1.48), mirrorMat);
+  glass.position.set(0, 0.8, 0.025); g.add(glass);
   // Base feet
-  [-0.15, 0.15].forEach(x => {
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 0.06), m.clone());
-    foot.position.set(x, 0.015, 0.03); g.add(foot);
+  [-0.2, 0.2].forEach(x => {
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 0.12), m.clone());
+    foot.position.set(x, 0.015, 0.04); g.add(foot);
   });
-  g.userData = { isFurniture: true, name: 'Floor Mirror', desc: 'Standing mirror, h160cm', matType: 'wood' as MatType, matColor: col || '#B8956A' };
+  g.userData = { isFurniture: true, name: 'Floor Mirror', desc: 'Standing mirror, 50×160cm', matType: 'wood' as MatType, matColor: col || '#B8956A' };
   return g;
 }
 
