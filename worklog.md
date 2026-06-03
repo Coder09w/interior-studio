@@ -499,3 +499,29 @@ Stage Summary:
 - All 5 tasks completed and deployed
 - Key files modified: InteriorStudio.tsx, furniture-builders.ts, skin-system.ts
 - Logo saved to /home/z/my-project/download/instod-logo.png
+
+---
+Task ID: bug-fix-round
+Agent: Main (Super Z)
+Task: UI testing and bug fixes from comprehensive browser-based audit
+
+Work Log:
+- Used agent-browser to test all pages on https://instod.vercel.app
+- Found 10 bugs across HIGH/MEDIUM/LOW severity
+- Fix #1 (HIGH): Renamed all "Interior Studio" → "Instod" across 16 files (auth/login, auth/signup, auth/forgot-password, auth/reset-password, about, contact, dashboard, view, privacy, terms, onboarding, pricing, profile, feedback-button, homepage)
+- Fix #2 (HIGH): Pricing CTA buttons now redirect guests to /editor (was /auth/signup) for immediate design access
+- Fix #3 (MEDIUM): Contact form subject validation — added manual check since shadcn Select's required prop is unreliable
+- Fix #4 (MEDIUM): Login error feedback — added result.ok check alongside result.error for NextAuth signIn
+- Fix #5 (MEDIUM): Share room button — shows "Save the room first" toast when room hasn't been saved yet
+- Fix #7 (LOW): Contact form already had success toast (not a bug)
+- Fix #8 (LOW): Screen reader "DesignsCome" — added aria-label to h2 heading
+- Fix #9 (LOW): Pricing FAQ — converted static divs to interactive Accordion component
+- Fix #10 (LOW): Beta banner dismiss — switched from sessionStorage to localStorage for persistent dismiss
+- Cleaned up unused imports (Loader2, Calculator, Presentation, useState, useEffect) from pricing page
+- Verified: Sign Up CTA in editor is already behind isGuest check (not a bug)
+- Build passes, zero TypeScript errors, pushed to main (commit 1777040)
+
+Stage Summary:
+- 10 bugs identified, 8 actually fixed, 2 were not bugs (already handled)
+- Complete brand rename from "Interior Studio" to "Instod" across entire codebase
+- All changes deployed to https://instod.vercel.app
