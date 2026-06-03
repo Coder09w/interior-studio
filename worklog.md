@@ -421,3 +421,28 @@ Stage Summary:
   - Focus: Data migration, format changes, responsive sharing, input validation timing
 - **Lisa Crispin & Janet Gregory** — Agile Testing: "Testing must be integrated into development, not bolted on at the end."
   - Focus: Error boundaries, console cleanup, feedback integration, monitoring, staging
+
+---
+Task ID: v4-audit-fixes
+Agent: Main
+Task: Fix all V4 audit remaining issues, verify database, push and deploy
+
+Work Log:
+- Checked all 5 V4 audit issues
+- Issue 1 (EditorLoader on non-3D pages): Already fixed — only /editor/loading.tsx uses EditorLoader, all other pages use PageLoader
+- Issue 2 (Dead email addresses): Fixed — replaced security@instod.vercel.app in /terms and privacy@interiorstudio.app + hello@interiorstudio.app in /privacy with https://instod.vercel.app/contact form link
+- Issue 3 (Footer Blog #): Already fixed — no Blog link in any footer
+- Issue 4 (OAuth mismatch): Already fixed — privacy policy only mentions NextAuth.js, no Google/GitHub OAuth claims
+- Issue 5 (9AM-6PM EST): Already fixed — contact page says "We respond within 24-48 hours"
+- Added Feedback model to Prisma schema for persistent feedback storage
+- Created migration SQL for Feedback table
+- Updated /api/feedback to store in database instead of console.log
+- Verified plans API, feedback API, and email replacements on live site
+- Built, committed, and pushed to Vercel — deployment confirmed live
+
+Stage Summary:
+- Only 1 of 5 V4 audit issues actually needed fixing (dead emails)
+- 3 issues were already resolved in previous sessions
+- 1 issue (EditorLoader) was misdiagnosed — it's correctly scoped to /editor only
+- Added database-backed feedback storage (was previously console.log only)
+- All changes deployed and verified on https://instod.vercel.app
