@@ -673,6 +673,11 @@ canvas {
   opacity: 0;
 }
 
+/* Smooth scroll for homepage */
+html {
+  scroll-behavior: smooth;
+}
+
 /* Accessibility: Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

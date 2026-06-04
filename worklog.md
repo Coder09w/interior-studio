@@ -525,3 +525,37 @@ Stage Summary:
 - 10 bugs identified, 8 actually fixed, 2 were not bugs (already handled)
 - Complete brand rename from "Interior Studio" to "Instod" across entire codebase
 - All changes deployed to https://instod.vercel.app
+---
+Task ID: 1
+Agent: main
+Task: Redesign homepage with dark+white combo and smooth animated scrolling
+
+Work Log:
+- Read and analyzed the full page.tsx (1380 lines) and globals.css (717 lines)
+- Designed section-by-section dark/white alternating layout
+- Rewrote page.tsx (~1468 lines) with dramatic dark+white combo design
+- Added smooth scroll CSS (scroll-behavior: smooth) to globals.css
+- Added new animation components: RevealOnScroll, HorizontalReveal, ParallaxSection, GradientDivider
+- Enhanced StaggerContainer with larger stagger (0.12) and staggerItem offset (50px)
+- Navbar now adapts between dark mode (on hero) and light mode (on white sections)
+- Hero section: dark cinematic #0F0F0F bg, glowing copper accents, dark-themed editor mockup
+- Features section: clean white #FFFFFF with warm text
+- Room Showcase: dark #121212 with color glow on hover
+- How It Works: light #FAFAFA
+- Stats section: dark #1A1A1A with parallax, copper glow on numbers
+- Testimonials: white #FFFFFF
+- Showcase Banner: dark #0F0F0F with HorizontalReveal animations
+- CTA section: dark #1A1A1A with radial copper gradient
+- Footer: darker #0A0A0A
+- Added GradientDivider between every dark↔white transition for smooth visual flow
+- Build verified: compiles successfully with zero TypeScript errors
+
+Stage Summary:
+- Homepage redesigned with dramatic dark+white alternating sections
+- Smooth scroll animations with RevealOnScroll (60px offset, scale 0.95→1, buttery easing)
+- ParallaxSection wrapper for stats section
+- HorizontalReveal for showcase banner
+- Navbar adapts colors based on scroll position (dark on hero, light on white sections)
+- GradientDividers create smooth transitions between dark and white sections
+- All navigation links and session logic preserved
+- Build passes cleanly
