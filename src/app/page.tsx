@@ -353,7 +353,7 @@ function HeroSection() {
             <RevealOnScroll delay={0.1}>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
                 <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
-                <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>FREE 3D ROOM DESIGNER</span>
+                <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>FREE 3D DESIGNER</span>
               </div>
             </RevealOnScroll>
 
@@ -376,9 +376,7 @@ function HeroSection() {
                 className="mt-5 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed"
                 style={{ color: '#A8A8A8' }}
               >
-                Design and explore your rooms in an interactive 3D editor.
-                Place furniture, swap materials, adjust lighting, and iterate on your
-                layout from any angle — no design experience needed.
+                Design and explore rooms in <span className="font-semibold" style={{ color: '#C17F4E' }}>interactive 3D</span>. Place furniture, swap materials, adjust lighting — from any angle.
               </p>
             </RevealOnScroll>
 
@@ -431,7 +429,7 @@ function HeroSection() {
                   <span className="font-semibold" style={{ color: '#FFFFFF' }}>
                     Early Access Beta
                   </span>{' '}
-                  — Your feedback shapes the product
+                  — Your feedback shapes this
                 </p>
               </div>
             </RevealOnScroll>
@@ -701,48 +699,48 @@ const features = [
   {
     icon: Box,
     title: '3D Real-Time Preview',
-    description:
-      'Walk through your designs in a fully interactive 3D environment. Rotate, zoom, and explore every angle with smooth OrbitControls.',
+    highlight: 'Explore',
+    description: 'every angle. Rotate, zoom — see it live.',
     gradient: 'linear-gradient(135deg, rgba(193,127,78,0.06) 0%, rgba(212,167,106,0.04) 100%)',
     image: '/images/feature-preview-3d.png',
   },
   {
     icon: Armchair,
     title: '30+ Furniture Items',
-    description:
-      'From sofas to bathtubs, our extensive library has everything you need to furnish any room type. Each item is fully customizable.',
+    highlight: 'Customize',
+    description: 'every piece. Sofas, tables, lamps and more.',
     gradient: 'linear-gradient(135deg, rgba(139,115,85,0.06) 0%, rgba(193,127,78,0.04) 100%)',
     image: '/images/feature-furniture.png',
   },
   {
     icon: LayoutGrid,
     title: 'Multiple Rooms',
-    description:
-      'Design entire houses with dedicated rooms for living, bedroom, kitchen, bathroom, and office spaces. Switch between them instantly.',
+    highlight: 'Instant',
+    description: 'switch. 6 room types at your fingertips.',
     gradient: 'linear-gradient(135deg, rgba(123,143,161,0.06) 0%, rgba(61,79,95,0.04) 100%)',
     image: '/images/feature-rooms.png',
   },
   {
     icon: Palette,
     title: 'Material & Color System',
-    description:
-      'Swap fabrics, woods, metals, and leathers with a click. See changes instantly in 3D with realistic PBR materials and shadows.',
+    highlight: 'Swap',
+    description: 'fabrics, woods, metals — see it live.',
     gradient: 'linear-gradient(135deg, rgba(193,127,78,0.08) 0%, rgba(139,115,85,0.04) 100%)',
     image: '/images/feature-materials.png',
   },
   {
     icon: Share2,
     title: 'Save & Share',
-    description:
-      'Save your designs and share them with anyone via a simple link. No login required to view shared rooms.',
+    highlight: 'One link',
+    description: 'to share. No login needed to view.',
     gradient: 'linear-gradient(135deg, rgba(107,142,107,0.06) 0%, rgba(139,115,85,0.04) 100%)',
     image: '/images/feature-share.png',
   },
   {
     icon: Settings,
     title: 'Smart Room Settings',
-    description:
-      'Customize dimensions, flooring, windows, doors, and lighting to match your exact space. Four mood presets available.',
+    highlight: 'Match',
+    description: 'your space. Dimensions, lighting, 4 mood presets.',
     gradient: 'linear-gradient(135deg, rgba(61,79,95,0.06) 0%, rgba(123,143,161,0.04) 100%)',
     image: '/images/feature-settings.png',
   },
@@ -758,16 +756,16 @@ function FeaturesSection() {
               className="text-3xl sm:text-4xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
             >
-              Everything You Need to Design Beautiful Spaces
+              Design <span style={{ color: '#C17F4E' }}>Beautiful Spaces</span>
             </h2>
             <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
-              Powerful tools to bring your interior design vision to life.
+              Everything you need. Nothing you don't.
             </p>
           </div>
         </RevealOnScroll>
 
         <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map(({ icon: Icon, title, description, gradient, image }) => (
+          {features.map(({ icon: Icon, title, description, highlight, gradient, image }) => (
             <motion.div
               key={title}
               variants={staggerItem}
@@ -805,21 +803,23 @@ function FeaturesSection() {
                 </div>
               </FadeInWhenVisible>
               {/* Content area */}
-              <div className="relative z-10 p-6">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
-                  style={{ background: 'rgba(193,127,78,0.1)', border: '1.5px solid rgba(193,127,78,0.15)' }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+              <div className="relative z-10 p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                    style={{ background: 'rgba(193,127,78,0.1)', border: '1.5px solid rgba(193,127,78,0.15)' }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                  </div>
+                  <h3
+                    className="text-[16px] font-semibold tracking-tight"
+                    style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
+                  >
+                    {title}
+                  </h3>
                 </div>
-                <h3
-                  className="text-[17px] font-semibold mb-2 tracking-tight"
-                  style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
-                >
-                  {title}
-                </h3>
-                <p className="text-[13.5px] leading-[1.65]" style={{ color: '#6B5E52' }}>
-                  {description}
+                <p className="text-[13px] leading-[1.55]" style={{ color: '#6B5E52' }}>
+                  <span className="font-semibold" style={{ color: '#C17F4E' }}>{highlight}</span>{' '}{description}
                 </p>
               </div>
             </motion.div>
@@ -854,10 +854,10 @@ function RoomShowcase() {
               className="text-2xl sm:text-3xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
             >
-              Design Every Room in Your Home
+              Design Every <span style={{ color: '#C17F4E' }}>Room</span>
             </h2>
             <p className="mt-3 text-sm" style={{ color: '#A8A8A8' }}>
-              Dedicated templates and furniture for every space. Click any room to start designing.
+              Click any room to start designing.
             </p>
           </div>
         </RevealOnScroll>
@@ -925,21 +925,21 @@ const steps = [
     num: 1,
     title: 'Pick a Room',
     description:
-      'Choose from living room, bedroom, kitchen, and more. Set your dimensions and style.',
+      'Choose your space. Set dimensions and style.',
     icon: LayoutGrid,
   },
   {
     num: 2,
     title: 'Add Furniture',
     description:
-      'Browse our library and place items with a click. Drag to reposition, rotate to fit.',
+      'Place with a click. Drag, rotate, done.',
     icon: Armchair,
   },
   {
     num: 3,
     title: 'Save & Share',
     description:
-      'Save your design and share it with contractors, friends, or keep iterating.',
+      'One link. Anyone can view — no login needed.',
     icon: Share2,
   },
 ];
@@ -961,7 +961,7 @@ function HowItWorksSection() {
               How It Works
             </h2>
             <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
-              From blank canvas to dream home in three simple steps.
+              Three steps. Zero friction.
             </p>
           </div>
         </RevealOnScroll>
@@ -1085,8 +1085,7 @@ function TestimonialsSection() {
             Be a <span style={{ color: '#C17F4E' }}>Founding Member</span>
           </h2>
           <p className="mt-4 text-base max-w-2xl mx-auto" style={{ color: '#5A4E42' }}>
-            Instod is in Early Access Beta. As one of our first users, your feedback directly shapes the product.
-            Join now and get full premium access for free while we build the future of interior design.
+            Your feedback shapes the product. <span className="font-semibold" style={{ color: '#C17F4E' }}>Full access, free</span> during beta.
           </p>
         </RevealOnScroll>
 
@@ -1096,17 +1095,17 @@ function TestimonialsSection() {
               {
                 icon: Globe,
                 title: 'Your Voice Matters',
-                description: 'Every piece of feedback shapes new features. We build what our community asks for first.',
+                description: 'Feedback shapes features. We build what you ask for.',
               },
               {
                 icon: Zap,
                 title: 'Full Access, Free',
-                description: 'During beta, all premium features are unlocked at no cost. No credit card, no time limit.',
+                description: 'All premium features unlocked. No credit card, no limit.',
               },
               {
                 icon: Star,
                 title: 'Early Adopter Perks',
-                description: 'Founding members get exclusive discounts and extended free access when premium launches.',
+                description: 'Exclusive discounts and extended free access at launch.',
               },
             ].map(({ icon: Icon, title, description }) => (
               <div
@@ -1182,8 +1181,7 @@ function ShowcaseBannerSection() {
                 <span style={{ color: '#C17F4E', textShadow: '0 0 40px rgba(193,127,78,0.3)' }}>Come Alive</span>
               </h2>
               <p className="mt-5 text-base sm:text-lg leading-relaxed" style={{ color: '#A8A8A8' }}>
-                Watch your ideas transform into stunning 3D spaces in real time.
-                Every detail, every texture, every shadow — rendered instantly as you design.
+                Every texture, every shadow — rendered <span className="font-semibold" style={{ color: '#C17F4E' }}>instantly</span> as you design.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row items-start gap-4">
                 <Link
@@ -1318,7 +1316,7 @@ function CTASection() {
         </RevealOnScroll>
         <RevealOnScroll delay={0.2}>
           <p className="mt-4 text-base sm:text-lg max-w-xl mx-auto" style={{ color: '#A8A8A8' }}>
-            Jump right into the 3D editor and start creating. No account needed to explore and design.
+            No account needed. Jump in and start creating.
           </p>
         </RevealOnScroll>
         <RevealOnScroll delay={0.3}>
