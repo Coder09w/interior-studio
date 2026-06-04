@@ -771,12 +771,22 @@ function FeaturesSection() {
             <motion.div
               key={title}
               variants={staggerItem}
-              className="group rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 relative overflow-hidden"
+              className="group rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden"
               style={{
                 background: '#FFFFFF',
-                borderColor: '#E2DDD4',
+                borderColor: '#E8E2DA',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              }}
+              whileHover={{
+                boxShadow: '0 8px 30px rgba(193,127,78,0.12)',
+                borderColor: '#C17F4E',
               }}
             >
+              {/* Copper accent top bar */}
+              <div
+                className="h-1 w-full transition-all duration-300 group-hover:h-1.5"
+                style={{ background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }}
+              />
               {/* Feature image banner */}
               <FadeInWhenVisible delay={0.1}>
                 <div className="relative aspect-[16/9] overflow-hidden">
@@ -797,18 +807,18 @@ function FeaturesSection() {
               {/* Content area */}
               <div className="relative z-10 p-6">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
-                  style={{ background: 'rgba(193,127,78,0.12)' }}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
+                  style={{ background: 'rgba(193,127,78,0.1)', border: '1.5px solid rgba(193,127,78,0.15)' }}
                 >
-                  <Icon className="w-6 h-6" style={{ color: '#C17F4E' }} />
+                  <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
                 </div>
                 <h3
-                  className="text-lg font-semibold mb-2"
+                  className="text-[17px] font-semibold mb-2 tracking-tight"
                   style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
                 >
                   {title}
                 </h3>
-                <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>
+                <p className="text-[13.5px] leading-[1.65]" style={{ color: '#6B5E52' }}>
                   {description}
                 </p>
               </div>
@@ -857,10 +867,10 @@ function RoomShowcase() {
               <motion.div
                 variants={staggerItem}
                 whileHover={{ y: -6, scale: 1.02 }}
-                className="group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer transition-shadow duration-300 hover:shadow-xl"
-                style={{ boxShadow: '0 0 0 transparent' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 0 40px ${color}33`; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 transparent'; }}
+                className="group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-300"
+                style={{ boxShadow: '0 0 0 transparent', borderColor: 'rgba(255,255,255,0.08)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 0 40px ${color}33`; (e.currentTarget as HTMLElement).style.borderColor = `${color}88`; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 transparent'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
               >
               {/* Room image background */}
               <img
@@ -887,13 +897,14 @@ function RoomShowcase() {
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
                 <div className="flex items-center gap-2.5">
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center"
-                    style={{ background: `${color}CC` }}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: `${color}CC`, border: '1.5px solid rgba(255,255,255,0.15)' }}
                   >
                     <Icon className="w-5 h-5 text-white" />
                   </div>
                   <span
-                    className="text-base font-semibold text-white"
+                    className="text-[15px] font-semibold text-white tracking-tight"
+                    style={{ fontFamily: "'Outfit', sans-serif" }}
                   >
                     {label}
                   </span>
@@ -965,20 +976,20 @@ function HowItWorksSection() {
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 360 }}
                 transition={{ duration: 0.6 }}
-                className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg mb-6"
-                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-lg mb-6 border-2"
+                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', borderColor: 'rgba(255,255,255,0.2)' }}
               >
                 {num}
               </motion.div>
               <h3
-                className="text-xl font-semibold mb-2"
+                className="text-xl font-semibold mb-2 tracking-tight"
                 style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
               >
                 {title}
               </h3>
               <p
-                className="text-sm leading-relaxed max-w-xs"
-                style={{ color: '#5A4E42' }}
+                className="text-[13.5px] leading-[1.65] max-w-xs"
+                style={{ color: '#6B5E52' }}
               >
                 {description}
               </p>
@@ -1021,27 +1032,31 @@ function StatsSection() {
             <motion.div
               key={label}
               variants={staggerItem}
-              className="text-center p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 group"
-              style={{ background: '#1E1E1E', borderColor: '#2A2A2A' }}
-              whileHover={{ boxShadow: '0 0 30px rgba(193,127,78,0.1)' }}
+              className="text-center p-6 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 group"
+              style={{ background: '#1E1E1E', borderColor: '#2E2E2E', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+              whileHover={{ boxShadow: '0 0 30px rgba(193,127,78,0.12)', borderColor: '#C17F4E' }}
             >
+              {/* Copper accent top bar */}
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
-                style={{ background: 'rgba(193,127,78,0.15)' }}
+                className="h-0.5 w-10 mx-auto rounded-full mb-4 transition-all duration-300 group-hover:w-16"
+                style={{ background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }}
+              />
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:scale-110"
+                style={{ background: 'rgba(193,127,78,0.12)', border: '1.5px solid rgba(193,127,78,0.2)' }}
               >
                 <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
               </div>
               <p
-                className="text-3xl sm:text-4xl font-bold"
+                className="text-3xl sm:text-4xl font-bold tracking-tight"
                 style={{
                   fontFamily: "'Outfit', sans-serif",
                   color: '#C17F4E',
-                  textShadow: '0 0 20px rgba(193,127,78,0.3)',
                 }}
               >
                 <AnimatedCounter value={value} suffix={suffix} />
               </p>
-              <p className="text-sm mt-1 font-medium" style={{ color: '#A8A8A8' }}>{label}</p>
+              <p className="text-[13px] mt-1.5 font-medium tracking-wide" style={{ color: '#9A9A9A' }}>{label}</p>
             </motion.div>
           ))}
         </StaggerContainer>
@@ -1096,21 +1111,39 @@ function TestimonialsSection() {
             ].map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
-                className="p-6 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                className="p-6 rounded-2xl border-2 text-left transition-all duration-300 hover:-translate-y-1 group"
                 style={{
                   background: '#FFFFFF',
-                  borderColor: '#E2DDD4',
+                  borderColor: '#E8E2DA',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = '#C17F4E';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(193,127,78,0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = '#E8E2DA';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+                }}
               >
+                {/* Copper accent top bar */}
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                  style={{ background: 'rgba(193,127,78,0.1)' }}
+                  className="h-0.5 w-8 rounded-full mb-4 transition-all duration-300 group-hover:w-14"
+                  style={{ background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }}
+                />
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
+                  style={{ background: 'rgba(193,127,78,0.1)', border: '1.5px solid rgba(193,127,78,0.15)' }}
                 >
                   <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
                 </div>
-                <h3 className="text-sm font-semibold mb-2" style={{ color: '#1A1A1A' }}>{title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: '#5A4E42' }}>
+                <h3
+                  className="text-[15px] font-semibold mb-2 tracking-tight"
+                  style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
+                >
+                  {title}
+                </h3>
+                <p className="text-[13px] leading-[1.65]" style={{ color: '#6B5E52' }}>
                   {description}
                 </p>
               </div>
