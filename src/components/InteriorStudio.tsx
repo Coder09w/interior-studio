@@ -260,9 +260,13 @@ export default function InteriorStudio() {
   const [tutorialStep, setTutorialStep] = useState(0);
   const [selectedRoomType, setSelectedRoomType] = useState<PresetRoomType>('living');
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [hasCachedDesign, setHasCachedDesign] = useState(false);
 
   // Guest mode state
   const [isGuest, setIsGuest] = useState(true); // default to guest until we verify auth
+
+  // Loading state — minimum display time for loader
+  const [sceneReady, setSceneReady] = useState(false);
 
   // WebGL support state
   const [webglError, setWebglError] = useState<string | null>(null);
@@ -1528,6 +1532,64 @@ export default function InteriorStudio() {
     markUnsaved();
   }, [buildRoom, deselectAll, markSceneDirty, markUnsaved, serializeFurniture]);
 
+  /* ===== RESTORE CACHED DESIGN ===== */
+  const restoreCachedDesign = useCallback(() => {
+    const savedRoom = cachedRoomDataRef.current;
+    if (!savedRoom) return;
+
+    // Clear existing furniture
+    placedItemsRef.current.forEach(item => {
+      sceneRef.current?.remove(item);
+      item.traverse(c => {
+        if (c instanceof THREE.Mesh) { c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material?.dispose(); }
+      });
+    });
+    placedItemsRef.current = [];
+    selectedObjRef.current = null;
+    setItemPanelVisible(false);
+
+    // Apply cached room settings (cast from unknown types)
+    const r = savedRoom as Record<string, any>;
+    if (r.width) { roomWRef.current = r.width; setRoomW(r.width); }
+    if (r.depth) { roomDRef.current = r.depth; setRoomD(r.depth); }
+    if (r.height) { roomHRef.current = r.height; setRoomH(r.height); }
+    if (r.wallColor) { wallColRef.current = r.wallColor; setWallCol(r.wallColor); }
+    if (r.floorType) { floorTypeRef.current = r.floorType; setFloorType(r.floorType); }
+    if (r.floorColor) { floorColorRef.current = r.floorColor; setFloorColor(r.floorColor); }
+    if (r.doorWall) { doorWallRef.current = r.doorWall; setDoorWall(r.doorWall); }
+    if (r.windowCount) { windowCountRef.current = r.windowCount; setWindowCount(r.windowCount); }
+    if (r.windowWall) { windowWallRef.current = r.windowWall; setWindowWall(r.windowWall); }
+    if (r.lightMood) { lightMoodRef.current = r.lightMood; setLightMood(r.lightMood); }
+    if (r.ceilingLightPreset) { ceilingLightPresetRef.current = r.ceilingLightPreset; setCeilingLightPreset(r.ceilingLightPreset); }
+    if (r.designName) { setDesignName(r.designName); designNameRef.current = r.designName; }
+    if (r.activeSkin) { setActiveSkin(r.activeSkin); activeSkinRef.current = r.activeSkin; }
+
+    // Rebuild room with cached settings
+    buildRoom();
+
+    // Load cached furniture after room is built
+    setTimeout(() => {
+      if (r.furniture) {
+        loadFurnitureData(r.furniture as FurnitureData[]);
+      }
+
+      // Apply skin if cached
+      if (r.activeSkin && r.activeSkin !== 'default') {
+        const skin = SKINS_DICTIONARY[r.activeSkin as string];
+        if (skin) {
+          const sc = sceneRef.current, rg = roomGroupRef.current;
+          if (sc && rg) applySkinToSkeleton(sc, rg, placedItemsRef.current, skin, ambientLightRef.current, dirLightRef.current, rendererRef.current, hemiLightRef.current, fillLightRef.current);
+        }
+      }
+
+      markSceneDirty();
+      historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+    }, 200);
+
+    setShowOnboarding(false);
+    markUnsaved();
+  }, [buildRoom, loadFurnitureData, markSceneDirty, markUnsaved, serializeFurniture]);
+
   /* ===== THREE.JS INIT ===== */
   useEffect(() => {
     const mobile = isMobileDevice();
@@ -1583,10 +1645,8 @@ export default function InteriorStudio() {
 
     const roomGroup = new THREE.Group(); scene.add(roomGroup); roomGroupRef.current = roomGroup;
     buildRoom(); setTimeout(() => {
-      // Try to load saved room state from localStorage
-      // NOTE: We do NOT skip onboarding anymore — user always picks a room first
-      // Cached data is loaded only after they dismiss the onboarding screen
-      let hasCachedData = false;
+      // Load saved room state from localStorage — ONLY store, do NOT auto-apply
+      // The user must explicitly choose to continue or start fresh via onboarding
       try {
         // Check if user is authenticated (has session)
         fetch('/api/auth/session').then(r => r.json()).then(session => {
@@ -1596,24 +1656,9 @@ export default function InteriorStudio() {
         const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
         const savedRoom = savedRooms['default'];
         if (savedRoom) {
-          hasCachedData = true;
-          // Store cached data for later use (when user dismisses onboarding)
+          // Only store cached data for later use — do NOT apply settings here
           cachedRoomDataRef.current = savedRoom;
-          // Apply room dimensions and settings silently (no visual skip)
-          if (savedRoom.width) { roomWRef.current = savedRoom.width; setRoomW(savedRoom.width); }
-          if (savedRoom.depth) { roomDRef.current = savedRoom.depth; setRoomD(savedRoom.depth); }
-          if (savedRoom.height) { roomHRef.current = savedRoom.height; setRoomH(savedRoom.height); }
-          if (savedRoom.wallColor) { wallColRef.current = savedRoom.wallColor; setWallCol(savedRoom.wallColor); }
-          if (savedRoom.floorType) { floorTypeRef.current = savedRoom.floorType; setFloorType(savedRoom.floorType); }
-          if (savedRoom.floorColor) { floorColorRef.current = savedRoom.floorColor; setFloorColor(savedRoom.floorColor); }
-          if (savedRoom.doorWall) { doorWallRef.current = savedRoom.doorWall; setDoorWall(savedRoom.doorWall); }
-          if (savedRoom.windowCount) { windowCountRef.current = savedRoom.windowCount; setWindowCount(savedRoom.windowCount); }
-          if (savedRoom.windowWall) { windowWallRef.current = savedRoom.windowWall; setWindowWall(savedRoom.windowWall); }
-          if (savedRoom.lightMood) { lightMoodRef.current = savedRoom.lightMood; setLightMood(savedRoom.lightMood); }
-          if (savedRoom.ceilingLightPreset) { ceilingLightPresetRef.current = savedRoom.ceilingLightPreset; setCeilingLightPreset(savedRoom.ceilingLightPreset); }
-          if (savedRoom.designName) { setDesignName(savedRoom.designName); designNameRef.current = savedRoom.designName; }
-          if (savedRoom.activeSkin) { setActiveSkin(savedRoom.activeSkin); activeSkinRef.current = savedRoom.activeSkin; }
-          buildRoom();
+          setHasCachedDesign(true);
         }
         // Also load saved room states map
         const savedStates = JSON.parse(localStorage.getItem('instod_room_states') || '{}');
@@ -1623,12 +1668,15 @@ export default function InteriorStudio() {
       } catch (_e) {
         // Ignore localStorage errors
       }
-      // Only add default furniture if no cached data — onboarding will handle the rest
-      if (!hasCachedData) {
-        addDefaultFurniture();
-      }
+      // Always add default furniture — onboarding will handle loading presets
+      addDefaultFurniture();
       historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
     }, 100);
+
+    // Minimum loading display time (2.5s) so the loader animation completes properly
+    const minLoadTimer = setTimeout(() => {
+      setSceneReady(true);
+    }, 2500);
 
     const onResize = () => {
       const p = canvas.parentElement; if (!p) return;
@@ -2045,6 +2093,7 @@ export default function InteriorStudio() {
       window.removeEventListener('keydown', onKeyDown);
       renderer.dispose();
       if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
+      clearTimeout(minLoadTimer);
     };
   }, []);
 
@@ -2981,8 +3030,37 @@ export default function InteriorStudio() {
       {!webglError && (
         <>
 
+      {/* ===== LOADING OVERLAY — shows until scene is ready ===== */}
+      {!sceneReady && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F5F0E8 0%, #EDE5D8 50%, #F0E8DC 100%)', transition: 'opacity 0.5s ease-out' }}>
+          <div className="text-center w-full max-w-lg px-6 relative z-10">
+            {/* Animated room icon */}
+            <div className="mx-auto mb-6" style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(193,127,78,0.15)' }}>
+              <div style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
+                <i className="fas fa-cube text-3xl" style={{ color: '#C17F4E' }} />
+              </div>
+            </div>
+            {/* Logo */}
+            <img src="/logo.svg" alt="Instod" style={{ width: '48px', height: '48px', borderRadius: '14px', margin: '0 auto 10px', display: 'block' }} />
+            {/* Brand name */}
+            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.75rem', fontWeight: 800, color: '#2D2D2D', letterSpacing: '-0.02em', marginBottom: '4px' }}>Instod</h1>
+            <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '0.8rem', color: '#5A4E42', marginBottom: '24px', opacity: 0.8 }}>3D Room Design Previewer</p>
+            {/* Progress bar */}
+            <div style={{ width: '100%', height: '6px', borderRadius: '6px', background: '#E2DDD4', marginBottom: '16px', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: '6px',
+                background: 'linear-gradient(90deg, #C17F4E, #D4A76A, #C17F4E)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.5s ease-in-out infinite, loadProgress 2.3s ease-out forwards',
+              }} />
+            </div>
+            <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '0.8rem', color: '#5A4E42', fontWeight: 500 }}>Preparing your studio<span className="loader-dot-pulse" style={{ display: 'inline-flex', gap: '2px', marginLeft: '2px' }}><span style={{ animation: 'loaderDot 1.4s ease-in-out infinite', opacity: 0 }}>.</span><span style={{ animation: 'loaderDot 1.4s ease-in-out 0.2s infinite', opacity: 0 }}>.</span><span style={{ animation: 'loaderDot 1.4s ease-in-out 0.4s infinite', opacity: 0 }}>.</span></span></p>
+          </div>
+        </div>
+      )}
+
       {/* ===== ONBOARDING OVERLAY ===== */}
-      {showOnboarding && (
+      {showOnboarding && sceneReady && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(45,45,45,0.85)', backdropFilter: 'blur(8px)' }}>
           <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto" onKeyDown={trapFocus} style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
             {/* Step 1: Room Type */}
@@ -3018,6 +3096,13 @@ export default function InteriorStudio() {
                   style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>
                   <i className="fas fa-pen" /> Start from Scratch
                 </button>
+                {hasCachedDesign && (
+                  <button onClick={restoreCachedDesign}
+                    className="w-full mt-3 py-3 rounded-xl text-sm font-bold text-white cursor-pointer border-none flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
+                    <i className="fas fa-history" /> Continue Previous Design
+                  </button>
+                )}
               </>
             )}
 
