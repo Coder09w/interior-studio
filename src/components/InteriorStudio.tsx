@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { builders, makeMat } from '@/lib/furniture-builders';
+import EditorLoader from '@/components/EditorLoader';
 import type { MatType } from '@/lib/furniture-builders';
 import { categories, furnitureItems, matColors, wallColorOptions, roomTypeDefaults, colorNames } from '@/lib/furniture-data';
 import type { CategoryId } from '@/lib/furniture-data';
@@ -3032,30 +3033,8 @@ export default function InteriorStudio() {
 
       {/* ===== LOADING OVERLAY — shows until scene is ready ===== */}
       {!sceneReady && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F5F0E8 0%, #EDE5D8 50%, #F0E8DC 100%)', transition: 'opacity 0.5s ease-out' }}>
-          <div className="text-center w-full max-w-lg px-6 relative z-10">
-            {/* Animated room icon */}
-            <div className="mx-auto mb-6" style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(193,127,78,0.15)' }}>
-              <div style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
-                <i className="fas fa-cube text-3xl" style={{ color: '#C17F4E' }} />
-              </div>
-            </div>
-            {/* Logo */}
-            <img src="/logo.svg" alt="Instod" style={{ width: '48px', height: '48px', borderRadius: '14px', margin: '0 auto 10px', display: 'block' }} />
-            {/* Brand name */}
-            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.75rem', fontWeight: 800, color: '#2D2D2D', letterSpacing: '-0.02em', marginBottom: '4px' }}>Instod</h1>
-            <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '0.8rem', color: '#5A4E42', marginBottom: '24px', opacity: 0.8 }}>3D Room Design Previewer</p>
-            {/* Progress bar */}
-            <div style={{ width: '100%', height: '6px', borderRadius: '6px', background: '#E2DDD4', marginBottom: '16px', overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', borderRadius: '6px',
-                background: 'linear-gradient(90deg, #C17F4E, #D4A76A, #C17F4E)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 1.5s ease-in-out infinite, loadProgress 2.3s ease-out forwards',
-              }} />
-            </div>
-            <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: '0.8rem', color: '#5A4E42', fontWeight: 500 }}>Preparing your studio<span className="loader-dot-pulse" style={{ display: 'inline-flex', gap: '2px', marginLeft: '2px' }}><span style={{ animation: 'loaderDot 1.4s ease-in-out infinite', opacity: 0 }}>.</span><span style={{ animation: 'loaderDot 1.4s ease-in-out 0.2s infinite', opacity: 0 }}>.</span><span style={{ animation: 'loaderDot 1.4s ease-in-out 0.4s infinite', opacity: 0 }}>.</span></span></p>
-          </div>
+        <div className="fixed inset-0 z-[200]" style={{ transition: 'opacity 0.5s ease-out' }}>
+          <EditorLoader />
         </div>
       )}
 
