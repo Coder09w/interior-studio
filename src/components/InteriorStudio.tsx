@@ -160,7 +160,7 @@ function makeTileTexture(w: number, d: number): THREE.CanvasTexture {
 const lightMoods: Record<string, { bg: number; fog: number; ambient: [number, number]; dir: [number, number]; hemi: [number, number, number]; fill: [number, number]; exposure: number }> = {
   daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.5], dir: [0xFFF0D8, 0.5], hemi: [0xFFF5E6, 0x8B7355, 0.3], fill: [0xE0E8F0, 0.15], exposure: 0.9 },
   golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.35], dir: [0xFFE0A0, 0.4], hemi: [0xFFF0C0, 0x8B7355, 0.2], fill: [0xFFE8C0, 0.1], exposure: 0.95 },
-  evening: { bg: 0xD8C8B0, fog: 0xD8C8B0, ambient: [0xFFC880, 0.2], dir: [0xFFE8C0, 0.25], hemi: [0xD8A070, 0x6B5340, 0.15], fill: [0xFFC880, 0.06], exposure: 0.85 },
+  evening: { bg: 0x5C4A38, fog: 0x5C4A38, ambient: [0xFFC880, 0.2], dir: [0xFFE8C0, 0.25], hemi: [0xD8A070, 0x6B5340, 0.15], fill: [0xFFC880, 0.06], exposure: 0.85 },
   night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.08], dir: [0xFFE0A0, 0.08], hemi: [0x1A1A2E, 0x0D0D15, 0.05], fill: [0x4455AA, 0.02], exposure: 1.05 },
 };
 
@@ -281,6 +281,9 @@ export default function InteriorStudio() {
   const currentRoomIdRef = useRef('default');
   const designNameRef = useRef('Untitled Room');
   const activeSkinRef = useRef('default');
+
+  // Ref to store cached room data for restoring after onboarding
+  const cachedRoomDataRef = useRef<Record<string, unknown> | null>(null);
 
   // Refs for scene lights (to update on mood change)
   const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
@@ -583,10 +586,12 @@ export default function InteriorStudio() {
     const metalMat = new THREE.MeshStandardMaterial({ color: 0x333, roughness: 0.3, metalness: 0.8 });
     const brassMat = new THREE.MeshStandardMaterial({ color: 0xB8860B, roughness: 0.35, metalness: 0.7 });
     const isNight = mood === 'night';
-    const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
+    const isEvening = mood === 'evening';
+    const isDark = isNight || isEvening;
+    const lightColor = isDark ? 0xFFE8C0 : 0xFFEED0;
     // Simple intensity values (old-style, no physically correct candela)
-    const mainIntensity = isNight ? 0.5 : 0.8;
-    const secondaryIntensity = isNight ? 0.4 : 0.6;
+    const mainIntensity = isDark ? 0.5 : 0.8;
+    const secondaryIntensity = isDark ? 0.4 : 0.6;
     // Exposure guard
     const clampExposure = (v: number) => Math.max(0.3, Math.min(v, 1.15));
 
@@ -595,8 +600,8 @@ export default function InteriorStudio() {
       const bulbGeo = new THREE.SphereGeometry(radius, 12, 12);
       const bulbMat = new THREE.MeshStandardMaterial({
         color: 0xFFF5E0,
-        emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-        emissiveIntensity: isNight ? 1.5 : 1.0,
+        emissive: isDark ? 0xFFE8A0 : 0xFFEED0,
+        emissiveIntensity: isDark ? 1.5 : 1.0,
         roughness: 0.2,
         metalness: 0.0,
       });
@@ -632,7 +637,7 @@ export default function InteriorStudio() {
         // Crystal drop
         const crystal = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshStandardMaterial({
           color: 0xFFFFFF, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.85,
-          emissive: lightColor, emissiveIntensity: isNight ? 0.5 : 0.3,
+          emissive: lightColor, emissiveIntensity: isDark ? 0.5 : 0.3,
         }));
         crystal.position.set(Math.cos(angle) * armLen, -0.48, Math.sin(angle) * armLen);
         chandGroup.add(crystal);
@@ -694,8 +699,8 @@ export default function InteriorStudio() {
       panelGroup.add(frame);
       // Emissive panel surface
       const panelMat = new THREE.MeshStandardMaterial({
-        color: 0xFFEED0, emissive: isNight ? 0xFFE8A0 : 0xFFEED0,
-        emissiveIntensity: isNight ? 1.5 : 0.8, roughness: 0.3,
+        color: 0xFFEED0, emissive: isDark ? 0xFFE8A0 : 0xFFEED0,
+        emissiveIntensity: isDark ? 1.5 : 0.8, roughness: 0.3,
       });
       const panel = new THREE.Mesh(new THREE.PlaneGeometry(panelW, panelD), panelMat);
       panel.rotation.x = Math.PI / 2;
@@ -729,7 +734,7 @@ export default function InteriorStudio() {
         pendGroup.add(shade);
         // Inner glow — emissive shade interior
         const innerGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.1, 0.08, 12), new THREE.MeshStandardMaterial({
-          color: 0xFFF0D0, emissive: lightColor, emissiveIntensity: isNight ? 1.0 : 0.5, roughness: 0.5,
+          color: 0xFFF0D0, emissive: lightColor, emissiveIntensity: isDark ? 1.0 : 0.5, roughness: 0.5,
         }));
         innerGlow.position.y = -0.54;
         pendGroup.add(innerGlow);
@@ -761,7 +766,7 @@ export default function InteriorStudio() {
 
         // Emissive recessed ring (the "on" indicator)
         const ringMat = new THREE.MeshStandardMaterial({
-          color: 0xFFEED0, emissive: lightColor, emissiveIntensity: isNight ? 1.5 : 0.8,
+          color: 0xFFEED0, emissive: lightColor, emissiveIntensity: isDark ? 1.5 : 0.8,
           roughness: 0.3, metalness: 0.0,
         });
         const ring = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.11, 16), ringMat);
@@ -786,7 +791,7 @@ export default function InteriorStudio() {
     }
 
     // Room fill light
-    const roomFillIntensity = isNight ? 0.3 : 0.5;
+    const roomFillIntensity = isDark ? 0.3 : 0.5;
     const roomFill = new THREE.PointLight(lightColor, roomFillIntensity, 0);
     roomFill.position.set(0, h * 0.7, 0);
     roomFill.name = 'roomFillLight';
@@ -839,6 +844,8 @@ export default function InteriorStudio() {
 
     const moodData = lightMoods[mood] || lightMoods.daylight;
     const isNight = mood === 'night';
+    const isEvening = mood === 'evening';
+    const isDark = isNight || isEvening;
 
     // Update scene background & fog
     scene.background = new THREE.Color(moodData.bg);
@@ -868,7 +875,7 @@ export default function InteriorStudio() {
     }
 
     // Update window glass emissive intensity in-place (avoid full rebuild)
-    const lightColor = isNight ? 0xFFE8C0 : 0xFFEED0;
+    const lightColor = isDark ? 0xFFE8C0 : 0xFFEED0;
     roomGroup.traverse(c => {
       if (!(c instanceof THREE.Mesh)) return;
       // Window glass — update emissive intensity
@@ -877,20 +884,20 @@ export default function InteriorStudio() {
         const emHex = mat.emissive.getHex();
         // Glass windows have emissive 0x8AB8D0
         if (emHex === 0x8AB8D0) {
-          mat.emissiveIntensity = isNight ? 0.1 : 0.4;
+          mat.emissiveIntensity = isDark ? 0.1 : 0.4;
         }
       }
     });
 
     // Update ceiling spot light colors & emissive in-place
-    const mainIntensity = isNight ? 0.5 : 0.8;
-    const secondaryIntensity = isNight ? 0.4 : 0.6;
+    const mainIntensity = isDark ? 0.5 : 0.8;
+    const secondaryIntensity = isDark ? 0.4 : 0.6;
     roomGroup.traverse(c => {
       if (c instanceof THREE.PointLight) {
         c.color.setHex(lightColor);
         // Differentiate between room fill light and ceiling spots
         if (c.name === 'roomFillLight') {
-          c.intensity = isNight ? 0.3 : 0.5;
+          c.intensity = isDark ? 0.3 : 0.5;
         } else {
           // Ceiling spot — track head vs single fixture
           c.intensity = (c.userData?.isSecondary) ? secondaryIntensity : mainIntensity;
@@ -903,8 +910,8 @@ export default function InteriorStudio() {
           const emHex = m.emissive.getHex();
           // Bulb emissive (warm tones) — update color and intensity
           if (emHex === 0xFFEED0 || emHex === 0xFFE8A0 || emHex === 0xFFE8C0 || emHex === 0xFFF0C0) {
-            m.emissive.setHex(isNight ? 0xFFE8A0 : 0xFFEED0);
-            m.emissiveIntensity = isNight ? 1.5 : (m.emissiveIntensity > 1.0 ? 1.0 : m.emissiveIntensity);
+            m.emissive.setHex(isDark ? 0xFFE8A0 : 0xFFEED0);
+            m.emissiveIntensity = isDark ? 1.5 : (m.emissiveIntensity > 1.0 ? 1.0 : m.emissiveIntensity);
           }
         }
       }
@@ -1577,7 +1584,9 @@ export default function InteriorStudio() {
     const roomGroup = new THREE.Group(); scene.add(roomGroup); roomGroupRef.current = roomGroup;
     buildRoom(); setTimeout(() => {
       // Try to load saved room state from localStorage
-      let loadedFromStorage = false;
+      // NOTE: We do NOT skip onboarding anymore — user always picks a room first
+      // Cached data is loaded only after they dismiss the onboarding screen
+      let hasCachedData = false;
       try {
         // Check if user is authenticated (has session)
         fetch('/api/auth/session').then(r => r.json()).then(session => {
@@ -1587,8 +1596,10 @@ export default function InteriorStudio() {
         const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
         const savedRoom = savedRooms['default'];
         if (savedRoom) {
-          loadedFromStorage = true;
-          setShowOnboarding(false); // Skip onboarding if there's saved data — also skip tutorial
+          hasCachedData = true;
+          // Store cached data for later use (when user dismisses onboarding)
+          cachedRoomDataRef.current = savedRoom;
+          // Apply room dimensions and settings silently (no visual skip)
           if (savedRoom.width) { roomWRef.current = savedRoom.width; setRoomW(savedRoom.width); }
           if (savedRoom.depth) { roomDRef.current = savedRoom.depth; setRoomD(savedRoom.depth); }
           if (savedRoom.height) { roomHRef.current = savedRoom.height; setRoomH(savedRoom.height); }
@@ -1603,25 +1614,6 @@ export default function InteriorStudio() {
           if (savedRoom.designName) { setDesignName(savedRoom.designName); designNameRef.current = savedRoom.designName; }
           if (savedRoom.activeSkin) { setActiveSkin(savedRoom.activeSkin); activeSkinRef.current = savedRoom.activeSkin; }
           buildRoom();
-          if (savedRoom.furniture) {
-            const furnitureData = JSON.parse(savedRoom.furniture);
-            if (Array.isArray(furnitureData) && furnitureData.length > 0) {
-              loadFurnitureData(furnitureData);
-            }
-          }
-          // Re-apply skin after loading furniture (skin overrides material colors)
-          if (savedRoom.activeSkin && savedRoom.activeSkin !== 'default') {
-            const skin = SKINS_DICTIONARY[savedRoom.activeSkin];
-            if (skin) {
-              setTimeout(() => {
-                const sc = sceneRef.current;
-                const rg = roomGroupRef.current;
-                if (!sc || !rg) return;
-                applySkinToSkeleton(sc, rg, placedItemsRef.current, skin, ambientLightRef.current, dirLightRef.current, rendererRef.current, hemiLightRef.current, fillLightRef.current);
-                markSceneDirty();
-              }, 150);
-            }
-          }
         }
         // Also load saved room states map
         const savedStates = JSON.parse(localStorage.getItem('instod_room_states') || '{}');
@@ -1631,7 +1623,8 @@ export default function InteriorStudio() {
       } catch (_e) {
         // Ignore localStorage errors
       }
-      if (!loadedFromStorage) {
+      // Only add default furniture if no cached data — onboarding will handle the rest
+      if (!hasCachedData) {
         addDefaultFurniture();
       }
       historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;

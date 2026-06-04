@@ -303,8 +303,15 @@ export function applySkinToSkeleton(
       renderer.toneMappingExposure = Math.max(0.3, Math.min(l.exposure, 1.15));
     }
     if (l.bgColor) {
-      scene.background = new THREE.Color(l.bgColor);
-      scene.fog = new THREE.FogExp2(new THREE.Color(l.bgColor).getHex(), 0.018);
+      // Only apply skin bgColor if the current mood is NOT a dark mood (evening/night)
+      // Dark moods should keep their dark background for proper atmosphere
+      const currentBg = scene.background as THREE.Color | null;
+      const currentBgHex = currentBg ? currentBg.getHex() : 0xFFFFFF;
+      const isDarkMood = currentBgHex < 0x808080; // dark backgrounds have low hex values
+      if (!isDarkMood) {
+        scene.background = new THREE.Color(l.bgColor);
+        scene.fog = new THREE.FogExp2(new THREE.Color(l.bgColor).getHex(), 0.018);
+      }
     }
     // Update hemisphere light intensity based on skin's ambient ratio
     if (hemiLight && l.ambientIntensity !== undefined) {

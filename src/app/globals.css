@@ -484,8 +484,8 @@ canvas {
 }
 
 @keyframes loaderGlowPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(193,127,78,0.15), 0 0 60px rgba(193,127,78,0.08); }
-  50% { box-shadow: 0 0 35px rgba(193,127,78,0.3), 0 0 80px rgba(193,127,78,0.15); }
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 @keyframes loaderShimmer {
@@ -494,9 +494,9 @@ canvas {
 }
 
 @keyframes loaderLetterIn {
-  0% { opacity: 0; transform: translateY(12px) scale(0.8); filter: blur(4px); }
-  60% { opacity: 1; transform: translateY(-2px) scale(1.05); filter: blur(0); }
-  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  0% { opacity: 0; transform: translateY(12px) scale(0.8); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes loaderParticleFloat {

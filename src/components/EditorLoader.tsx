@@ -165,12 +165,11 @@ export default function EditorLoader() {
   useEffect(() => {
     let current = 0;
     const interval = setInterval(() => {
-      // Slower, steadier progress — smaller increments, longer interval
-      // Speed slows down as we approach completion (easing)
+      // Steadier progress with less randomness
       const remaining = 100 - current;
-      const increment = Math.max(0.5, (remaining * 0.08) + (Math.random() * 1.5));
+      const increment = Math.max(0.3, remaining * 0.06 + 0.5);
       current = Math.min(current + increment, 100);
-      setProgress(Math.round(current));
+      setProgress(current); // Use raw float for smoother CSS transition
 
       const stage = [...STAGES].reverse().find(s => current >= s.at);
       if (stage) setStatusText(stage.text);
@@ -182,7 +181,7 @@ export default function EditorLoader() {
         setIsComplete(true);
         clearInterval(interval);
       }
-    }, 500); // Slower interval: 500ms (was 350ms)
+    }, 300); // Faster interval with smaller increments = smoother
 
     return () => clearInterval(interval);
   }, []);
@@ -223,7 +222,7 @@ export default function EditorLoader() {
             background: 'rgba(255,255,255,0.5)',
             borderRadius: '24px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(10px)',
+            backdropFilter: 'none',
             border: '1px solid rgba(193,127,78,0.12)',
           }}
         >
@@ -276,7 +275,7 @@ export default function EditorLoader() {
                 ? 'linear-gradient(90deg, #5A8F4E, #7AB86A, #5A8F4E)' // Green when complete
                 : 'linear-gradient(90deg, #C17F4E, #D4A76A, #C17F4E)',
               backgroundSize: '200% 100%',
-              transition: 'width 0.5s ease-out, background 0.5s ease',
+              transition: 'width 0.3s ease-out, background 0.5s ease',
               position: 'relative',
             }}
           />
