@@ -117,16 +117,6 @@ function ParallaxSection({ children, className = '', style, offset = 40 }: { chi
   );
 }
 
-/* ─── Gradient Divider between dark/white sections ─── */
-function GradientDivider({ from, to }: { from: string; to: string }) {
-  return (
-    <div
-      className="h-24"
-      style={{ background: `linear-gradient(to bottom, ${from}, ${to})` }}
-    />
-  );
-}
-
 /* ─── Counter Animation ─── */
 function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -1446,19 +1436,12 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
         <HeroSection />
-        <GradientDivider from="#0F0F0F" to="#FFFFFF" />
         <FeaturesSection />
-        <GradientDivider from="#FFFFFF" to="#121212" />
         <RoomShowcase />
-        <GradientDivider from="#121212" to="#FAFAFA" />
         <HowItWorksSection />
-        <GradientDivider from="#FAFAFA" to="#1A1A1A" />
         <StatsSection />
-        <GradientDivider from="#1A1A1A" to="#FFFFFF" />
         <TestimonialsSection />
-        <GradientDivider from="#FFFFFF" to="#0F0F0F" />
         <ShowcaseBannerSection />
-        <GradientDivider from="#0F0F0F" to="#1A1A1A" />
         <CTASection />
       </main>
       <Footer />
