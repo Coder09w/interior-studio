@@ -3322,14 +3322,41 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       )}
 
-      {/* Guest Upsell — compact pill in top bar on mobile, banner on desktop */}
+      {/* Guest Upsell — modern top banner with prominent CTA */}
       {isGuest && !showOnboarding && !isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-center py-1.5" style={{ background: 'linear-gradient(90deg, #C17F4E, #A86A3D)', color: '#fff', fontSize: 11 }}>
-          <i className="fas fa-lock mr-1.5 text-[9px]" />
-          <span className="font-semibold">Guest Mode</span>
-          <span className="mx-1.5 opacity-50">—</span>
-          <span>Limited features</span>
-          <a href="/auth/signup" className="ml-2 px-3 py-0.5 rounded-full text-[10px] font-bold no-underline" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+        <div
+          className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-6"
+          style={{
+            background: 'linear-gradient(135deg, #C17F4E 0%, #A86A3D 50%, #8E5A30 100%)',
+            color: '#fff',
+            height: 44,
+            fontFamily: "'Outfit', sans-serif",
+            boxShadow: '0 2px 12px rgba(193,127,78,0.25)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center justify-center rounded-full"
+              style={{ background: 'rgba(255,255,255,0.15)', width: 26, height: 26 }}
+            >
+              <i className="fas fa-lock text-[10px]" style={{ color: '#fff' }} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[13px] tracking-wide">Guest Mode</span>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>|</span>
+              <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.8)' }}>Limited features — sign up for full access</span>
+            </div>
+          </div>
+          <a
+            href="/auth/signup"
+            className="flex items-center gap-2 px-5 py-1.5 rounded-full text-[12px] font-bold no-underline transition-all hover:scale-[1.03] hover:shadow-lg"
+            style={{
+              background: '#FFFFFF',
+              color: '#A86A3D',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            }}
+          >
+            <i className="fas fa-user-plus text-[10px]" />
             Sign Up Free
           </a>
         </div>
