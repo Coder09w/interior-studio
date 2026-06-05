@@ -384,7 +384,7 @@ function HeroSection() {
               <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <Link
                   href="/editor"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
                 >
                   Start Designing
@@ -392,7 +392,7 @@ function HeroSection() {
                 </Link>
                 <a
                   href="#how-it-works"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-base border-2 transition-all hover:shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-base border-2 transition-all duration-200 hover:bg-white/5 hover:border-white/30 active:scale-[0.97]"
                   style={{
                     borderColor: 'rgba(255,255,255,0.2)',
                     color: '#FFFFFF',
@@ -504,8 +504,8 @@ function HeroSection() {
                       style={{ top: '40%', left: '25%' }}
                     >
                       <motion.div
-                        animate={{ background: ['#C17F4E', '#8B7355', '#6B8E6B', '#7B8FA1', '#C17F4E'] }}
-                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                        animate={{ background: ['#C17F4E', '#8B7355', '#6B8E6B', '#7B8FA1', '#C17F4E'], y: [0, -3, 0] }}
+                        transition={{ background: { duration: 8, repeat: Infinity, ease: 'easeInOut' }, y: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }}
                         className="w-24 h-12 rounded-lg shadow-md flex items-center justify-center"
                         style={{ opacity: 0.85 }}
                       >
@@ -531,8 +531,8 @@ function HeroSection() {
                     {/* Table */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 0.85, scale: 1 }}
-                      transition={{ delay: 0.7, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                      animate={{ opacity: 0.85, scale: 1, y: [0, -2, 0] }}
+                      transition={{ opacity: { delay: 0.7, duration: 0.6, ease: [0.16, 1, 0.3, 1] }, scale: { delay: 0.7, duration: 0.6, ease: [0.16, 1, 0.3, 1] }, y: { delay: 1.5, duration: 4, repeat: Infinity, ease: 'easeInOut' } }}
                       className="absolute flex flex-col items-center gap-1"
                       style={{ top: '45%', left: '55%' }}
                     >
@@ -558,12 +558,14 @@ function HeroSection() {
                       className="absolute flex flex-col items-center gap-1"
                       style={{ top: '20%', left: '72%' }}
                     >
-                      <div
+                      <motion.div
+                        animate={{ boxShadow: ['0 0 20px rgba(212,167,106,0.3)', '0 0 30px rgba(212,167,106,0.5)', '0 0 20px rgba(212,167,106,0.3)'] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                         className="w-10 h-10 rounded-full shadow-md flex items-center justify-center"
-                        style={{ background: '#D4A76A', opacity: 0.85, boxShadow: '0 0 20px rgba(212,167,106,0.3)' }}
+                        style={{ background: '#D4A76A', opacity: 0.85 }}
                       >
                         <Lamp className="w-4 h-4 text-white" />
-                      </div>
+                      </motion.div>
                       <span
                         className="text-[10px] font-medium px-2 py-0.5 rounded"
                         style={{ background: 'rgba(30,30,30,0.9)', color: '#A8A8A8' }}
@@ -1002,7 +1004,7 @@ function HowItWorksSection() {
           <div className="text-center mt-10">
             <Link
               href="/editor"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
             >
               Ready? Start designing
@@ -1186,7 +1188,7 @@ function ShowcaseBannerSection() {
               <div className="mt-8 flex flex-col sm:flex-row items-start gap-4">
                 <Link
                   href="/editor"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
                 >
                   Try It Now
@@ -1323,7 +1325,7 @@ function CTASection() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/editor"
-              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all hover:opacity-90 hover:shadow-xl hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-200 hover:opacity-90 hover:shadow-xl hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
             >
               Open 3D Editor
@@ -1331,7 +1333,7 @@ function CTASection() {
             </Link>
             <Link
               href="/auth/signup"
-              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl font-semibold text-lg border-2 transition-all hover:shadow-sm"
+              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl font-semibold text-lg border-2 transition-all duration-200 hover:shadow-sm hover:bg-white/5 active:scale-[0.97]"
               style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#FFFFFF' }}
             >
               Sign Up to Save
@@ -1506,19 +1508,32 @@ function Footer() {
 /* ─── Page ─── */
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="min-h-screen flex flex-col"
+    >
       <Navbar />
       <main className="flex-1">
         <HeroSection />
+        {/* Section divider: Dark hero → White features */}
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E40, transparent)' }} />
         <FeaturesSection />
+        {/* Section divider: White features → Dark rooms */}
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E30, transparent)' }} />
         <RoomShowcase />
+        {/* Section divider: Dark rooms → Light how-it-works */}
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E30, transparent)' }} />
         <HowItWorksSection />
         <StatsSection />
+        {/* Section divider: Dark stats → White testimonials */}
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E30, transparent)' }} />
         <TestimonialsSection />
         <ShowcaseBannerSection />
         <CTASection />
       </main>
       <Footer />
-    </div>
+    </motion.div>
   );
 }

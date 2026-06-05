@@ -443,6 +443,26 @@ input[type="range"].int-range::-moz-range-thumb {
   textarea {
     font-size: 16px !important;
   }
+  /* Prevent double-tap zoom on interactive elements */
+  button, a, [role="tab"], [role="button"] {
+    touch-action: manipulation;
+  }
+  /* Minimum touch target size for interactive elements in the editor */
+  .int-furniture-card {
+    min-height: 80px;
+  }
+  .int-color-swatch {
+    width: 40px;
+    height: 40px;
+  }
+  .int-cat-tab {
+    padding: 10px 14px;
+    min-height: 40px;
+  }
+  .int-mat-pill {
+    padding: 10px 16px;
+    min-height: 40px;
+  }
 }
 
 /* Smooth scrolling for bottom panels */
@@ -450,6 +470,13 @@ input[type="range"].int-range::-moz-range-thumb {
   .int-scrollbar {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+  }
+}
+
+/* Safe area support for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .fixed.bottom-0 {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 

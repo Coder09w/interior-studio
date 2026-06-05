@@ -178,11 +178,9 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div>
                   <label htmlFor="password" className="text-sm font-medium" style={{ color: '#2D2D2D' }}>Password</label>
-                  <Link href="/auth/forgot-password" className="text-xs font-medium hover:underline" style={{ color: '#C17F4E' }}>
-                    Forgot password?
-                  </Link>
+                  {/* Forgot password hidden during beta — no SMTP configured */}
                 </div>
                 <div className="relative">
                   <Input
@@ -243,7 +241,7 @@ export default function LoginPage() {
                 Continue as guest
               </Link>
               <p className="text-[10px] text-center mt-2" style={{ color: '#5A4E42' }}>
-                Limited features — 8 furniture items, 2 rooms
+                Limited features — sign up for all 30+ furniture items
               </p>
             </div>
           </div>

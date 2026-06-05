@@ -12,9 +12,9 @@ import { SKINS_DICTIONARY, applySkinToSkeleton, SKINS_LIST } from '@/lib/skin-sy
 import { DESIGN_PRESETS, getPresetsForRoom, getPresetById } from '@/lib/design-presets';
 import type { DesignPreset, RoomType as PresetRoomType } from '@/lib/design-presets';
 
-// Guest mode restrictions — relaxed during beta (all features free)
-const GUEST_ALLOWED_FURNITURE = new Set(['createSofa', 'createCoffeeTable', 'createBed', 'createDiningTable', 'createDiningChair', 'createKitchenCounter', 'createDesk', 'createOfficeChair', 'createBookshelf', 'createArmchair', 'createLoveSeat', 'createOttoman', 'createWardrobe', 'createNightstand', 'createDresser', 'createConsole', 'createRug', 'createFloorLamp', 'createTableLamp', 'createVanityTable', 'createCredenza', 'createKitchenCart', 'createFilingCabinet', 'createFloorMirror', 'createWallArt']);
-const GUEST_ALLOWED_CATEGORIES = new Set<CategoryId>(['seating', 'tables', 'bedroom', 'kitchen', 'office', 'bathroom', 'lighting', 'decor']);
+// Guest mode restrictions — limited subset of basic items
+const GUEST_ALLOWED_FURNITURE = new Set(['createSofa', 'createCoffeeTable', 'createBed', 'createArmchair', 'createDesk', 'createOfficeChair', 'createBookshelf', 'createRug', 'createFloorLamp', 'createTableLamp']);
+const GUEST_ALLOWED_CATEGORIES = new Set<CategoryId>(['seating', 'tables', 'bedroom', 'office', 'lighting', 'decor']);
 const GUEST_MAX_ROOMS = 6;
 const GUEST_MAX_ITEMS = 30;
 const GUEST_COLORS_PER_TYPE = 12;
@@ -1635,6 +1635,12 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     // Better touch settings for mobile
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.enablePan = true;
+    // Smoother touch rotation speed on mobile
+    if (mobile) {
+      controls.rotateSpeed = 0.5;
+      controls.panSpeed = 0.5;
+      controls.dampingFactor = 0.12;
+    }
     controlsRef.current = controls;
 
     // Lighting
@@ -1647,6 +1653,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const shadowSize = mobile ? 1024 : 2048;
     dirLight.shadow.mapSize.set(shadowSize, shadowSize);
     dirLight.shadow.camera.left = -10; dirLight.shadow.camera.right = 10; dirLight.shadow.camera.top = 10; dirLight.shadow.camera.bottom = -10; dirLight.shadow.camera.near = 0.5; dirLight.shadow.camera.far = 30; dirLight.shadow.bias = -0.001;
+    // Tighten shadow camera bounds based on room size for better shadow quality
+    const shadowBound = Math.max(roomWRef.current, roomDRef.current) * 0.75;
+    dirLight.shadow.camera.left = -shadowBound; dirLight.shadow.camera.right = shadowBound;
+    dirLight.shadow.camera.top = shadowBound; dirLight.shadow.camera.bottom = -shadowBound;
     if (!mobile) dirLight.shadow.radius = 4;
     scene.add(dirLight); dirLightRef.current = dirLight;
     const fillLight = new THREE.DirectionalLight(0xE0E8F0, 0.15);
@@ -2101,7 +2111,20 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       canvas.removeEventListener('touchstart', onTouchStart); canvas.removeEventListener('touchmove', onTouchMove); canvas.removeEventListener('touchend', onTouchEnd);
       canvas.removeEventListener('pointerdown', markDirty); canvas.removeEventListener('pointermove', markDirty);
       window.removeEventListener('keydown', onKeyDown);
+      // Dispose Three.js resources to prevent GPU memory leaks
       renderer.dispose();
+      scene.traverse(c => {
+        if (c instanceof THREE.Mesh) {
+          const mat = c.material as THREE.MeshStandardMaterial;
+          mat.map?.dispose(); c.geometry?.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => { (m as THREE.MeshStandardMaterial).map?.dispose(); m.dispose(); }); else c.material?.dispose();
+        }
+        if ((c instanceof THREE.SpotLight || c instanceof THREE.PointLight) && c.shadow?.map) {
+          c.shadow.map.dispose(); c.shadow.map = null;
+        }
+      });
+      // Dispose texture cache
+      texCache.forEach(v => v.dispose()); texCache.clear();
       if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
       clearTimeout(minLoadTimer);
     };
@@ -3058,8 +3081,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
       {/* ===== ONBOARDING OVERLAY ===== */}
       {showOnboarding && sceneReady && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(45,45,45,0.85)', backdropFilter: 'blur(8px)' }}>
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto" onKeyDown={trapFocus} style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" style={{ background: 'rgba(45,45,45,0.85)', backdropFilter: 'blur(8px)', animation: 'fadeInUp 0.4s ease forwards' }}>
+          <div className="bg-white rounded-2xl p-5 sm:p-7 max-w-lg w-full mx-auto max-h-[90vh] sm:max-h-[85vh] overflow-y-auto int-scrollbar" onKeyDown={trapFocus} style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.3)', animation: 'fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards' }}>
             {/* Step 1: Room Type */}
             {onboardingStep === 'room' && (
               <>
@@ -3378,6 +3401,28 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       )}
 
+      {/* Mobile Guest Banner — slim pill at top */}
+      {isGuest && !showOnboarding && isMobile && (
+        <a
+          href="/auth/signup"
+          className="fixed top-0 left-0 right-0 z-30 flex items-center justify-center gap-2 no-underline"
+          style={{
+            background: 'linear-gradient(135deg, #C17F4E, #A86A3D)',
+            color: '#fff',
+            height: 36,
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: 11,
+            fontWeight: 600,
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            boxShadow: '0 2px 8px rgba(193,127,78,0.2)',
+          }}
+        >
+          <i className="fas fa-lock text-[8px]" />
+          <span>Guest Mode — Limited features</span>
+          <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>Sign Up Free</span>
+        </a>
+      )}
+
       {/* Shortcuts Modal */}
       {showShortcuts && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowShortcuts(false)}>
@@ -3515,7 +3560,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       {/* ===== Main 3D Viewer ===== */}
       <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease' }}>
         {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined }}>
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined, marginTop: (isMobile && isGuest && !showOnboarding) ? 36 : undefined }}>
           {!isMobile && (
             <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }}><i className="fas fa-bars text-xs" /></button>
           )}
@@ -3538,16 +3583,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 </button>
               );
             })}
-            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
-            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9' : 'w-6 h-6'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9' : 'w-6 h-6'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
           </div>
 
           {/* Mobile right actions — minimal: only save status + sign up pill */}
           {isMobile && (
             <div className="flex items-center gap-1.5" style={{ flexShrink: 0 }}>
               {isGuest && (
-                <a href="/auth/signup" className="px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap no-underline flex items-center gap-1" style={{ background: '#C17F4E', color: '#fff' }}>
-                  <i className="fas fa-lock text-[8px]" />Sign Up
+                <a href="/auth/signup" className="px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap no-underline flex items-center gap-1 min-h-[36px]" style={{ background: '#C17F4E', color: '#fff' }}>
+                  <i className="fas fa-lock text-[9px]" />Sign Up
                 </a>
               )}
             </div>
@@ -3682,8 +3727,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
         {/* Mobile: two-finger rotate hint */}
         {isMobile && !mobilePanel && !ceilingEditMode && !itemPanelVisible && (
-          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 10 }}>
-            <i className="fas fa-hand-pointer mr-1" />Tap to select &bull; Two fingers to rotate
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 10 }}>
+            <i className="fas fa-hand-pointer mr-1" />Tap to select &bull; Two fingers to rotate/zoom
           </div>
         )}
 
@@ -3691,9 +3736,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         {isMobile && !mobilePanel && !ceilingEditMode && (
           <div className="absolute right-2 z-20" style={{ top: '50%', transform: 'translateY(-50%)' }}>
             {/* Toggle button */}
-            <button
-              onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
-              className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+            <button onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
+              className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer shadow-lg"
               style={{ background: mobileActionsOpen ? '#C17F4E' : (lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)'), backdropFilter: 'blur(8px)', border: mobileActionsOpen ? 'none' : (lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4'), color: mobileActionsOpen ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), boxShadow: '0 2px 8px rgba(0,0,0,0.12)', transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}
               aria-label="Actions"
             >
@@ -3702,12 +3746,12 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {/* Expanded action buttons */}
             {mobileActionsOpen && (
               <div className="flex flex-col gap-1.5 mt-1.5 items-center">
-                <button onClick={() => { saveRoom(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
-                <button onClick={() => { undo(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Undo" title="Undo"><i className="fas fa-undo text-[11px]" /></button>
-                <button onClick={() => { redo(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-[11px]" /></button>
-                <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>
-                <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[11px]" /></button>
-                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid #C17F4E', color: '#C17F4E' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
+                <button onClick={() => { saveRoom(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
+                <button onClick={() => { undo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Undo" title="Undo"><i className="fas fa-undo text-[11px]" /></button>
+                <button onClick={() => { redo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-[11px]" /></button>
+                <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>
+                <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[11px]" /></button>
+                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid #C17F4E', color: '#C17F4E' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
               </div>
             )}
           </div>
@@ -3716,21 +3760,21 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '38vh' : 'auto', paddingBottom: 'env(safe-area-inset-bottom, 0px)', flexShrink: 0 }}>
+        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '38vh' : 'auto', paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }}>
 
           {/* Selected item slim bar — name + rotate + delete, only when item is selected and no panel open */}
           {itemPanelVisible && !mobilePanel && (
             <div className="flex items-center gap-1.5 px-2 border-b" style={{ height: 38, borderColor: '#F0E8D8', background: '#FAF8F4' }}>
               <span className="text-[11px] font-semibold truncate flex-1" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>{selectedName}</span>
-              <button onClick={() => rotateSelected('left')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', fontSize: 12, background: '#fff' }} aria-label="Rotate Left"><i className="fas fa-undo" /></button>
-              <button onClick={() => rotateSelected('right')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', fontSize: 12, background: '#fff' }} aria-label="Rotate Right"><i className="fas fa-redo" /></button>
-              <button onClick={deleteSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 12, background: '#fff' }} aria-label="Delete"><i className="fas fa-trash-alt" /></button>
-              <button onClick={deselectAll} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 10 }} aria-label="Deselect"><i className="fas fa-times" /></button>
+              <button onClick={() => rotateSelected('left')} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', fontSize: 12, background: '#fff' }} aria-label="Rotate Left"><i className="fas fa-undo" /></button>
+              <button onClick={() => rotateSelected('right')} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', fontSize: 12, background: '#fff' }} aria-label="Rotate Right"><i className="fas fa-redo" /></button>
+              <button onClick={deleteSelected} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 12, background: '#fff' }} aria-label="Delete"><i className="fas fa-trash-alt" /></button>
+              <button onClick={deselectAll} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 10 }} aria-label="Deselect"><i className="fas fa-times" /></button>
             </div>
           )}
 
-          {/* Tab bar — icon-only, Furniture + Colors first, 52px height */}
-          <div role="tablist" className="flex border-b" style={{ borderColor: '#E2DDD4', height: 52 }}>
+          {/* Tab bar — icon-only, Furniture + Colors first, 56px height for better touch targets */}
+          <div role="tablist" className="flex border-b" style={{ borderColor: '#E2DDD4', height: 56 }}>
             {([
               { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture', color: '#C17F4E' },
               { id: 'material' as const, icon: 'fa-palette', label: 'Colors', color: '#C17F4E' },
@@ -3743,8 +3787,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 role="tab" aria-selected={mobilePanel === id}
                 className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
                 style={{ color: mobilePanel === id ? color : '#5A4E42', background: mobilePanel === id ? `${color}0A` : 'transparent' }}>
-                <i className={`fas ${icon}`} style={{ fontSize: 15 }} />
-                <span style={{ fontSize: 8, fontWeight: 600 }}>{label}</span>
+                <i className={`fas ${icon}`} style={{ fontSize: 16 }} />
+                <span style={{ fontSize: 9, fontWeight: 600 }}>{label}</span>
                 {mobilePanel === id && <div style={{ width: 4, height: 4, borderRadius: '50%', background: color, position: 'absolute', bottom: 3 }} />}
               </button>
             ))}
@@ -3764,7 +3808,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
       {/* Toast */}
       <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (mobilePanel ? '40vh' : (itemPanelVisible ? 96 : 58)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-        <div role="status" aria-live="polite" className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff' }}>{toastMsg}</div>
+        <div role="status" aria-live="polite" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}><i className="fas fa-check-circle text-xs" style={{ color: '#7A8B6F' }} />{toastMsg}</div>
       </div>
       </>
       )}

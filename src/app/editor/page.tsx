@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import EditorLoader from '@/components/EditorLoader';
+import EditorErrorBoundary from '@/components/EditorErrorBoundary';
 
 /* ─── WebGL Detection ─── */
 function checkWebGL(): { supported: boolean; version: string } {
@@ -95,5 +96,9 @@ export default function EditorPage() {
 
   if (webglStatus === 'checking') return <EditorLoader />;
   if (webglStatus === 'unsupported') return <WebGLUnsupported />;
-  return <InteriorStudio initialRoomType={roomType || undefined} />;
+  return (
+    <EditorErrorBoundary>
+      <InteriorStudio initialRoomType={roomType || undefined} />
+    </EditorErrorBoundary>
+  );
 }
