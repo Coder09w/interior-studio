@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -318,12 +319,7 @@ function DashboardContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm"
-              style={{ backgroundColor: '#C17F4E' }}
-            >
-              <Sofa className="w-5 h-5 text-white" />
-            </div>
+            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg shadow-sm" />
             <span
               className="text-lg font-bold tracking-tight hidden sm:inline"
               style={{ color: '#2D2D2D' }}

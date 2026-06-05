@@ -2,11 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Sofa, ArrowLeft, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import Image from 'next/image';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -96,12 +97,7 @@ function ResetPasswordForm() {
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-sm"
-              style={{ backgroundColor: '#C17F4E' }}
-            >
-              <Sofa className="w-7 h-7 text-white" />
-            </div>
+            <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl mb-4 shadow-sm" />
             <h1
               className="text-2xl font-bold tracking-tight"
               style={{ color: '#2D2D2D' }}
@@ -172,12 +168,7 @@ function ResetPasswordForm() {
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-sm"
-              style={{ backgroundColor: '#C17F4E' }}
-            >
-              <Sofa className="w-7 h-7 text-white" />
-            </div>
+            <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl mb-4 shadow-sm" />
             <h1
               className="text-2xl font-bold tracking-tight"
               style={{ color: '#2D2D2D' }}
@@ -235,12 +226,7 @@ function ResetPasswordForm() {
       >
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-sm"
-            style={{ backgroundColor: '#C17F4E' }}
-          >
-            <Sofa className="w-7 h-7 text-white" />
-          </div>
+          <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl mb-4 shadow-sm" />
           <h1
             className="text-2xl font-bold tracking-tight"
             style={{ color: '#2D2D2D' }}
@@ -402,12 +388,7 @@ export default function ResetPasswordPage() {
           className="min-h-screen flex items-center justify-center"
           style={{ backgroundColor: '#F5F0E8' }}
         >
-          <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center shadow-sm"
-            style={{ backgroundColor: '#C17F4E' }}
-          >
-            <Sofa className="w-7 h-7 text-white" />
-          </div>
+          <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl shadow-sm" />
         </div>
       }
     >

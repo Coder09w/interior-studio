@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { Sofa, Eye, EyeOff, Loader2, ArrowLeft, Home, Check } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ArrowLeft, Home, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -139,9 +139,7 @@ export default function SignupPage() {
         {/* Benefits list */}
         <div className="absolute bottom-0 left-0 right-0 p-10 z-10">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#C17F4E' }}>
-              <Sofa className="w-5 h-5 text-white" />
-            </div>
+            <Image src="/logo.svg" alt="Instod" width={40} height={40} className="rounded-xl" />
             <span className="text-white font-bold text-lg" style={{ fontFamily: "'Outfit', sans-serif" }}>
               Instod
             </span>
@@ -186,9 +184,7 @@ export default function SignupPage() {
           <div className="w-full max-w-md">
             {/* Mobile logo */}
             <div className="lg:hidden flex flex-col items-center mb-8">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: '#C17F4E' }}>
-                <Sofa className="w-6 h-6 text-white" />
-              </div>
+              <Image src="/logo.svg" alt="Instod" width={48} height={48} className="rounded-xl mb-3" />
               <h1 className="text-xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Instod</h1>
             </div>
 

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Sofa, ArrowLeft, CheckCircle2, Loader2, Mail } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -67,12 +68,7 @@ export default function ForgotPasswordPage() {
       >
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-sm"
-            style={{ backgroundColor: '#C17F4E' }}
-          >
-            <Sofa className="w-7 h-7 text-white" />
-          </div>
+          <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl mb-4 shadow-sm" />
           <h1
             className="text-2xl font-bold tracking-tight"
             style={{ color: '#2D2D2D' }}

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sofa, RotateCcw, Home } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Home } from 'lucide-react';
 import Link from 'next/link';
 
 interface ErrorBoundaryProps {
@@ -49,7 +49,7 @@ export default class EditorErrorBoundary extends React.Component<ErrorBoundaryPr
           <div className="max-w-md w-full mx-4 p-8 rounded-2xl text-center" style={{ background: '#F5F0E8', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
             {/* Icon */}
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: '#FEF2F2' }}>
-              <Sofa className="w-8 h-8" style={{ color: '#DC2626' }} />
+              <AlertTriangle className="w-8 h-8" style={{ color: '#DC2626' }} />
             </div>
             
             {/* Title */}
