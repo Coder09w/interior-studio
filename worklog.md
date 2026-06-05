@@ -559,3 +559,29 @@ Stage Summary:
 - GradientDividers create smooth transitions between dark and white sections
 - All navigation links and session logic preserved
 - Build passes cleanly
+
+---
+Task ID: pre-launch-sprint
+Agent: Main Agent
+Task: Execute pre-launch fixing sprint, design sprint, performance sprint, and mobile sprint
+
+Work Log:
+- Created middleware.ts with server-side route protection (dashboard, profile, onboarding require auth, callbackUrl support)
+- Hidden "Forgot password?" link on login page (no SMTP during beta)
+- Fixed GUEST_ALLOWED_FURNITURE: reduced from 25 (all items) to 10 basic items
+- Fixed GUEST_ALLOWED_CATEGORIES: reduced from 8 (all) to 6 (removed kitchen, bathroom)
+- Updated login page guest text to "sign up for all 30+ furniture items"
+- Verified server-side guest limits already work (API routes require auth, guests use localStorage only)
+- Created EditorErrorBoundary.tsx component with styled fallback UI (reload, go home, clear data options)
+- Integrated error boundary in editor page.tsx
+- Homepage design: page entrance animation, section dividers, button active states, hero 3D preview animations
+- Editor design: onboarding dialog responsive improvements, toast notification polish
+- Performance: tightened shadow camera bounds, proper Three.js cleanup on unmount, removed invalid frustumCulled
+- Mobile: OrbitControls tuned for touch, mobile guest banner added, touch targets ≥44px, tab bar height increased, safe area insets, prevent double-tap zoom
+- Build passed, committed and pushed
+
+Stage Summary:
+- All 4 sprints completed and pushed to main
+- Commit: cdc5820 "Pre-launch sprint: security, design, performance, and mobile fixes"
+- 8 files changed, 301 insertions, 84 deletions
+- Build passes clean, TypeScript passes clean
