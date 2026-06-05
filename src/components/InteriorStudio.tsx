@@ -3003,20 +3003,17 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       {/* Actions */}
       <div className="p-5">
         <p className="int-section-header">Actions</p>
-        <div className="flex flex-col gap-1.5">
-          <button onClick={saveRoom} className="int-btn-primary w-full"><i className="fas fa-save text-[12px]" />Save Room</button>
-          {!isGuest && (
-            <button onClick={() => window.location.href = '/dashboard'} className="int-btn-secondary w-full"><i className="fas fa-th-large text-[12px]" />Go to Dashboard</button>
-          )}
-          <div className="flex gap-1.5">
-            <button onClick={() => setShowSnapshots(true)} className="int-btn-secondary flex-1"><i className="fas fa-camera-retro text-[12px]" />Snapshots</button>
-            <button onClick={takeScreenshot} className="int-btn-secondary flex-1"><i className="fas fa-camera text-[12px]" />Screenshot</button>
+        <div className="flex flex-col gap-2">
+          <button onClick={saveRoom} className="int-btn-primary w-full"><i className="fas fa-save" />Save Room</button>
+          <button onClick={() => window.location.href = '/dashboard'} className="int-btn-secondary w-full"><i className="fas fa-th-large" />Dashboard</button>
+          <div className="flex gap-2">
+            <button onClick={() => setShowSnapshots(true)} className="int-btn-secondary flex-1"><i className="fas fa-camera-retro" />Snapshots</button>
+            <button onClick={takeScreenshot} className="int-btn-secondary flex-1"><i className="fas fa-camera" />Screenshot</button>
           </div>
-          <div className="flex gap-1.5">
-            <button onClick={exportHD} className="int-btn-secondary flex-1"><i className="fas fa-expand text-[12px]" />Export HD</button>
-            <button onClick={exportFloorPlan} className="int-btn-secondary flex-1"><i className="fas fa-drafting-compass text-[12px]" />Floor Plan</button>
+          <div className="flex gap-2">
+            <button onClick={exportHD} className="int-btn-secondary flex-1"><i className="fas fa-expand" />Export HD</button>
+            <button onClick={exportFloorPlan} className="int-btn-secondary flex-1"><i className="fas fa-drafting-compass" />Floor Plan</button>
           </div>
-          <button onClick={deleteSelected} className="int-btn-danger w-full"><i className="fas fa-trash-alt text-[12px]" />Delete Selected</button>
         </div>
       </div>
     </aside>
@@ -3540,9 +3537,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           {/* Desktop right actions */}
           {!isMobile && (
             <div className="flex items-center gap-1">
-              {!isGuest && (
-                <button onClick={() => window.location.href = '/dashboard'} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.06)' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[9px]" /></button>
-              )}
+              <button onClick={() => window.location.href = '/dashboard'} className="h-8 px-2.5 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.06)' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /><span className="text-[10px] font-semibold">Dashboard</span></button>
               <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: snapToGrid ? '#C17F4E' : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? '#C17F4E' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[9px]" /></button>
               <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: shadowsEnabled ? '#C17F4E' : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? '#C17F4E' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[9px]" /></button>
               <button onClick={shareRoom} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[9px]" /></button>
@@ -3693,9 +3688,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 <button onClick={() => { redo(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-[11px]" /></button>
                 <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>
                 <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[11px]" /></button>
-                {!isGuest && (
-                  <button onClick={() => { window.location.href = '/dashboard'; }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid #C17F4E', color: '#C17F4E' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
-                )}
+                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid #C17F4E', color: '#C17F4E' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
               </div>
             )}
           </div>
