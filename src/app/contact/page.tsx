@@ -28,7 +28,7 @@ const faqs = [
   {
     question: 'How do I get started with the 3D room editor?',
     answer:
-      'Getting started is easy! Simply visit our editor page and you can begin designing immediately — no sign-up required. You can choose from 5 different room types, drag and drop furniture items, adjust materials and colors, and experiment with 4 lighting moods. When you are ready to save your design, create a free account to store up to 3 designs. For unlimited designs and additional features, consider upgrading to our Pro plan.',
+      'Getting started is easy! Simply visit our editor page and you can begin designing immediately — no sign-up required. You can choose from 6 different room types, drag and drop furniture items, adjust materials and colors, and experiment with 4 lighting moods. When you are ready to save your design, create a free account to store up to 3 designs. For unlimited designs and additional features, consider upgrading to our Pro plan.',
   },
   {
     question: 'What file formats can I export my designs in?',

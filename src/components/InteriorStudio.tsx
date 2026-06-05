@@ -178,7 +178,7 @@ const floorColorOptions = [
 ];
 
 /* ===== MAIN COMPONENT ===== */
-export default function InteriorStudio() {
+export default function InteriorStudio({ initialRoomType }: { initialRoomType?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -262,6 +262,15 @@ export default function InteriorStudio() {
   const [selectedRoomType, setSelectedRoomType] = useState<PresetRoomType>('living');
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [hasCachedDesign, setHasCachedDesign] = useState(false);
+
+  // Apply initialRoomType from URL query param (e.g. ?room=bedroom)
+  useEffect(() => {
+    if (initialRoomType && ['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'].includes(initialRoomType)) {
+      setSelectedRoomType(initialRoomType as PresetRoomType);
+      // Skip to preset selection if a room type was specified
+      setOnboardingStep('preset');
+    }
+  }, [initialRoomType]);
 
   // Guest mode state
   const [isGuest, setIsGuest] = useState(true); // default to guest until we verify auth

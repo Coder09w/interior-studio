@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import EditorLoader from '@/components/EditorLoader';
 
@@ -84,6 +85,8 @@ const InteriorStudio = dynamic(() => import('@/components/InteriorStudio'), {
 
 export default function EditorPage() {
   const [webglStatus, setWebglStatus] = useState<'checking' | 'supported' | 'unsupported'>('checking');
+  const searchParams = useSearchParams();
+  const roomType = searchParams.get('room');
 
   useEffect(() => {
     const { supported } = checkWebGL();
@@ -92,5 +95,5 @@ export default function EditorPage() {
 
   if (webglStatus === 'checking') return <EditorLoader />;
   if (webglStatus === 'unsupported') return <WebGLUnsupported />;
-  return <InteriorStudio />;
+  return <InteriorStudio initialRoomType={roomType || undefined} />;
 }

@@ -478,6 +478,16 @@ export default function PricingPage() {
             {session ? 'Go to Dashboard' : 'Create Free Account'}
             <ChevronRight className="w-4 h-4" />
           </button>
+          {!session && (
+            <Link
+              href="/editor"
+              className="mt-3 inline-flex items-center gap-2 text-sm font-medium transition-colors"
+              style={{ color: '#C17F4E' }}
+            >
+              or try the editor first — no account needed
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          )}
         </div>
       </div>
 

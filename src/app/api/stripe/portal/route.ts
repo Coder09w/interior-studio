@@ -62,7 +62,7 @@ export async function POST(request?: NextRequest) {
 
       const config = await stripe.billingPortal.configurations.create({
         business_profile: {
-          headline: 'Interior Studio — Manage your subscription',
+          headline: 'Instod — Manage your subscription',
         },
         features: {
           payment_method_update: {
