@@ -1363,41 +1363,43 @@ function CTASection() {
 function Footer() {
   return (
     <footer style={{ background: '#0A0A0A' }} className="text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2.5 mb-4">
-              <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-lg" />
-              <span
-                className="text-lg font-bold"
-                style={{ fontFamily: "'Outfit', sans-serif" }}
-              >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Top row: brand + CTA */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 pb-12" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="Instod" className="w-11 h-11 rounded-xl" />
+            <div>
+              <span className="text-xl font-bold block" style={{ fontFamily: "'Outfit', sans-serif" }}>
                 Instod
               </span>
-            </div>
-            <p className="text-sm leading-relaxed text-gray-400 max-w-xs">
-              The easiest way to design, visualize, and share your dream
-              interiors in stunning 3D.
-            </p>
-            {/* Social links */}
-            <div className="flex items-center gap-3 mt-4">
-              <a href="https://twitter.com/instodapp" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors" aria-label="Twitter">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              </a>
-              <a href="https://github.com/instod" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors" aria-label="GitHub">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-              </a>
-              <a href="https://instagram.com/instodapp" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors" aria-label="Instagram">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-              </a>
+              <p className="text-xs text-gray-500">3D Room Design Previewer</p>
             </div>
           </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link
+              href="/editor"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              Open Editor
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            </Link>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all"
+              style={{ border: '1.5px solid rgba(255,255,255,0.15)', color: '#E0E0E0' }}
+            >
+              View Pricing
+            </Link>
+          </div>
+        </div>
 
+        {/* Middle row: link columns */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 py-12">
           {/* Product */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm">Product</h4>
-            <ul className="space-y-2.5">
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Product</h4>
+            <ul className="space-y-3.5">
               {[
                 { label: '3D Editor', href: '/editor' },
                 { label: 'Pricing', href: '/pricing' },
@@ -1407,7 +1409,8 @@ function Footer() {
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-[15px] text-gray-400 hover:text-white transition-colors"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
                   >
                     {label}
                   </Link>
@@ -1418,8 +1421,8 @@ function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm">Company</h4>
-            <ul className="space-y-2.5">
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Company</h4>
+            <ul className="space-y-3.5">
               {[
                 { label: 'About', href: '/about' },
                 { label: 'Contact', href: '/contact' },
@@ -1428,7 +1431,8 @@ function Footer() {
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-[15px] text-gray-400 hover:text-white transition-colors"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
                   >
                     {label}
                   </Link>
@@ -1439,8 +1443,8 @@ function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm">Legal</h4>
-            <ul className="space-y-2.5">
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Legal</h4>
+            <ul className="space-y-3.5">
               {[
                 { label: 'Privacy Policy', href: '/privacy' },
                 { label: 'Terms of Service', href: '/terms' },
@@ -1449,7 +1453,8 @@ function Footer() {
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-[15px] text-gray-400 hover:text-white transition-colors"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
                   >
                     {label}
                   </Link>
@@ -1457,14 +1462,40 @@ function Footer() {
               ))}
             </ul>
           </div>
+
+          {/* Connect */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Connect</h4>
+            <ul className="space-y-3.5">
+              {[
+                { label: 'Twitter / X', href: 'https://twitter.com/instodapp' },
+                { label: 'GitHub', href: 'https://github.com/instod' },
+                { label: 'Instagram', href: 'https://instagram.com/instodapp' },
+              ].map(({ label, href }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[15px] text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1.5"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    {label}
+                    <svg className="w-3 h-3 opacity-40" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <div
-          className="mt-12 pt-8 border-t text-center"
-          style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-        >
-          <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Instod. All rights reserved.
+        {/* Bottom row */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <p className="text-sm text-gray-500" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            &copy; {new Date().getFullYear()} Instod. Crafted by Muhammad Saadi.
+          </p>
+          <p className="text-xs text-gray-600" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            Free during beta &middot; No credit card &middot; Works in browser
           </p>
         </div>
       </div>

@@ -72,7 +72,7 @@ export default function AboutPage() {
             </div>
             <div className="text-center sm:text-left">
               <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Meet the Founder</h2>
-              <p className="text-sm font-semibold mb-3" style={{ color: '#C17F4E' }}>Arjun Mehta — Founder & Lead Developer</p>
+              <p className="text-sm font-semibold mb-3" style={{ color: '#C17F4E' }}>Muhammad Saadi — Founder & Lead Developer</p>
               <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>
                 Instod started as a personal frustration: why is visualizing a room redesign so expensive and complicated? After years of working with 3D web technologies, I set out to build a tool that makes professional-quality room visualization accessible to everyone — no downloads, no subscriptions during beta, no design degree required. What began as a side project has grown into a platform used by thousands of early adopters, and I am incredibly grateful for every piece of feedback that shapes its future.
               </p>

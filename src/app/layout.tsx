@@ -45,8 +45,8 @@ export const metadata: Metadata = {
     "3D preview",
     "instod",
   ],
-  authors: [{ name: "Instod" }],
-  creator: "Instod",
+  authors: [{ name: "Muhammad Saadi" }],
+  creator: "Muhammad Saadi",
   publisher: "Instod",
   robots: {
     index: true,
