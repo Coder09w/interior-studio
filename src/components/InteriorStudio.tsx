@@ -2570,12 +2570,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           {/* Lighting */}
           <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
             <div className="flex gap-1 mt-1.5 flex-wrap">
-              {lightMoodOptions.map(lm => (
-                <button key={lm.id} onClick={() => { setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
+              {lightMoodOptions.map(lm => {
+                const lockedMoods = new Set(['golden', 'night']);
+                const isLocked = isGuest && lockedMoods.has(lm.id);
+                return (
+                <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all relative ${isLocked ? 'opacity-50' : ''}`}
                   style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E8DFD4', color: lightMood === lm.id ? '#C17F4E' : '#4A3E32', background: lightMood === lm.id ? '#F5E8DC' : 'transparent' }}>
                   {lm.icon} {lm.label}
+                  {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#C17F4E' }} />}
                 </button>
-              ))}
+              );})}
             </div>
           </div>
           {/* Ceiling Light Preset - Mobile */}
@@ -2882,12 +2886,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         {/* Lighting Mood */}
         <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
           <div className="flex gap-1.5 mt-1.5">
-            {lightMoodOptions.map(lm => (
-              <button key={lm.id} onClick={() => { setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
+            {lightMoodOptions.map(lm => {
+              const lockedMoods = new Set(['golden', 'night']);
+              const isLocked = isGuest && lockedMoods.has(lm.id);
+              return (
+              <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all relative ${isLocked ? 'opacity-50' : ''}`}
                 style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E8DFD4', color: lightMood === lm.id ? '#C17F4E' : '#4A3E32', background: lightMood === lm.id ? '#F5E8DC' : 'transparent' }}>
                 {lm.icon} {lm.label}
+                {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#C17F4E' }} />}
               </button>
-            ))}
+            );})}
           </div>
         </div>
 
@@ -2920,12 +2928,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       <div className="p-5">
         <p className="int-section-header">Design Presets</p>
         <div className="flex gap-1.5 mb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => (
-            <button key={type} onClick={() => setSelectedRoomType(type)}
-              className={`px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
+          {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => {
+            const lockedTypes = new Set(['kitchen', 'dining', 'bathroom']);
+            const isLocked = isGuest && lockedTypes.has(type);
+            return (
+            <button key={type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + type.charAt(0).toUpperCase() + type.slice(1)); return; } setSelectedRoomType(type); }}
+              className={`px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer transition-all whitespace-nowrap border relative ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
+              {isLocked && <i className="fas fa-lock text-[7px] absolute top-0.5 right-0.5" style={{ color: '#C17F4E' }} />}
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
-          ))}
+          );})}
         </div>
         <div className="space-y-1.5 max-h-40 overflow-y-auto int-scrollbar">
           {getPresetsForRoom(selectedRoomType).map(preset => (
@@ -3060,21 +3072,24 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {([
-                    { type: 'living' as PresetRoomType, label: 'Living Room', icon: 'fa-couch', color: '#7A8B6F' },
-                    { type: 'bedroom' as PresetRoomType, label: 'Bedroom', icon: 'fa-bed', color: '#C49898' },
-                    { type: 'kitchen' as PresetRoomType, label: 'Kitchen', icon: 'fa-utensils', color: '#C17F59' },
-                    { type: 'dining' as PresetRoomType, label: 'Dining Room', icon: 'fa-utensils', color: '#B8956A' },
-                    { type: 'office' as PresetRoomType, label: 'Office', icon: 'fa-laptop', color: '#3D4F5F' },
-                    { type: 'bathroom' as PresetRoomType, label: 'Bathroom', icon: 'fa-bath', color: '#7B8EA0' },
-                  ]).map(room => (
-                    <button key={room.type} onClick={() => { setSelectedRoomType(room.type); setOnboardingStep('preset'); }}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center hover:shadow-md ${selectedRoomType === room.type ? 'border-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] bg-[#FAF8F4]'}`}>
+                    { type: 'living' as PresetRoomType, label: 'Living Room', icon: 'fa-couch', color: '#7A8B6F', locked: false },
+                    { type: 'bedroom' as PresetRoomType, label: 'Bedroom', icon: 'fa-bed', color: '#C49898', locked: false },
+                    { type: 'kitchen' as PresetRoomType, label: 'Kitchen', icon: 'fa-utensils', color: '#C17F59', locked: true },
+                    { type: 'dining' as PresetRoomType, label: 'Dining Room', icon: 'fa-utensils', color: '#B8956A', locked: true },
+                    { type: 'office' as PresetRoomType, label: 'Office', icon: 'fa-laptop', color: '#3D4F5F', locked: false },
+                    { type: 'bathroom' as PresetRoomType, label: 'Bathroom', icon: 'fa-bath', color: '#7B8EA0', locked: true },
+                  ]).map(room => {
+                    const isLocked = isGuest && room.locked;
+                    return (
+                    <button key={room.type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + room.label); return; } setSelectedRoomType(room.type); setOnboardingStep('preset'); }}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center hover:shadow-md relative ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === room.type ? 'border-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] bg-[#FAF8F4]'}`}>
+                      {isLocked && <i className="fas fa-lock absolute top-2 right-2 text-[9px]" style={{ color: '#C17F4E' }} />}
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: room.color + '18', color: room.color }}>
                         <i className={`fas ${room.icon} text-lg`} />
                       </div>
                       <p className="text-xs font-bold">{room.label}</p>
                     </button>
-                  ))}
+                  );})}
                 </div>
                 <button onClick={() => { setOnboardingStep('blank'); }}
                   className="w-full mt-4 py-3 rounded-xl text-sm font-semibold cursor-pointer border-2 flex items-center justify-center gap-2"
@@ -3153,12 +3168,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 {/* Room type selection */}
                 <p className="text-[10px] font-bold uppercase tracking-[1.5px] mb-2" style={{ color: '#5A4E42' }}>Room Type</p>
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => (
-                    <button key={type} onClick={() => setSelectedRoomType(type)}
-                      className={`py-2 px-3 rounded-lg text-[11px] font-semibold cursor-pointer transition-all border ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
+                  {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => {
+                    const lockedTypes = new Set(['kitchen', 'dining', 'bathroom']);
+                    const isLocked = isGuest && lockedTypes.has(type);
+                    return (
+                    <button key={type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + type.charAt(0).toUpperCase() + type.slice(1)); return; } setSelectedRoomType(type); }}
+                      className={`py-2 px-3 rounded-lg text-[11px] font-semibold cursor-pointer transition-all border relative ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
+                      {isLocked && <i className="fas fa-lock text-[7px] absolute top-1 right-1" style={{ color: '#C17F4E' }} />}
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </button>
-                  ))}
+                  );})}
                 </div>
 
                 {/* Guest mode notice */}
