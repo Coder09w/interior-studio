@@ -138,10 +138,16 @@ export default function SignupPage() {
 
         {/* Benefits list */}
         <div className="absolute bottom-0 left-0 right-0 p-10 z-10">
-          <div className="flex items-center gap-3 mb-5">
-            <Image src="/logo.svg" alt="Instod" width={40} height={40} className="rounded-xl" />
-            <span className="text-white font-bold text-lg" style={{ fontFamily: "'Outfit', sans-serif" }}>
+          <div className="flex items-center gap-2.5 mb-5">
+            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+            <span className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
               Instod
+            </span>
+            <span
+              className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              BETA
             </span>
           </div>
           <h2 className="text-white text-2xl font-bold mb-4" style={{ fontFamily: "'Outfit', sans-serif" }}>
@@ -183,9 +189,15 @@ export default function SignupPage() {
         <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
           <div className="w-full max-w-md">
             {/* Mobile logo */}
-            <div className="lg:hidden flex flex-col items-center mb-8">
-              <Image src="/logo.svg" alt="Instod" width={48} height={48} className="rounded-xl mb-3" />
-              <h1 className="text-xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Instod</h1>
+            <div className="lg:hidden flex items-center gap-2.5 mb-8">
+              <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+              <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Instod</span>
+              <span
+                className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
+                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+              >
+                BETA
+              </span>
             </div>
 
             {/* Header */}

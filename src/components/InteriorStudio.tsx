@@ -193,6 +193,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const dragPlaneRef = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
   const dragOffsetRef = useRef(new THREE.Vector3());
   const intersectionRef = useRef(new THREE.Vector3());
+  const lastDragWorldRef = useRef(new THREE.Vector3()); // tracks previous drag world pos for delta-based drag
   const raycasterRef = useRef(new THREE.Raycaster());
   const pointerRef = useRef(new THREE.Vector2());
   const autoRotateRef = useRef(false);
@@ -1629,18 +1630,18 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     rendererRef.current = renderer;
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; controls.dampingFactor = 0.1;
-    controls.rotateSpeed = 0.6;
-    controls.panSpeed = 0.6;
+    controls.enableDamping = true; controls.dampingFactor = 0.12;
+    controls.rotateSpeed = 0.5;
+    controls.panSpeed = 0.5;
     controls.maxPolarAngle = Math.PI * 0.48; controls.minDistance = 2; controls.maxDistance = 22;
     controls.target.set(0, 1, 0);
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.enablePan = true;
     // Smoother touch on mobile
     if (mobile) {
-      controls.rotateSpeed = 0.4;
-      controls.panSpeed = 0.4;
-      controls.dampingFactor = 0.14;
+      controls.rotateSpeed = 0.35;
+      controls.panSpeed = 0.35;
+      controls.dampingFactor = 0.18;
     }
     controlsRef.current = controls;
 
@@ -1867,6 +1868,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current);
           dragOffsetRef.current.copy(intersectionRef.current).sub(f.position);
           dragOffsetRef.current.y = 0;
+          // Store initial drag world position for delta-based movement
+          lastDragWorldRef.current.copy(intersectionRef.current);
           canvas.style.cursor = 'move';
         }
       } else { deselectAll(); }
@@ -1906,7 +1909,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       pointerRef.current.y = -((e.clientY - r.top) / r.height) * 2 + 1;
       raycasterRef.current.setFromCamera(pointerRef.current, camera);
       if (raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current)) {
-        const np = intersectionRef.current.sub(dragOffsetRef.current);
+        // Delta-based drag: compute how much the intersection point moved since last frame
+        const dx = intersectionRef.current.x - lastDragWorldRef.current.x;
+        const dz = intersectionRef.current.z - lastDragWorldRef.current.z;
+        // Sensitivity factor: 0.7 slows drag to feel controllable without being sluggish
+        const sensitivity = 0.7;
+        const scaledDx = dx * sensitivity;
+        const scaledDz = dz * sensitivity;
+        // Apply delta to current position (not raw intersection, so camera angle doesn't distort)
+        let nx = dragItemRef.current.position.x + scaledDx;
+        let nz = dragItemRef.current.position.z + scaledDz;
         // Calculate furniture bounding box for wall constraint
         const bbox = new THREE.Box3().setFromObject(dragItemRef.current);
         const size = new THREE.Vector3();
@@ -1915,9 +1927,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         const halfFurnD = size.z / 2;
         const hw = roomWRef.current / 2 - halfFurnW - 0.05;
         const hd = roomDRef.current / 2 - halfFurnD - 0.05;
-        let nx = Math.max(-hw, Math.min(hw, np.x)), nz = Math.max(-hd, Math.min(hd, np.z));
+        nx = Math.max(-hw, Math.min(hw, nx)); nz = Math.max(-hd, Math.min(hd, nz));
         if (snapToGridRef.current) { nx = Math.round(nx * 2) / 2; nz = Math.round(nz * 2) / 2; }
         dragItemRef.current.position.x = nx; dragItemRef.current.position.z = nz;
+        // Update last drag world position for next frame's delta
+        lastDragWorldRef.current.copy(intersectionRef.current);
         markUnsaved();
       }
     };
