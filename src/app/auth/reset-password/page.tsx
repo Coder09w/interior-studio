@@ -96,14 +96,20 @@ function ResetPasswordForm() {
           }}
         >
           {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl mb-4 shadow-sm" />
-            <h1
-              className="text-2xl font-bold tracking-tight"
-              style={{ color: '#2D2D2D' }}
+          <div className="flex items-center gap-2.5 mb-8 justify-center">
+            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+            <span
+              className="text-xl font-bold tracking-tight"
+              style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
             >
               Instod
-            </h1>
+            </span>
+            <span
+              className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              BETA
+            </span>
           </div>
 
           {/* Error State */}
@@ -167,14 +173,20 @@ function ResetPasswordForm() {
           }}
         >
           {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl mb-4 shadow-sm" />
-            <h1
-              className="text-2xl font-bold tracking-tight"
-              style={{ color: '#2D2D2D' }}
+          <div className="flex items-center gap-2.5 mb-8 justify-center">
+            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+            <span
+              className="text-xl font-bold tracking-tight"
+              style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
             >
               Instod
-            </h1>
+            </span>
+            <span
+              className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
+              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+            >
+              BETA
+            </span>
           </div>
 
           {/* Success State */}
@@ -225,14 +237,20 @@ function ResetPasswordForm() {
         }}
       >
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl mb-4 shadow-sm" />
-          <h1
-            className="text-2xl font-bold tracking-tight"
-            style={{ color: '#2D2D2D' }}
+        <div className="flex items-center gap-2.5 mb-8 justify-center">
+          <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+          <span
+            className="text-xl font-bold tracking-tight"
+            style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
           >
             Instod
-          </h1>
+          </span>
+          <span
+            className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
+            style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+          >
+            BETA
+          </span>
         </div>
 
         {/* Header */}
@@ -388,7 +406,7 @@ export default function ResetPasswordPage() {
           className="min-h-screen flex items-center justify-center"
           style={{ backgroundColor: '#F5F0E8' }}
         >
-          <Image src="/logo.svg" alt="Instod" width={56} height={56} className="rounded-xl shadow-sm" />
+          <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
         </div>
       }
     >
