@@ -9,9 +9,9 @@ export default function NotFound() {
       <div className="text-center max-w-md">
         <div
           className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6"
-          style={{ background: "rgba(193,127,78,0.12)" }}
+          style={{ background: "rgba(0,0,0,0.05)" }}
         >
-          <span className="text-4xl font-bold" style={{ color: "#C17F4E" }}>
+          <span className="text-4xl font-bold" style={{ color: "#2D2D2D" }}>
             404
           </span>
         </div>

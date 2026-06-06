@@ -259,7 +259,7 @@ function ResetPasswordForm() {
             className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"
             style={{ backgroundColor: '#FAF8F4' }}
           >
-            <KeyRound className="w-6 h-6" style={{ color: '#C17F4E' }} />
+            <KeyRound className="w-6 h-6" style={{ color: '#7A6E62' }} />
           </div>
           <h2
             className="text-lg font-semibold mb-2"

@@ -209,6 +209,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
   // State
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarDark, setSidebarDark] = useState(false); // dark editor sidebar toggle
   const [currentCat, setCurrentCat] = useState<CategoryId>('seating');
   const [currentMatType, setCurrentMatType] = useState<MatType>('fabric');
   const [currentColor, setCurrentColor] = useState('#5A4E42');
@@ -1077,7 +1078,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     // Add ceiling grid helper
     const scene = sceneRef.current;
     if (scene) {
-      const ceilGrid = new THREE.GridHelper(Math.max(w, d), Math.max(w, d) * 4, 0xC17F4E, 0xDDC8A8);
+      const ceilGrid = new THREE.GridHelper(Math.max(w, d), Math.max(w, d) * 4, 0x8A7E72, 0xDDC8A8);
       ceilGrid.rotation.x = Math.PI / 2;
       ceilGrid.position.y = h - 0.001;
       (ceilGrid.material as THREE.Material).opacity = 0.35;
@@ -2358,8 +2359,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       ctx.save();
       ctx.translate(fx, fz);
       ctx.rotate(item.rotation.y);
-      ctx.fillStyle = 'rgba(193,127,78,0.2)';
-      ctx.strokeStyle = '#C17F4E';
+      ctx.fillStyle = 'rgba(0,0,0,0.08)';
+      ctx.strokeStyle = '#8A7E72';
       ctx.lineWidth = 1;
       ctx.fillRect(-fw / 2, -fd / 2, fw, fd);
       ctx.strokeRect(-fw / 2, -fd / 2, fw, fd);
@@ -2474,7 +2475,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 style={{ background: c }} aria-label={colorNames[c] || c} role="radio" aria-checked={currentColor === c} />
             ))}
           </div>
-          <div className="flex items-center gap-1 mt-1"><span className="text-[10px]" style={{ color: '#5A4E42' }}>Color:</span><span className="text-[11px] font-semibold" style={{ color: '#C17F4E' }}>{colorNames[currentColor] || currentColor}</span></div>
+          <div className="flex items-center gap-1 mt-1"><span className="text-[10px]" style={{ color: '#5A4E42' }}>Color:</span><span className="text-[11px] font-semibold" style={{ color: '#2D2D2D' }}>{colorNames[currentColor] || currentColor}</span></div>
           {/* Wall Color */}
           <p className="int-section-header" style={{ marginTop: '12px' }}>Wall Color</p>
           <div className="flex flex-wrap gap-1.5">
@@ -2615,7 +2616,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all relative ${isLocked ? 'opacity-50' : ''}`}
                   style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E8DFD4', color: lightMood === lm.id ? '#C17F4E' : '#4A3E32', background: lightMood === lm.id ? '#F5E8DC' : 'transparent' }}>
                   {lm.icon} {lm.label}
-                  {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#C17F4E' }} />}
+                  {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
                 </button>
               );})}
             </div>
@@ -2657,10 +2658,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           </div>
 
           {/* Current skin status */}
-          <div className="p-3 rounded-xl mb-3" style={{ background: activeSkin === 'default' ? 'rgba(92,64,51,0.06)' : 'rgba(193,127,78,0.06)', border: `1px solid ${activeSkin === 'default' ? '#5C4033' : '#C17F4E'}` }}>
+          <div className="p-3 rounded-xl mb-3" style={{ background: activeSkin === 'default' ? 'rgba(92,64,51,0.06)' : '#FAF8F4', border: `1px solid ${activeSkin === 'default' ? '#5C4033' : '#E8DFD4'}` }}>
             <div className="flex items-center gap-2 mb-1">
-              <i className={`fas ${activeSkin === 'default' ? 'fa-check-circle' : 'fa-paint-brush'} text-xs`} style={{ color: activeSkin === 'default' ? '#5C4033' : '#C17F4E' }} />
-              <p className="text-[11px] font-bold" style={{ color: activeSkin === 'default' ? '#5C4033' : '#C17F4E' }}>
+              <i className={`fas ${activeSkin === 'default' ? 'fa-check-circle' : 'fa-paint-brush'} text-xs`} style={{ color: activeSkin === 'default' ? '#5C4033' : '#7A6E62' }} />
+              <p className="text-[11px] font-bold" style={{ color: activeSkin === 'default' ? '#5C4033' : '#7A6E62' }}>
                 {activeSkin === 'default' ? 'Skeleton Active' : `Skin: ${SKINS_DICTIONARY[activeSkin]?.name || activeSkin}`}
               </p>
             </div>
@@ -2763,8 +2764,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             ))}
           </div>
           {isGuest && (
-            <div className="mt-3 p-2.5 rounded-lg border" style={{ background: 'rgba(193,127,78,0.06)', borderColor: 'rgba(193,127,78,0.15)' }}>
-              <p className="text-[10px]" style={{ color: '#5A4E42' }}><i className="fas fa-lock text-[9px] mr-1" style={{ color: '#C17F4E' }} />Sign in to save presets and unlock more designs</p>
+            <div className="mt-3 p-2.5 rounded-lg border" style={{ background: '#FAF8F4', borderColor: '#E8DFD4' }}>
+              <p className="text-[10px]" style={{ color: '#5A4E42' }}><i className="fas fa-lock text-[9px] mr-1" style={{ color: '#7A6E62' }} />Sign in to save presets and unlock more designs</p>
               <a href="/auth/signup" className="text-[10px] font-bold no-underline" style={{ color: '#C17F4E' }}>Sign Up Free →</a>
             </div>
           )}
@@ -2776,7 +2777,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
   /* ===== DESKTOP SIDEBAR CONTENT ===== */
   const renderDesktopSidebar = () => (
-    <aside className={`int-scrollbar h-screen overflow-y-auto int-sidebar int-sidebar-glow-${lightMood}`} style={{ width: sidebarOpen ? 320 : 0, minWidth: sidebarOpen ? 320 : 0, borderRight: sidebarOpen ? '1px solid #E8DFD4' : 'none', overflow: sidebarOpen ? 'auto' : 'hidden', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+    <aside data-sidebar-theme={sidebarDark ? 'dark' : 'light'} className={`int-scrollbar h-screen overflow-y-auto ${sidebarDark ? '' : `int-sidebar int-sidebar-glow-${lightMood}`}`} style={{ width: sidebarOpen ? 320 : 0, minWidth: sidebarOpen ? 320 : 0, borderRight: sidebarOpen ? `1px solid ${sidebarDark ? 'rgba(255,255,255,0.06)' : '#E8DFD4'}` : 'none', overflow: sidebarOpen ? 'auto' : 'hidden', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)', backgroundColor: sidebarDark ? '#1E1B18' : undefined, color: sidebarDark ? '#E8E0D6' : undefined }}>
       {/* Logo */}
       <div className="p-5 int-logo-border">
         <div className="flex items-center gap-3">
@@ -2828,7 +2829,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               style={{ background: c }} aria-label={colorNames[c] || c} role="radio" aria-checked={currentColor === c} />
           ))}
         </div>
-        <div className="flex items-center gap-2 mt-2"><span className="text-[12px]" style={{ color: '#7A6E62' }}>Selected:</span><span className="text-[13px] font-semibold" style={{ color: '#C17F4E' }}>{colorNames[currentColor] || currentColor}</span></div>
+        <div className="flex items-center gap-2 mt-2"><span className="text-[12px]" style={{ color: '#7A6E62' }}>Selected:</span><span className="text-[13px] font-semibold" style={{ color: '#2D2D2D' }}>{colorNames[currentColor] || currentColor}</span></div>
       </div>
       <div className="int-section-divider" />
 
@@ -2931,7 +2932,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all relative ${isLocked ? 'opacity-50' : ''}`}
                 style={{ borderColor: lightMood === lm.id ? '#C17F4E' : '#E8DFD4', color: lightMood === lm.id ? '#C17F4E' : '#4A3E32', background: lightMood === lm.id ? '#F5E8DC' : 'transparent' }}>
                 {lm.icon} {lm.label}
-                {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#C17F4E' }} />}
+                {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
               </button>
             );})}
           </div>
@@ -2972,7 +2973,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             return (
             <button key={type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + type.charAt(0).toUpperCase() + type.slice(1)); return; } setSelectedRoomType(type); }}
               className={`px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer transition-all whitespace-nowrap border relative ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
-              {isLocked && <i className="fas fa-lock text-[7px] absolute top-0.5 right-0.5" style={{ color: '#C17F4E' }} />}
+              {isLocked && <i className="fas fa-lock text-[7px] absolute top-0.5 right-0.5" style={{ color: '#7A6E62' }} />}
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
           );})}
@@ -3075,8 +3076,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       {webglError && (
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
-              <i className="fas fa-cube text-white text-2xl" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: '#F0E8D8' }}>
+              <i className="fas fa-cube text-2xl" style={{ color: '#7A6E62' }} />
             </div>
             <h2 className="text-xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>3D Editor Unavailable</h2>
             <p className="text-sm mb-4" style={{ color: '#5A4E42' }}>{webglError}</p>
@@ -3102,8 +3103,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {onboardingStep === 'room' && (
               <>
                 <div className="text-center mb-6">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
-                    <i className="fas fa-home text-white text-xl" />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#F0E8D8' }}>
+                    <i className="fas fa-home text-xl" style={{ color: '#7A6E62' }} />
                   </div>
                   <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>What would you like to design?</h2>
                   <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>Choose a room type to get started</p>
@@ -3121,7 +3122,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                     return (
                     <button key={room.type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + room.label); return; } setSelectedRoomType(room.type); setOnboardingStep('preset'); }}
                       className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center hover:shadow-md relative ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === room.type ? 'border-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] bg-[#FAF8F4]'}`}>
-                      {isLocked && <i className="fas fa-lock absolute top-2 right-2 text-[9px]" style={{ color: '#C17F4E' }} />}
+                      {isLocked && <i className="fas fa-lock absolute top-2 right-2 text-[9px]" style={{ color: '#7A6E62' }} />}
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: room.color + '18', color: room.color }}>
                         <i className={`fas ${room.icon} text-lg`} />
                       </div>
@@ -3148,8 +3149,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {onboardingStep === 'preset' && (
               <>
                 <div className="text-center mb-5">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
-                    <i className="fas fa-palette text-white text-xl" />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#F0E8D8' }}>
+                    <i className="fas fa-palette text-xl" style={{ color: '#7A6E62' }} />
                   </div>
                   <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Choose a Style</h2>
                   <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>Pick a preset or start from scratch</p>
@@ -3196,8 +3197,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {onboardingStep === 'blank' && (
               <>
                 <div className="text-center mb-5">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
-                    <i className="fas fa-drafting-compass text-white text-xl" />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#F0E8D8' }}>
+                    <i className="fas fa-drafting-compass text-xl" style={{ color: '#7A6E62' }} />
                   </div>
                   <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Start from Scratch</h2>
                   <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>Build your room from the ground up</p>
@@ -3212,7 +3213,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                     return (
                     <button key={type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + type.charAt(0).toUpperCase() + type.slice(1)); return; } setSelectedRoomType(type); }}
                       className={`py-2 px-3 rounded-lg text-[11px] font-semibold cursor-pointer transition-all border relative ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
-                      {isLocked && <i className="fas fa-lock text-[7px] absolute top-1 right-1" style={{ color: '#C17F4E' }} />}
+                      {isLocked && <i className="fas fa-lock text-[7px] absolute top-1 right-1" style={{ color: '#7A6E62' }} />}
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </button>
                   );})}
@@ -3220,16 +3221,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
                 {/* Guest mode notice */}
                 {isGuest && (
-                  <div className="p-3 rounded-xl mb-4 border" style={{ background: 'rgba(193,127,78,0.06)', borderColor: 'rgba(193,127,78,0.2)' }}>
+                  <div className="p-3 rounded-xl mb-4 border" style={{ background: '#FAF8F4', borderColor: '#E8DFD4' }}>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <i className="fas fa-info-circle text-xs" style={{ color: '#C17F4E' }} />
-                      <p className="text-[11px] font-bold" style={{ color: '#C17F4E' }}>Guest Mode</p>
+                      <i className="fas fa-info-circle text-xs" style={{ color: '#7A6E62' }} />
+                      <p className="text-[11px] font-bold" style={{ color: '#7A6E62' }}>Guest Mode</p>
                     </div>
                     <p className="text-[10px] mb-2" style={{ color: '#5A4E42' }}>You're using the free editor with limited options. Sign in for the full experience.</p>
                     <div className="flex gap-3 text-[9px]" style={{ color: '#5A4E42' }}>
-                      <span><i className="fas fa-couch mr-0.5" style={{ color: '#C17F4E' }} /> {GUEST_ALLOWED_FURNITURE.size} items</span>
-                      <span><i className="fas fa-door-open mr-0.5" style={{ color: '#C17F4E' }} /> {GUEST_MAX_ROOMS} rooms</span>
-                      <span><i className="fas fa-palette mr-0.5" style={{ color: '#C17F4E' }} /> Fewer colors</span>
+                      <span><i className="fas fa-couch mr-0.5" style={{ color: '#7A6E62' }} /> {GUEST_ALLOWED_FURNITURE.size} items</span>
+                      <span><i className="fas fa-door-open mr-0.5" style={{ color: '#7A6E62' }} /> {GUEST_MAX_ROOMS} rooms</span>
+                      <span><i className="fas fa-palette mr-0.5" style={{ color: '#7A6E62' }} /> Fewer colors</span>
                     </div>
                     <a href="/auth/signup" className="mt-2 block w-full py-2 rounded-lg text-[11px] font-bold text-center no-underline" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', color: '#fff' }}>
                       <i className="fas fa-sign-in-alt mr-1" />Sign Up for Full Access
@@ -3289,8 +3290,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {tutorialStep === 0 && (
               <>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
-                    <i className="fas fa-mouse-pointer" style={{ color: '#C17F4E' }} />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                    <i className="fas fa-mouse-pointer" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Navigate Your Room</h3>
@@ -3309,8 +3310,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {tutorialStep === 1 && (
               <>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
-                    <i className="fas fa-couch" style={{ color: '#C17F4E' }} />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                    <i className="fas fa-couch" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Add Furniture</h3>
@@ -3329,8 +3330,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {tutorialStep === 2 && (
               <>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
-                    <i className="fas fa-arrows-alt" style={{ color: '#C17F4E' }} />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                    <i className="fas fa-arrows-alt" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Move &amp; Rotate</h3>
@@ -3349,8 +3350,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {tutorialStep === 3 && (
               <>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
-                    <i className="fas fa-palette" style={{ color: '#C17F4E' }} />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                    <i className="fas fa-palette" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Customize Materials</h3>
@@ -3381,11 +3382,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         <div
           className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-6"
           style={{
-            background: 'linear-gradient(135deg, #C17F4E 0%, #A86A3D 50%, #8E5A30 100%)',
+            background: '#5A4E42',
             color: '#fff',
             height: 44,
             fontFamily: "'Outfit', sans-serif",
-            boxShadow: '0 2px 12px rgba(193,127,78,0.25)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
           }}
         >
           <div className="flex items-center gap-3">
@@ -3422,14 +3423,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           href="/auth/signup"
           className="fixed top-0 left-0 right-0 z-30 flex items-center justify-center gap-2 no-underline"
           style={{
-            background: 'linear-gradient(135deg, #C17F4E, #A86A3D)',
+            background: '#5A4E42',
             color: '#fff',
             height: 36,
             fontFamily: "'Outfit', sans-serif",
             fontSize: 11,
             fontWeight: 600,
             paddingTop: 'env(safe-area-inset-top, 0px)',
-            boxShadow: '0 2px 8px rgba(193,127,78,0.2)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
           }}
         >
           <i className="fas fa-lock text-[8px]" />
@@ -3494,7 +3495,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 return (
                   <div key={room.id} className="flex items-center gap-2 p-2.5 rounded-xl border transition-all" style={{ borderColor: currentRoomId === room.id ? '#C17F4E' : '#E2DDD4', background: currentRoomId === room.id ? 'rgba(193,127,78,0.06)' : 'transparent' }}>
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: currentRoomId === room.id ? '#C17F4E' : '#F0E8D8' }}>
-                      <i className="fas fa-door-open text-[10px]" style={{ color: currentRoomId === room.id ? '#fff' : '#C17F4E' }} />
+                      <i className="fas fa-door-open text-[10px]" style={{ color: currentRoomId === room.id ? '#fff' : '#7A6E62' }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       {isEditing ? (
@@ -3542,7 +3543,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {/* Snapshots list */}
             {snapshots.length === 0 ? (
               <div className="text-center py-6">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: '#F0E8D8' }}><i className="fas fa-camera-retro text-lg" style={{ color: '#C17F4E' }} /></div>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: '#F0E8D8' }}><i className="fas fa-camera-retro text-lg" style={{ color: '#7A6E62' }} /></div>
                 <p className="text-xs" style={{ color: '#5A4E42' }}>No snapshots yet. Save a snapshot to preserve a design revision.</p>
               </div>
             ) : (
@@ -3550,14 +3551,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 {snapshots.map((snap, idx) => (
                   <div key={idx} className="flex items-center gap-2 p-2.5 rounded-xl border" style={{ borderColor: '#E2DDD4' }}>
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#F0E8D8' }}>
-                      <i className="fas fa-camera-retro text-[10px]" style={{ color: '#C17F4E' }} />
+                      <i className="fas fa-camera-retro text-[10px]" style={{ color: '#7A6E62' }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold truncate">{snap.name}</p>
                       <p className="text-[9px]" style={{ color: '#5A4E42' }}>{new Date(snap.timestamp).toLocaleString()} &bull; {snap.data.length} items</p>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
-                      <button onClick={() => restoreSnapshot(idx)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }} aria-label="Restore snapshot" title="Restore"><i className="fas fa-undo text-[9px]" style={{ color: '#C17F4E' }} /></button>
+                      <button onClick={() => restoreSnapshot(idx)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }} aria-label="Restore snapshot" title="Restore"><i className="fas fa-undo text-[9px]" style={{ color: '#7A6E62' }} /></button>
                       <button onClick={() => deleteSnapshot(idx)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0' }} aria-label="Delete snapshot" title="Delete"><i className="fas fa-trash-alt text-[9px]" style={{ color: '#c0392b' }} /></button>
                     </div>
                   </div>
@@ -3577,13 +3578,18 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined, marginTop: (isMobile && isGuest && !showOnboarding) ? 36 : undefined }}>
           {!isMobile && (
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }}><i className="fas fa-bars text-xs" /></button>
+            <>
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }}><i className="fas fa-bars text-xs" /></button>
+              {sidebarOpen && (
+                <button onClick={() => setSidebarDark(!sidebarDark)} aria-label={sidebarDark ? 'Light sidebar' : 'Dark sidebar'} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} title={sidebarDark ? 'Switch to light sidebar' : 'Switch to dark sidebar'}><i className={`fas ${sidebarDark ? 'fa-sun' : 'fa-moon'} text-xs`} /></button>
+              )}
+            </>
           )}
           <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined }} />
-          <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#C17F4E' : '#5A4E42', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
+          <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#5A4E42', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
             {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}
           </span>
-          <span className="text-[9px] px-2 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1" style={{ background: 'rgba(193,127,78,0.1)', color: '#C17F4E' }} title="This is a layout drafting view. Use Export for polished renders.">
+          <span className="text-[9px] px-2 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }} title="This is a layout drafting view. Use Export for polished renders.">
             <i className="fas fa-drafting-compass text-[7px]" />Draft
           </span>
 
@@ -3616,7 +3622,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           {/* Desktop right actions */}
           {!isMobile && (
             <div className="flex items-center gap-1">
-              <button onClick={() => window.location.href = '/dashboard'} className="h-8 px-2.5 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer border" style={{ borderColor: '#C17F4E', color: '#C17F4E', background: 'rgba(193,127,78,0.06)' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /><span className="text-[10px] font-semibold">Dashboard</span></button>
+              <button onClick={() => window.location.href = '/dashboard'} className="h-8 px-2.5 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'transparent' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /><span className="text-[10px] font-semibold">Dashboard</span></button>
               <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: snapToGrid ? '#C17F4E' : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? '#C17F4E' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[9px]" /></button>
               <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: shadowsEnabled ? '#C17F4E' : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? '#C17F4E' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[9px]" /></button>
               <button onClick={shareRoom} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[9px]" /></button>
@@ -3630,14 +3636,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
-          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-30' : 'absolute top-14 left-1/2 -translate-x-1/2 z-30 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #C17F4E' : '1px solid #C17F4E', ...(isMobile ? { paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-30' : 'absolute top-14 left-1/2 -translate-x-1/2 z-30 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
             {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.15)' }}><i className="fas fa-lightbulb text-[10px]" style={{ color: '#C17F4E' }} /></div>
-                  <h3 className="text-xs font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#C17F4E' }}>Ceiling Light Editor</h3>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(193,127,78,0.1)', color: '#C17F4E' }}>{ceilingSpotPositionsRef.current.length}/6</span>
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}><i className="fas fa-lightbulb text-[10px]" style={{ color: '#7A6E62' }} /></div>
+                  <h3 className="text-xs font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Ceiling Light Editor</h3>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }}>{ceilingSpotPositionsRef.current.length}/6</span>
                 </div>
                 <button onClick={exitCeilingEditMode} aria-label="Exit ceiling editor" className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-[9px]" /></button>
               </div>
@@ -3766,7 +3772,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 <button onClick={() => { redo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-[11px]" /></button>
                 <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>
                 <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[11px]" /></button>
-                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid #C17F4E', color: '#C17F4E' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
+                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
               </div>
             )}
           </div>
@@ -3791,20 +3797,20 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           {/* Tab bar — icon-only, Furniture + Colors first, 56px height for better touch targets */}
           <div role="tablist" className="flex border-b" style={{ borderColor: '#E2DDD4', height: 56 }}>
             {([
-              { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture', color: '#C17F4E' },
-              { id: 'material' as const, icon: 'fa-palette', label: 'Colors', color: '#C17F4E' },
-              { id: 'room' as const, icon: 'fa-sliders-h', label: 'Room', color: '#C17F4E' },
-              { id: 'skin' as const, icon: 'fa-wand-magic-sparkles', label: 'Skins', color: '#C17F4E' },
-              { id: 'presets' as const, icon: 'fa-magic', label: 'Presets', color: '#C17F4E' },
+              { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture', color: '#5A4E42' },
+              { id: 'material' as const, icon: 'fa-palette', label: 'Colors', color: '#5A4E42' },
+              { id: 'room' as const, icon: 'fa-sliders-h', label: 'Room', color: '#5A4E42' },
+              { id: 'skin' as const, icon: 'fa-wand-magic-sparkles', label: 'Skins', color: '#5A4E42' },
+              { id: 'presets' as const, icon: 'fa-magic', label: 'Presets', color: '#5A4E42' },
               { id: 'skeleton' as const, icon: 'fa-bone', label: 'More', color: '#5C4033' },
             ]).map(({ id, icon, label, color }) => (
               <button key={id} onClick={() => { setMobilePanel(mobilePanel === id ? null : id); setMobileActionsOpen(false); }}
                 role="tab" aria-selected={mobilePanel === id}
                 className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
-                style={{ color: mobilePanel === id ? color : '#5A4E42', background: mobilePanel === id ? `${color}0A` : 'transparent' }}>
+                style={{ color: mobilePanel === id ? '#2D2D2D' : '#5A4E42', background: mobilePanel === id ? 'rgba(0,0,0,0.05)' : 'transparent' }}>
                 <i className={`fas ${icon}`} style={{ fontSize: 16 }} />
-                <span style={{ fontSize: 9, fontWeight: 600 }}>{label}</span>
-                {mobilePanel === id && <div style={{ width: 4, height: 4, borderRadius: '50%', background: color, position: 'absolute', bottom: 3 }} />}
+                <span style={{ fontSize: 9, fontWeight: mobilePanel === id ? 700 : 600 }}>{label}</span>
+                {mobilePanel === id && <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#2D2D2D', position: 'absolute', bottom: 3 }} />}
               </button>
             ))}
           </div>

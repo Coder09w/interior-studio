@@ -113,7 +113,7 @@ export default function TermsOfServicePage() {
       {/* Header */}
       <div className="text-center pt-10 pb-12 px-4">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style={{ background: '#FAF8F4', border: '1px solid #E2DDD4' }}>
-          <FileText className="w-7 h-7" style={{ color: '#C17F4E' }} />
+          <FileText className="w-7 h-7" style={{ color: '#7A6E62' }} />
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           Terms of Service
@@ -142,7 +142,7 @@ export default function TermsOfServicePage() {
                 className="flex items-center gap-2.5 text-sm font-medium py-1.5 px-3 rounded-lg transition-colors hover:bg-white/60"
                 style={{ color: '#2D2D2D' }}
               >
-                <section.icon className="w-4 h-4 flex-shrink-0" style={{ color: '#C17F4E' }} />
+                <section.icon className="w-4 h-4 flex-shrink-0" style={{ color: '#7A6E62' }} />
                 {section.title}
               </a>
             ))}
@@ -162,7 +162,7 @@ export default function TermsOfServicePage() {
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FAF8F4' }}>
-                  <section.icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                  <section.icon className="w-5 h-5" style={{ color: '#7A6E62' }} />
                 </div>
                 <h2 className="text-xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
                   {section.title}
@@ -183,8 +183,8 @@ export default function TermsOfServicePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#C17F4E' }}>
-                <Sofa className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#F0E8D8' }}>
+                <Sofa className="w-4 h-4" style={{ color: '#7A6E62' }} />
               </div>
               <span className="text-sm font-semibold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
                 Instod

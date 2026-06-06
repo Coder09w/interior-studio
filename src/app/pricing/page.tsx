@@ -53,7 +53,7 @@ const BETA_FEATURES = [
     icon: Zap,
     title: 'Unlimited Design Projects',
     desc: 'Create as many projects as you want — no limits during beta.',
-    color: '#C17F4E',
+    color: '#7A6E62',
   },
   {
     icon: Sofa,
@@ -129,7 +129,7 @@ const PLAN_CARDS = [
     bg: 'linear-gradient(180deg, #FFFBF5 0%, #FFF8F0 100%)',
     scale: true,
     icon: Zap,
-    iconBg: '#C17F4E15',
+    iconBg: 'rgba(0,0,0,0.05)',
     featured: true,
   },
   {
@@ -182,7 +182,7 @@ export default function PricingPage() {
           <span className="text-sm font-semibold" style={{ color: '#C17F4E' }}>Early Access Beta</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-          Design Freely. <span style={{ color: '#C17F4E' }}>Everything is Free.</span>
+          Design Freely. <span style={{ color: '#2D2D2D', fontWeight: 800 }}>Everything is Free.</span>
         </h1>
         <p className="mt-4 text-lg max-w-2xl mx-auto" style={{ color: '#5A4E42' }}>
           We&apos;re currently in Early Access Beta. As one of our early users, you get{' '}
@@ -197,12 +197,12 @@ export default function PricingPage() {
           className="rounded-2xl border-2 p-6 sm:p-8"
           style={{
             background: 'linear-gradient(135deg, #FFF8F0, #FFF3E6)',
-            borderColor: '#C17F4E40',
+            borderColor: '#E8DFD4',
           }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#C17F4E' }}>
-              <Gift className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#F0E8D8' }}>
+              <Gift className="w-6 h-6" style={{ color: '#7A6E62' }} />
             </div>
             <div className="flex-1">
               <h3 className="font-bold text-base" style={{ color: '#2D2D2D' }}>
@@ -225,7 +225,7 @@ export default function PricingPage() {
           style={{
             background: 'linear-gradient(180deg, #FFFBF5 0%, #FFF8F0 100%)',
             borderColor: '#C17F4E',
-            boxShadow: '0 0 30px rgba(193,127,78,0.1), 0 0 60px rgba(193,127,78,0.05)',
+            boxShadow: '0 0 30px rgba(0,0,0,0.08)',
           }}
         >
           {/* Beta badge */}
@@ -233,8 +233,8 @@ export default function PricingPage() {
             EARLY ACCESS BETA
           </div>
 
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: '#C17F4E15' }}>
-            <Gift className="w-7 h-7" style={{ color: '#C17F4E' }} />
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(0,0,0,0.05)' }}>
+            <Gift className="w-7 h-7" style={{ color: '#7A6E62' }} />
           </div>
 
           <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
@@ -261,7 +261,7 @@ export default function PricingPage() {
               'Save & manage projects',
             ].map((feat, i) => (
               <div key={i} className="flex items-start gap-2">
-                <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#C17F4E' }} />
+                <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#6B8B5E' }} />
                 <span className="text-sm" style={{ color: '#2D2D2D' }}>{feat}</span>
               </div>
             ))}
@@ -336,7 +336,7 @@ export default function PricingPage() {
                 <div className="space-y-2">
                   {plan.features.map((feat, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: isDark ? '#D4A76A' : plan.accentColor }} />
+                      <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: isDark ? '#D4A76A' : '#6B8B5E' }} />
                       <span className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#5A4E42' }}>{feat}</span>
                     </div>
                   ))}
@@ -351,8 +351,8 @@ export default function PricingPage() {
       <div className="py-16 px-4" style={{ background: '#FFFFFF' }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4" style={{ background: '#C17F4E15' }}>
-              <Sparkles className="w-6 h-6" style={{ color: '#C17F4E' }} />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4" style={{ background: 'rgba(0,0,0,0.05)' }}>
+              <Sparkles className="w-6 h-6" style={{ color: '#7A6E62' }} />
             </div>
             <h2 className="text-3xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               What You Get During Beta
@@ -418,8 +418,8 @@ export default function PricingPage() {
 
             <div className="rounded-2xl border p-6" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#C17F4E15' }}>
-                  <Star className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                  <Star className="w-5 h-5" style={{ color: '#7A6E62' }} />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm mb-1" style={{ color: '#2D2D2D' }}>

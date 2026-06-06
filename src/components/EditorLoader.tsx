@@ -209,8 +209,8 @@ export default function EditorLoader() {
       {/* Subtle background pattern */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(193,127,78,0.04) 0%, transparent 50%),
-                          radial-gradient(circle at 75% 75%, rgba(193,127,78,0.03) 0%, transparent 50%)`,
+        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(139,115,85,0.04) 0%, transparent 50%),
+                          radial-gradient(circle at 75% 75%, rgba(0,0,0,0.03) 0%, transparent 50%)`,
         pointerEvents: 'none',
       }} />
 
@@ -223,7 +223,7 @@ export default function EditorLoader() {
             borderRadius: '24px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             backdropFilter: 'none',
-            border: '1px solid rgba(193,127,78,0.12)',
+            border: '1px solid rgba(0,0,0,0.08)',
           }}
         >
           <IsometricRoom progress={progress} />
@@ -326,8 +326,8 @@ export default function EditorLoader() {
         <div style={{
           padding: '14px 18px',
           borderRadius: '16px',
-          background: 'rgba(193,127,78,0.06)',
-          border: '1px solid rgba(193,127,78,0.12)',
+          background: 'rgba(0,0,0,0.03)',
+          border: '1px solid rgba(0,0,0,0.08)',
           textAlign: 'left',
           minHeight: '52px',
         }}>
@@ -338,7 +338,7 @@ export default function EditorLoader() {
           }}>
             <span style={{
               fontWeight: 700,
-              color: '#C17F4E',
+              color: '#7A6E62',
               marginRight: '6px',
             }}>Tip:</span>
             {TIPS[tipIndex]}

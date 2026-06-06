@@ -20,12 +20,12 @@ export default function AboutPage() {
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Hero */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ background: '#C17F4E15' }}>
-            <Sofa className="w-4 h-4" style={{ color: '#C17F4E' }} />
-            <span className="text-sm font-semibold" style={{ color: '#C17F4E' }}>Our Story</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ background: 'rgba(0,0,0,0.05)' }}>
+            <Sofa className="w-4 h-4" style={{ color: '#7A6E62' }} />
+            <span className="text-sm font-semibold" style={{ color: '#7A6E62' }}>Our Story</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-            Making Interior Design <span style={{ color: '#C17F4E' }}>Accessible to Everyone</span>
+            Making Interior Design <span style={{ color: '#2D2D2D', fontWeight: 800 }}>Accessible to Everyone</span>
           </h1>
           <p className="mt-5 text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#5A4E42' }}>
             Instod was born from a simple idea: everyone deserves to visualize their dream space before committing to it. We believe great design shouldn't require expensive software or a professional degree.
@@ -67,12 +67,12 @@ export default function AboutPage() {
         {/* Founder */}
         <div className="rounded-2xl border p-8 mb-12" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>
-              <Sofa className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: '#F0E8D8' }}>
+              <Sofa className="w-10 h-10" style={{ color: '#7A6E62' }} />
             </div>
             <div className="text-center sm:text-left">
               <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Meet the Founder</h2>
-              <p className="text-sm font-semibold mb-3" style={{ color: '#C17F4E' }}>Muhammad Saadi — Founder & Lead Developer</p>
+              <p className="text-sm font-semibold mb-3" style={{ color: '#7A6E62' }}>Muhammad Saadi — Founder & Lead Developer</p>
               <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>
                 Instod started as a personal frustration: why is visualizing a room redesign so expensive and complicated? After years of working with 3D web technologies, I set out to build a tool that makes professional-quality room visualization accessible to everyone — no downloads, no subscriptions during beta, no design degree required. What began as a side project has grown into a platform used by thousands of early adopters, and I am incredibly grateful for every piece of feedback that shapes its future.
               </p>
@@ -94,8 +94,8 @@ export default function AboutPage() {
               { label: 'Dynamic Lighting', desc: '4 mood presets + custom' },
             ].map(({ label, desc }) => (
               <div key={label} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#FAF8F4' }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.1)' }}>
-                  <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                  <Sparkles className="w-4 h-4" style={{ color: '#7A6E62' }} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: '#2D2D2D' }}>{label}</p>
@@ -107,9 +107,9 @@ export default function AboutPage() {
         </div>
 
         {/* Beta Notice */}
-        <div className="text-center rounded-2xl border-2 p-8" style={{ background: 'linear-gradient(135deg, #FFF8F0, #FFF3E6)', borderColor: '#C17F4E40' }}>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: '#C17F4E' }}>
-            <Shield className="w-6 h-6 text-white" />
+        <div className="text-center rounded-2xl border-2 p-8" style={{ background: '#FAF8F4', borderColor: '#E8DFD4' }}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: '#F0E8D8' }}>
+            <Shield className="w-6 h-6" style={{ color: '#7A6E62' }} />
           </div>
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>We're in Early Access Beta</h2>
           <p className="text-sm leading-relaxed max-w-lg mx-auto" style={{ color: '#5A4E42' }}>

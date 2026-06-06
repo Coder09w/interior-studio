@@ -139,7 +139,7 @@ export default function ContactPage() {
       {/* Header */}
       <div className="text-center pt-10 pb-12 px-4">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style={{ background: '#FAF8F4', border: '1px solid #E2DDD4' }}>
-          <MessageSquare className="w-7 h-7" style={{ color: '#C17F4E' }} />
+          <MessageSquare className="w-7 h-7" style={{ color: '#7A6E62' }} />
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
           Get in Touch
@@ -158,7 +158,7 @@ export default function ContactPage() {
             <div className="rounded-2xl border p-6" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#FAF8F4' }}>
-                  <Mail className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                  <Mail className="w-5 h-5" style={{ color: '#7A6E62' }} />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Email Support</h3>
@@ -178,7 +178,7 @@ export default function ContactPage() {
             <div className="rounded-2xl border p-6" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#FAF8F4' }}>
-                  <Clock className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                  <Clock className="w-5 h-5" style={{ color: '#7A6E62' }} />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Response Time</h3>
@@ -196,7 +196,7 @@ export default function ContactPage() {
             <div className="rounded-2xl border p-6" style={{ background: '#FFFFFF', borderColor: '#E2DDD4' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#FAF8F4' }}>
-                  <MapPin className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                  <MapPin className="w-5 h-5" style={{ color: '#7A6E62' }} />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Office</h3>
@@ -212,7 +212,7 @@ export default function ContactPage() {
             {/* Priority Support Note */}
             <div className="rounded-2xl border p-5" style={{ background: 'linear-gradient(135deg, #FAF8F4, #F5F0E8)', borderColor: '#E2DDD4' }}>
               <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#C17F4E' }} />
+                <Phone className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#7A6E62' }} />
                 <div>
                   <h3 className="font-semibold text-sm" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Full Support During Beta</h3>
                   <p className="text-xs mt-1 leading-relaxed" style={{ color: '#5A4E42' }}>
@@ -333,7 +333,7 @@ export default function ContactPage() {
         <div className="mt-16">
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4" style={{ background: '#FAF8F4', border: '1px solid #E2DDD4' }}>
-              <HelpCircle className="w-6 h-6" style={{ color: '#C17F4E' }} />
+              <HelpCircle className="w-6 h-6" style={{ color: '#7A6E62' }} />
             </div>
             <h2 className="text-3xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               Frequently Asked Questions
@@ -378,8 +378,8 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#C17F4E' }}>
-                <Sofa className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#F0E8D8' }}>
+                <Sofa className="w-4 h-4" style={{ color: '#7A6E62' }} />
               </div>
               <span className="text-sm font-semibold" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
                 Instod

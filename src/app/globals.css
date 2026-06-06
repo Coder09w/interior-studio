@@ -121,33 +121,71 @@
   }
 }
 
-/* Instod custom styles — Supreme Panel Redesign */
+/* ═══════════════════════════════════════════════════════════════
+   INSTOD DESIGN SYSTEM — 60/30/10 Copper Discipline
+   
+   Structure ported from Theme A (Teal Professional) token system,
+   adapted to copper accent. Rule: copper appears ONLY on interactive
+   elements — buttons, active states, links, focus rings, badges.
+   All other surfaces use warm neutrals.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Core backgrounds (60%) ─────────────────── */
 :root {
-  --int-bg: #F5F0E8;
-  --int-fg: #2D2D2D;
-  --int-muted: #4A3E32;
-  --int-accent: #C17F4E;
-  --int-accent-hover: #A86A3D;
-  --int-accent-light: #F5E8DC;
-  --int-accent-glow: rgba(193,127,78,0.12);
-  --int-card: #FFFFFF;
-  --int-card-hover-bg: #FFF8F0;
-  --int-card-shadow: 0 1px 3px rgba(193,127,78,0.06);
-  --int-card-shadow-hover: 0 6px 20px rgba(193,127,78,0.14);
-  --int-card-radius: 16px;
-  --int-border: #E8DFD4;
-  --int-border-subtle: #F0E8DE;
-  --int-wood: #8B7355;
-  --int-ivory: #FAF8F4;
-  --int-dark: #333;
-  --int-warm: #F0E8D8;
-  --int-sidebar-bg: #FAF6F0;
-  --int-save: #6B8B5E;
-  --int-save-hover: #5A7A4E;
-  --int-danger: #B8433A;
-  --int-danger-bg: #FFF5F4;
-  --int-danger-border: #E8C8C8;
-  --int-fg-subtle: #7A6E62;
+  --int-bg:              #F5F0E8;   /* page background — warm cream */
+  --int-bg-section-alt:  #FAF6F0;   /* alternating sections */
+  --int-bg-surface:      #FFFFFF;   /* cards, panels */
+  --int-bg-surface-raised: #FFF8F0; /* hover state on cards */
+  --int-bg-input:        #FFFFFF;   /* form inputs */
+  --int-sidebar-bg:      #FAF6F0;   /* editor sidebar */
+
+/* ── Text (30%) ─────────────────────────────── */
+  --int-fg:              #2D2D2D;   /* headings, labels */
+  --int-fg-secondary:    #5A4E42;   /* body copy, descriptions */
+  --int-fg-subtle:       #7A6E62;   /* hints, placeholders, timestamps */
+  --int-fg-disabled:     #B8ADA2;   /* disabled states */
+
+/* ── Copper accent (10%) — INTERACTIVE ONLY ─── */
+  --int-accent:          #C17F4E;   /* primary buttons, active states */
+  --int-accent-hover:    #A86A3D;   /* button hover — 8% darker */
+  --int-accent-light:    #F5E8DC;   /* active bg fill (selected pills, tabs) */
+  --int-accent-bg:       rgba(193,127,78,0.08); /* badge/tag backgrounds — reduced from 0.12 */
+  --int-accent-border:   rgba(193,127,78,0.15); /* subtle accent borders — reduced from 0.20 */
+
+/* ── Borders ─────────────────────────────────── */
+  --int-border:          #E8DFD4;   /* most dividers */
+  --int-border-subtle:   #F0E8DE;   /* card outlines */
+  --int-border-strong:   #D4C8B8;   /* focused inputs */
+
+/* ── Structural / Neutral ────────────────────── */
+  --int-card:            #FFFFFF;
+  --int-card-hover-bg:   #FFF8F0;
+  --int-card-radius:     16px;
+  --int-card-shadow:     0 1px 3px rgba(0,0,0,0.05);        /* neutral shadow — was copper-tinted */
+  --int-card-shadow-hover: 0 6px 20px rgba(0,0,0,0.10);     /* neutral hover shadow */
+  --int-ivory:           #FAF8F4;
+  --int-warm:            #F0E8D8;
+  --int-wood:            #8B7355;   /* for 3D materials only, not UI */
+  --int-dark:            #333;
+  --int-muted:           #4A3E32;
+
+/* ── Semantic ────────────────────────────────── */
+  --int-save:            #6B8B5E;
+  --int-save-hover:      #5A7A4E;
+  --int-danger:          #B8433A;
+  --int-danger-bg:       #FFF5F4;
+  --int-danger-border:   #E8C8C8;
+
+/* ── Editor-specific tokens ──────────────────── */
+  --int-editor-canvas:   #F0E8D8;   /* warm off-white — makes 3D pop */
+  --int-editor-glow:     rgba(139,115,85,0.04); /* neutral sidebar glow — was copper-tinted */
+
+/* ── Dark editor sidebar (optional mode) ─────── */
+  --int-dark-surface:    #1E1B18;   /* dark sidebar background */
+  --int-dark-surface-raised: #2A2520; /* dark card bg */
+  --int-dark-border:     rgba(255,255,255,0.06); /* dark mode borders */
+  --int-dark-fg:         #E8E0D6;   /* dark mode primary text */
+  --int-dark-fg-muted:   #A09488;   /* dark mode secondary text */
 }
 
 .int-scrollbar::-webkit-scrollbar {
@@ -164,27 +202,26 @@
 /* ===== SIDEBAR SURFACE ===== */
 .int-sidebar {
   background-color: var(--int-sidebar-bg);
-  box-shadow: inset -4px 0 24px rgba(193,127,78,0.06);
+  box-shadow: inset -4px 0 24px var(--int-editor-glow);
   transition: box-shadow 0.5s ease;
 }
 
-/* ===== SECTION HEADER — accent bar + readable ===== */
+/* ===== SECTION HEADER — structural bar ===== */
 .int-section-header {
   font-family: 'Outfit', sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--int-fg);
-  border-left: 3px solid var(--int-accent);
+  border-left: 3px solid var(--int-border-strong);
   padding-left: 12px;
   margin-bottom: 12px;
   letter-spacing: 0.3px;
   line-height: 1;
 }
 
-/* ===== LOGO AREA — gradient bottom border ===== */
+/* ===== LOGO AREA — neutral bottom border ===== */
 .int-logo-border {
-  border-bottom: 2px solid transparent;
-  border-image: linear-gradient(90deg, #C17F4E, #D4A76A, #C49898) 1;
+  border-bottom: 1px solid var(--int-border);
 }
 
 /* ===== FURNITURE CARDS ===== */
@@ -225,7 +262,7 @@
   background: var(--int-accent);
   color: #fff;
   border-color: var(--int-accent);
-  box-shadow: 0 2px 8px rgba(193,127,78,0.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 /* ===== COLOR SWATCHES — bigger + accessible ===== */
@@ -239,7 +276,7 @@
 }
 .int-color-swatch-active {
   border-color: var(--int-accent);
-  box-shadow: 0 0 0 3px var(--int-accent-glow);
+  box-shadow: 0 0 0 3px var(--int-accent-bg);
 }
 .int-color-swatch:hover {
   transform: scale(1.1);
@@ -290,7 +327,7 @@
   border-radius: 14px;
   background: rgba(255,255,255,0.6);
   backdrop-filter: blur(8px);
-  color: var(--int-accent);
+  color: var(--int-fg-secondary);
   font-size: 14px;
   font-weight: 600;
   border: 1px solid var(--int-border);
@@ -304,7 +341,8 @@
 .int-btn-secondary:hover {
   background: rgba(255,255,255,0.9);
   border-color: var(--int-accent);
-  box-shadow: 0 2px 8px var(--int-accent-glow);
+  color: var(--int-accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .int-btn-danger {
@@ -340,7 +378,7 @@
 }
 .int-search-input:focus {
   border-color: var(--int-accent);
-  box-shadow: 0 0 0 3px var(--int-accent-glow);
+  box-shadow: 0 0 0 3px var(--int-accent-bg);
 }
 
 /* ===== SKIN COLOR BAR ===== */
@@ -358,18 +396,80 @@
   margin: -16px -16px 12px -16px;
 }
 
-/* ===== SECTION DIVIDER — gradient fade ===== */
+/* ===== SECTION DIVIDER — neutral gradient ===== */
 .int-section-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(232,223,212,0.5), transparent);
+  background: linear-gradient(90deg, transparent, var(--int-border), transparent);
   margin: 0 20px;
 }
 
-/* ===== AMBIENT SCENE GLOW (mood-reactive) ===== */
-.int-sidebar-glow-daylight { box-shadow: inset -4px 0 24px rgba(193,127,78,0.06); }
-.int-sidebar-glow-golden   { box-shadow: inset -4px 0 24px rgba(212,167,106,0.08); }
-.int-sidebar-glow-evening  { box-shadow: inset -4px 0 24px rgba(184,115,51,0.08); }
-.int-sidebar-glow-night    { box-shadow: inset -4px 0 24px rgba(68,85,170,0.06); }
+/* ===== AMBIENT SCENE GLOW (mood-reactive) — neutral base ===== */
+.int-sidebar-glow-daylight { box-shadow: inset -4px 0 24px rgba(139,115,85,0.04); }
+.int-sidebar-glow-golden   { box-shadow: inset -4px 0 24px rgba(160,140,100,0.05); }
+.int-sidebar-glow-evening  { box-shadow: inset -4px 0 24px rgba(120,90,50,0.05); }
+.int-sidebar-glow-night    { box-shadow: inset -4px 0 24px rgba(68,85,170,0.04); }
+
+/* ===== DARK EDITOR SIDEBAR (optional toggle) ===== */
+[data-sidebar-theme="dark"] {
+  --int-sidebar-bg: #1E1B18;
+  --int-bg: #1E1B18;
+  --int-bg-surface: #2A2520;
+  --int-bg-surface-raised: #342E28;
+  --int-bg-input: #2A2520;
+  --int-fg: #E8E0D6;
+  --int-fg-secondary: #A09488;
+  --int-fg-subtle: #787068;
+  --int-border: rgba(255,255,255,0.06);
+  --int-border-subtle: rgba(255,255,255,0.04);
+  --int-border-strong: rgba(255,255,255,0.12);
+  --int-card: #2A2520;
+  --int-card-hover-bg: #342E28;
+  --int-card-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  --int-card-shadow-hover: 0 6px 20px rgba(0,0,0,0.3);
+  --int-ivory: #2A2520;
+  --int-warm: #1E1B18;
+}
+[data-sidebar-theme="dark"] .int-section-header {
+  border-left-color: rgba(255,255,255,0.12);
+}
+[data-sidebar-theme="dark"] .int-logo-border {
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+[data-sidebar-theme="dark"] .int-furniture-card {
+  background: var(--int-card);
+  border-color: var(--int-border);
+}
+[data-sidebar-theme="dark"] .int-cat-tab {
+  background: rgba(255,255,255,0.05);
+  color: var(--int-fg-secondary);
+}
+[data-sidebar-theme="dark"] .int-cat-tab-active {
+  background: var(--int-accent);
+  color: #fff;
+}
+[data-sidebar-theme="dark"] .int-search-input {
+  background: var(--int-card);
+  border-color: var(--int-border);
+  color: var(--int-fg);
+}
+[data-sidebar-theme="dark"] .int-mat-pill {
+  border-color: var(--int-border);
+  color: var(--int-fg-secondary);
+}
+[data-sidebar-theme="dark"] .int-mat-pill-active {
+  border-color: var(--int-accent);
+  background: var(--int-accent-light);
+  color: var(--int-accent);
+}
+[data-sidebar-theme="dark"] .int-color-swatch-active {
+  border-color: var(--int-accent);
+}
+[data-sidebar-theme="dark"] .int-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+}
+[data-sidebar-theme="dark"] input[type="range"].int-range {
+  background: rgba(255,255,255,0.1);
+}
 
 input[type="range"].int-range {
   -webkit-appearance: none;
@@ -603,7 +703,7 @@ canvas {
   position: absolute;
   width: 4px; height: 4px;
   border-radius: 50%;
-  background: #C17F4E;
+  background: var(--int-fg-subtle);
   animation: loaderParticleFloat 3s ease-out infinite;
 }
 
@@ -611,7 +711,7 @@ canvas {
   display: inline-block;
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #C17F4E;
+  background: var(--int-fg-subtle);
   animation: loaderDotPulse 1.4s ease-in-out infinite;
 }
 .loader-dot-pulse span:nth-child(2) { animation-delay: 0.16s; }

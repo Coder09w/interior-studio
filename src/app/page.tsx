@@ -204,6 +204,7 @@ function Navbar() {
             >
               Instod
             </span>
+            {/* BETA badge — KEEP copper (interactive badge) */}
             <span
               className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
@@ -214,6 +215,7 @@ function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
+            {/* KEEP copper on hover — navigation link hover state */}
             <a
               href="#features"
               className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
@@ -221,6 +223,7 @@ function Navbar() {
             >
               Features
             </a>
+            {/* KEEP copper on hover — navigation link hover state */}
             <Link
               href="/pricing"
               className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
@@ -229,6 +232,7 @@ function Navbar() {
               Pricing
             </Link>
             {session ? (
+              /* KEEP copper — CTA button */
               <Link
                 href="/dashboard"
                 className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
@@ -245,6 +249,7 @@ function Navbar() {
                 >
                   Sign In
                 </Link>
+                {/* KEEP copper — CTA button */}
                 <Link
                   href="/editor"
                   className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md hover:shadow-[#C17F4E]/20"
@@ -282,10 +287,12 @@ function Navbar() {
             <Link href="/pricing" className="block text-sm font-medium py-2" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Pricing</Link>
             <div className="pt-2 flex flex-col gap-2">
               {session ? (
+                /* KEEP copper — CTA button */
                 <Link href="/dashboard" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
               ) : (
                 <>
                   <Link href="/auth/login" className="text-sm font-medium px-5 py-2.5 rounded-lg border text-center" style={{ borderColor, color: textColor }} onClick={() => setMobileOpen(false)}>Sign In</Link>
+                  {/* KEEP copper — CTA button */}
                   <Link href="/editor" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Open Editor</Link>
                 </>
               )}
@@ -331,10 +338,10 @@ function HeroSection() {
         }}
       />
 
-      {/* Decorative gradient blobs — copper-toned with glow effect */}
+      {/* Decorative gradient blobs — neutral warm tones (no copper) */}
       <div
         className="absolute top-20 right-1/4 w-96 h-96 rounded-full blur-3xl animate-float1"
-        style={{ background: 'linear-gradient(135deg, #C17F4E, #D4A76A)', willChange: 'transform, opacity', boxShadow: '0 0 120px rgba(193,127,78,0.15)' }}
+        style={{ background: 'linear-gradient(135deg, rgba(139,115,85,0.2), rgba(168,152,132,0.15))', willChange: 'transform, opacity', boxShadow: '0 0 120px rgba(139,115,85,0.06)' }}
       />
       <motion.div
         style={{ y: y2 }}
@@ -342,7 +349,7 @@ function HeroSection() {
       >
         <div
           className="w-full h-full rounded-full"
-          style={{ background: 'linear-gradient(135deg, #8B7355, #C17F4E)', willChange: 'transform, opacity', boxShadow: '0 0 80px rgba(193,127,78,0.1)' }}
+          style={{ background: 'linear-gradient(135deg, rgba(107,100,88,0.2), rgba(139,115,85,0.15))', willChange: 'transform, opacity', boxShadow: '0 0 80px rgba(139,115,85,0.04)' }}
         />
       </motion.div>
 
@@ -351,9 +358,10 @@ function HeroSection() {
           {/* Left: text */}
           <div className="text-center lg:text-left">
             <RevealOnScroll delay={0.1}>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
-                <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
-                <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>FREE 3D DESIGNER</span>
+              {/* Badge pill — neutral (not BETA) */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
+                <Sparkles className="w-4 h-4" style={{ color: '#A8A8A8' }} />
+                <span className="text-xs font-semibold tracking-wide" style={{ color: '#A8A8A8' }}>FREE 3D DESIGNER</span>
               </div>
             </RevealOnScroll>
 
@@ -364,8 +372,10 @@ function HeroSection() {
               >
                 Design Your{' '}
                 <span className="relative inline-block">
-                  <span style={{ color: '#C17F4E', textShadow: '0 0 40px rgba(193,127,78,0.3)' }}>Dream Space</span>
-                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="#C17F4E" strokeWidth="3" strokeLinecap="round" opacity="0.5"/></svg>
+                  {/* Bold white instead of copper — decorative heading emphasis */}
+                  <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Dream Space</span>
+                  {/* Neutral underline stroke (no copper) */}
+                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="#4A4A4A" strokeWidth="3" strokeLinecap="round" opacity="0.5"/></svg>
                 </span>{' '}
                 in 3D
               </h1>
@@ -376,12 +386,14 @@ function HeroSection() {
                 className="mt-5 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed"
                 style={{ color: '#A8A8A8' }}
               >
-                Design and explore rooms in <span className="font-semibold" style={{ color: '#C17F4E' }}>interactive 3D</span>. Place furniture, swap materials, adjust lighting — from any angle.
+                {/* "interactive 3D" — bold neutral instead of copper */}
+                Design and explore rooms in <span className="font-semibold" style={{ color: '#FFFFFF' }}>interactive 3D</span>. Place furniture, swap materials, adjust lighting — from any angle.
               </p>
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.4}>
               <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                {/* KEEP copper — "Start Designing" CTA button */}
                 <Link
                   href="/editor"
                   className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
@@ -398,7 +410,8 @@ function HeroSection() {
                     color: '#FFFFFF',
                   }}
                 >
-                  <Play className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                  {/* Play icon — neutral (no copper) */}
+                  <Play className="w-4 h-4" style={{ color: '#A8A8A8' }} />
                   See How It Works
                 </a>
               </div>
@@ -409,8 +422,8 @@ function HeroSection() {
               <div className="mt-10 flex items-center gap-4 justify-center lg:justify-start">
                 <div className="flex -space-x-2">
                   {[
-                    'bg-[#C17F4E]',
-                    'bg-[#8B7355]',
+                    'bg-[#7A6E62]',
+                    'bg-[#6B7B6B]',
                     'bg-[#6B8E6B]',
                     'bg-[#7B8FA1]',
                   ].map((bg, i) => (
@@ -442,7 +455,7 @@ function HeroSection() {
               style={{
                 borderColor: '#2A2A2A',
                 background: '#1E1E1E',
-                boxShadow: '0 0 60px rgba(193,127,78,0.08)',
+                boxShadow: '0 0 60px rgba(0,0,0,0.12)',
               }}
             >
               {/* Window chrome — dark theme */}
@@ -472,21 +485,21 @@ function HeroSection() {
                   pointerEvents: 'none',
                 }}
               >
-                {/* Floor grid */}
+                {/* Floor grid — neutral lines (no copper) */}
                 <div
                   className="absolute inset-0"
                   style={{
                     backgroundImage:
-                      'linear-gradient(to right, rgba(193,127,78,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(193,127,78,0.06) 1px, transparent 1px)',
+                      'linear-gradient(to right, rgba(139,115,85,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(139,115,85,0.06) 1px, transparent 1px)',
                     backgroundSize: '40px 40px',
                     transform: 'perspective(800px) rotateX(50deg)',
                     transformOrigin: 'top center',
                   }}
                 />
 
-                {/* Beta Preview badge */}
+                {/* Beta Preview badge — neutral (LIVE is not BETA) */}
                 <div className="absolute top-3 right-3 flex items-center gap-2">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold" style={{ background: 'rgba(193,127,78,0.9)', color: '#fff' }}>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#A8A8A8' }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     LIVE
                   </div>
@@ -495,7 +508,7 @@ function HeroSection() {
                 {/* Animated furniture items */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative w-full h-full">
-                    {/* Sofa — color cycles */}
+                    {/* Sofa — color cycles (no copper) */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 0.85, scale: 1 }}
@@ -504,7 +517,7 @@ function HeroSection() {
                       style={{ top: '40%', left: '25%' }}
                     >
                       <motion.div
-                        animate={{ background: ['#C17F4E', '#8B7355', '#6B8E6B', '#7B8FA1', '#C17F4E'], y: [0, -3, 0] }}
+                        animate={{ background: ['#7A6E62', '#6B7B6B', '#6B8E6B', '#7B8FA1', '#7A6E62'], y: [0, -3, 0] }}
                         transition={{ background: { duration: 8, repeat: Infinity, ease: 'easeInOut' }, y: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }}
                         className="w-24 h-12 rounded-lg shadow-md flex items-center justify-center"
                         style={{ opacity: 0.85 }}
@@ -517,18 +530,19 @@ function HeroSection() {
                       >
                         Modern Sofa
                       </span>
+                      {/* SWAP badge — neutral (not BETA) */}
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: [0, 1, 1, 0] }}
                         transition={{ duration: 8, repeat: Infinity, times: [0, 0.05, 0.9, 1] }}
                         className="absolute -top-5 px-1.5 py-0.5 rounded text-[8px] font-bold text-white"
-                        style={{ background: 'rgba(193,127,78,0.8)' }}
+                        style={{ background: 'rgba(122,110,98,0.8)' }}
                       >
                         SWAP
                       </motion.div>
                     </motion.div>
 
-                    {/* Table */}
+                    {/* Table — neutral color */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 0.85, scale: 1, y: [0, -2, 0] }}
@@ -538,7 +552,7 @@ function HeroSection() {
                     >
                       <div
                         className="w-16 h-16 rounded-lg shadow-md flex items-center justify-center"
-                        style={{ background: '#8B7355', opacity: 0.85 }}
+                        style={{ background: '#6B7B6B', opacity: 0.85 }}
                       >
                         <Layers className="w-5 h-5 text-white" />
                       </div>
@@ -550,7 +564,7 @@ function HeroSection() {
                       </span>
                     </motion.div>
 
-                    {/* Lamp */}
+                    {/* Lamp — neutral warm glow */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 0.85, scale: 1 }}
@@ -559,10 +573,10 @@ function HeroSection() {
                       style={{ top: '20%', left: '72%' }}
                     >
                       <motion.div
-                        animate={{ boxShadow: ['0 0 20px rgba(212,167,106,0.3)', '0 0 30px rgba(212,167,106,0.5)', '0 0 20px rgba(212,167,106,0.3)'] }}
+                        animate={{ boxShadow: ['0 0 20px rgba(139,115,85,0.3)', '0 0 30px rgba(139,115,85,0.5)', '0 0 20px rgba(139,115,85,0.3)'] }}
                         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                         className="w-10 h-10 rounded-full shadow-md flex items-center justify-center"
-                        style={{ background: '#D4A76A', opacity: 0.85 }}
+                        style={{ background: '#A89888', opacity: 0.85 }}
                       >
                         <Lamp className="w-4 h-4 text-white" />
                       </motion.div>
@@ -574,7 +588,7 @@ function HeroSection() {
                       </span>
                     </motion.div>
 
-                    {/* Rug */}
+                    {/* Rug — neutral (no copper) */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -586,8 +600,8 @@ function HeroSection() {
                         width: '120px',
                         height: '60px',
                         borderRadius: '8px',
-                        background: 'rgba(193,127,78,0.15)',
-                        border: '2px dashed rgba(193,127,78,0.3)',
+                        background: 'rgba(139,115,85,0.1)',
+                        border: '2px dashed rgba(139,115,85,0.2)',
                       }}
                     />
                   </div>
@@ -634,15 +648,16 @@ function HeroSection() {
               style={{
                 background: '#1E1E1E',
                 borderColor: '#2A2A2A',
-                boxShadow: '0 0 30px rgba(193,127,78,0.08)',
+                boxShadow: '0 0 30px rgba(0,0,0,0.08)',
               }}
             >
               <div className="flex items-center gap-2">
+                {/* Icon container — neutral (no copper) */}
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(193,127,78,0.15)' }}
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
                 >
-                  <Armchair className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                  <Armchair className="w-4 h-4" style={{ color: '#A8A8A8' }} />
                 </div>
                 <div>
                   <p
@@ -666,15 +681,16 @@ function HeroSection() {
               style={{
                 background: '#1E1E1E',
                 borderColor: '#2A2A2A',
-                boxShadow: '0 0 30px rgba(193,127,78,0.08)',
+                boxShadow: '0 0 30px rgba(0,0,0,0.08)',
               }}
             >
               <div className="flex items-center gap-2">
+                {/* Icon container — neutral (no copper) */}
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(193,127,78,0.15)' }}
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
                 >
-                  <Palette className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                  <Palette className="w-4 h-4" style={{ color: '#A8A8A8' }} />
                 </div>
                 <div>
                   <p
@@ -703,7 +719,7 @@ const features = [
     title: '3D Real-Time Preview',
     highlight: 'Explore',
     description: 'every angle. Rotate, zoom — see it live.',
-    gradient: 'linear-gradient(135deg, rgba(193,127,78,0.06) 0%, rgba(212,167,106,0.04) 100%)',
+    gradient: 'linear-gradient(135deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.02) 100%)',
     image: '/images/feature-preview-3d.png',
   },
   {
@@ -711,7 +727,7 @@ const features = [
     title: '30+ Furniture Items',
     highlight: 'Customize',
     description: 'every piece. Sofas, tables, lamps and more.',
-    gradient: 'linear-gradient(135deg, rgba(139,115,85,0.06) 0%, rgba(193,127,78,0.04) 100%)',
+    gradient: 'linear-gradient(135deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.02) 100%)',
     image: '/images/feature-furniture.png',
   },
   {
@@ -727,7 +743,7 @@ const features = [
     title: 'Material & Color System',
     highlight: 'Swap',
     description: 'fabrics, woods, metals — see it live.',
-    gradient: 'linear-gradient(135deg, rgba(193,127,78,0.08) 0%, rgba(139,115,85,0.04) 100%)',
+    gradient: 'linear-gradient(135deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.02) 100%)',
     image: '/images/feature-materials.png',
   },
   {
@@ -735,7 +751,7 @@ const features = [
     title: 'Save & Share',
     highlight: 'One link',
     description: 'to share. No login needed to view.',
-    gradient: 'linear-gradient(135deg, rgba(107,142,107,0.06) 0%, rgba(139,115,85,0.04) 100%)',
+    gradient: 'linear-gradient(135deg, rgba(107,142,107,0.06) 0%, rgba(0,0,0,0.02) 100%)',
     image: '/images/feature-share.png',
   },
   {
@@ -758,7 +774,8 @@ function FeaturesSection() {
               className="text-3xl sm:text-4xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
             >
-              Design <span style={{ color: '#C17F4E' }}>Beautiful Spaces</span>
+              {/* Bold emphasis instead of copper color (light bg) */}
+              Design <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Beautiful Spaces</span>
             </h2>
             <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
               Everything you need. Nothing you don't.
@@ -778,14 +795,14 @@ function FeaturesSection() {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
               }}
               whileHover={{
-                boxShadow: '0 8px 30px rgba(193,127,78,0.12)',
-                borderColor: '#C17F4E',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                borderColor: '#D4C8B8',
               }}
             >
-              {/* Copper accent top bar */}
+              {/* Accent top bar — neutral warm (no copper) */}
               <div
                 className="h-1 w-full transition-all duration-300 group-hover:h-1.5"
-                style={{ background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }}
+                style={{ background: 'linear-gradient(90deg, #E8DFD4, #D4C8B8)' }}
               />
               {/* Feature image banner */}
               <FadeInWhenVisible delay={0.1}>
@@ -807,11 +824,12 @@ function FeaturesSection() {
               {/* Content area */}
               <div className="relative z-10 p-5">
                 <div className="flex items-center gap-3 mb-3">
+                  {/* Icon container — neutral (no copper) */}
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                    style={{ background: 'rgba(193,127,78,0.1)', border: '1.5px solid rgba(193,127,78,0.15)' }}
+                    style={{ background: 'rgba(0,0,0,0.06)', border: '1.5px solid rgba(0,0,0,0.08)' }}
                   >
-                    <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                    <Icon className="w-5 h-5" style={{ color: '#7A6E62' }} />
                   </div>
                   <h3
                     className="text-[16px] font-semibold tracking-tight"
@@ -821,7 +839,8 @@ function FeaturesSection() {
                   </h3>
                 </div>
                 <p className="text-[13px] leading-[1.55]" style={{ color: '#6B5E52' }}>
-                  <span className="font-semibold" style={{ color: '#C17F4E' }}>{highlight}</span>{' '}{description}
+                  {/* Highlight text — bold neutral (no copper) */}
+                  <span className="font-semibold" style={{ color: '#2D2D2D' }}>{highlight}</span>{' '}{description}
                 </p>
               </div>
             </motion.div>
@@ -834,12 +853,12 @@ function FeaturesSection() {
 
 /* ─── Room types showcase (DARK #121212) ─── */
 const roomTypes = [
-  { icon: Sofa, label: 'Living Room', color: '#C17F4E', image: '/images/room-living.png', type: 'living' },
-  { icon: BedDouble, label: 'Bedroom', color: '#8B7355', image: '/images/room-bedroom.png', type: 'bedroom' },
-  { icon: CookingPot, label: 'Kitchen', color: '#D4A76A', image: '/images/room-kitchen.png', type: 'kitchen' },
+  { icon: Sofa, label: 'Living Room', color: '#A68B6B', image: '/images/room-living.png', type: 'living' },
+  { icon: BedDouble, label: 'Bedroom', color: '#8B7B6B', image: '/images/room-bedroom.png', type: 'bedroom' },
+  { icon: CookingPot, label: 'Kitchen', color: '#A89888', image: '/images/room-kitchen.png', type: 'kitchen' },
   { icon: Bath, label: 'Bathroom', color: '#7B8FA1', image: '/images/room-bathroom.png', type: 'bathroom' },
   { icon: Monitor, label: 'Office', color: '#3D4F5F', image: '/images/room-office.png', type: 'office' },
-  { icon: UtensilsCrossed, label: 'Dining Room', color: '#A68B6B', image: '/images/room-dining.png', type: 'dining' },
+  { icon: UtensilsCrossed, label: 'Dining Room', color: '#8B7B6B', image: '/images/room-dining.png', type: 'dining' },
 ];
 
 function RoomShowcase() {
@@ -856,7 +875,8 @@ function RoomShowcase() {
               className="text-2xl sm:text-3xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
             >
-              Design Every <span style={{ color: '#C17F4E' }}>Room</span>
+              {/* Bold white emphasis instead of copper (dark bg) */}
+              Design Every <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Room</span>
             </h2>
             <p className="mt-3 text-sm" style={{ color: '#A8A8A8' }}>
               Click any room to start designing.
@@ -888,7 +908,7 @@ function RoomShowcase() {
                   background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.1) 60%)',
                 }}
               />
-              {/* Hover CTA overlay */}
+              {/* Hover CTA overlay — KEEP copper (CTA button) */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'rgba(0,0,0,0.4)' }}>
                 <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm" style={{ background: 'rgba(193,127,78,0.9)', boxShadow: '0 0 20px rgba(193,127,78,0.3)' }}>
                   Design this room
@@ -974,12 +994,12 @@ function HowItWorksSection() {
 
           {steps.map(({ num, title, description, icon: Icon }) => (
             <motion.div key={num} variants={staggerItem} className="relative flex flex-col items-center text-center">
-              {/* Number circle */}
+              {/* Number circle — neutral (decorative, not CTA) */}
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 360 }}
                 transition={{ duration: 0.6 }}
                 className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-lg mb-6 border-2"
-                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', borderColor: 'rgba(255,255,255,0.2)' }}
+                style={{ background: 'linear-gradient(135deg, #5A4E42, #7A6E62)', borderColor: 'rgba(255,255,255,0.2)' }}
               >
                 {num}
               </motion.div>
@@ -999,7 +1019,7 @@ function HowItWorksSection() {
           ))}
         </StaggerContainer>
 
-        {/* CTA after steps */}
+        {/* CTA after steps — KEEP copper */}
         <RevealOnScroll delay={0.3}>
           <div className="text-center mt-10">
             <Link
@@ -1036,24 +1056,26 @@ function StatsSection() {
               variants={staggerItem}
               className="text-center p-6 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 group"
               style={{ background: '#1E1E1E', borderColor: '#2E2E2E', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
-              whileHover={{ boxShadow: '0 0 30px rgba(193,127,78,0.12)', borderColor: '#C17F4E' }}
+              whileHover={{ boxShadow: '0 0 30px rgba(0,0,0,0.12)', borderColor: '#4A4A4A' }}
             >
-              {/* Copper accent top bar */}
+              {/* Accent bar — neutral warm (no copper) */}
               <div
                 className="h-0.5 w-10 mx-auto rounded-full mb-4 transition-all duration-300 group-hover:w-16"
-                style={{ background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }}
+                style={{ background: '#E8DFD4' }}
               />
+              {/* Icon container — neutral (no copper) */}
               <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:scale-110"
-                style={{ background: 'rgba(193,127,78,0.12)', border: '1.5px solid rgba(193,127,78,0.2)' }}
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.08)' }}
               >
-                <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                <Icon className="w-5 h-5" style={{ color: '#A8A8A8' }} />
               </div>
+              {/* Stat value — neutral light (no copper) */}
               <p
                 className="text-3xl sm:text-4xl font-bold tracking-tight"
                 style={{
                   fontFamily: "'Outfit', sans-serif",
-                  color: '#C17F4E',
+                  color: '#FFFFFF',
                 }}
               >
                 <AnimatedCounter value={value} suffix={suffix} />
@@ -1079,15 +1101,17 @@ function TestimonialsSection() {
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <RevealOnScroll>
+          {/* EARLY ACCESS badge — KEEP copper (like BETA badge) */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.08)', borderColor: 'rgba(193,127,78,0.2)' }}>
             <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
             <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>EARLY ACCESS</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}>
-            Be a <span style={{ color: '#C17F4E' }}>Founding Member</span>
+            {/* Heading emphasis — bold neutral (light bg) */}
+            Be a <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Founding Member</span>
           </h2>
           <p className="mt-4 text-base max-w-2xl mx-auto" style={{ color: '#5A4E42' }}>
-            Your feedback shapes the product. <span className="font-semibold" style={{ color: '#C17F4E' }}>Full access, free</span> during beta.
+            Your feedback shapes the product. <span className="font-semibold" style={{ color: '#2D2D2D' }}>Full access, free</span> during beta.
           </p>
         </RevealOnScroll>
 
@@ -1119,24 +1143,25 @@ function TestimonialsSection() {
                   boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = '#C17F4E';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(193,127,78,0.12)';
+                  (e.currentTarget as HTMLElement).style.borderColor = '#D4C8B8';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = '#E8E2DA';
                   (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
                 }}
               >
-                {/* Copper accent top bar */}
+                {/* Accent bar — neutral warm (no copper) */}
                 <div
                   className="h-0.5 w-8 rounded-full mb-4 transition-all duration-300 group-hover:w-14"
-                  style={{ background: 'linear-gradient(90deg, #C17F4E, #D4A76A)' }}
+                  style={{ background: '#E8DFD4' }}
                 />
+                {/* Icon container — neutral (no copper) */}
                 <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
-                  style={{ background: 'rgba(193,127,78,0.1)', border: '1.5px solid rgba(193,127,78,0.15)' }}
+                  style={{ background: 'rgba(0,0,0,0.06)', border: '1.5px solid rgba(0,0,0,0.08)' }}
                 >
-                  <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                  <Icon className="w-5 h-5" style={{ color: '#7A6E62' }} />
                 </div>
                 <h3
                   className="text-[15px] font-semibold mb-2 tracking-tight"
@@ -1170,9 +1195,10 @@ function ShowcaseBannerSection() {
           {/* Left: text content */}
           <HorizontalReveal from="left">
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
-                <Eye className="w-4 h-4" style={{ color: '#C17F4E' }} />
-                <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>LIVE PREVIEW</span>
+              {/* LIVE PREVIEW badge — neutral (not BETA) */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
+                <Eye className="w-4 h-4" style={{ color: '#A8A8A8' }} />
+                <span className="text-xs font-semibold tracking-wide" style={{ color: '#A8A8A8' }}>LIVE PREVIEW</span>
               </div>
               <h2
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight"
@@ -1180,12 +1206,15 @@ function ShowcaseBannerSection() {
                 aria-label="See Your Designs Come Alive"
               >
                 See Your Designs{' '}
-                <span style={{ color: '#C17F4E', textShadow: '0 0 40px rgba(193,127,78,0.3)' }}>Come Alive</span>
+                {/* Heading emphasis — bold white (dark bg), no text shadow */}
+                <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Come Alive</span>
               </h2>
               <p className="mt-5 text-base sm:text-lg leading-relaxed" style={{ color: '#A8A8A8' }}>
-                Every texture, every shadow — rendered <span className="font-semibold" style={{ color: '#C17F4E' }}>instantly</span> as you design.
+                {/* Emphasis text — bold neutral (dark bg) */}
+                Every texture, every shadow — rendered <span className="font-semibold" style={{ color: '#FFFFFF' }}>instantly</span> as you design.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row items-start gap-4">
+                {/* KEEP copper — "Try It Now" CTA button */}
                 <Link
                   href="/editor"
                   className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
@@ -1195,7 +1224,7 @@ function ShowcaseBannerSection() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
-              {/* Feature highlights */}
+              {/* Feature highlights — neutral icons (no copper) */}
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {[
                   { icon: Zap, text: 'Real-time rendering' },
@@ -1206,9 +1235,9 @@ function ShowcaseBannerSection() {
                   <div key={text} className="flex items-center gap-2.5">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ background: 'rgba(193,127,78,0.15)' }}
+                      style={{ background: 'rgba(255,255,255,0.06)' }}
                     >
-                      <FIcon className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                      <FIcon className="w-4 h-4" style={{ color: '#A8A8A8' }} />
                     </div>
                     <span className="text-sm" style={{ color: '#A8A8A8' }}>{text}</span>
                   </div>
@@ -1224,7 +1253,7 @@ function ShowcaseBannerSection() {
               style={{
                 borderColor: '#2A2A2A',
                 background: '#1E1E1E',
-                boxShadow: '0 0 60px rgba(193,127,78,0.08)',
+                boxShadow: '0 0 60px rgba(0,0,0,0.12)',
               }}
             >
               {/* Window chrome — dark */}
@@ -1297,14 +1326,15 @@ function CTASection() {
     <section
       className="py-20 sm:py-28 relative overflow-hidden"
       style={{
-        background: 'radial-gradient(ellipse at center, rgba(193,127,78,0.08) 0%, #1A1A1A 70%)',
+        background: 'radial-gradient(ellipse at center, rgba(139,115,85,0.06) 0%, #1A1A1A 70%)',
       }}
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <RevealOnScroll>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.15)', borderColor: 'rgba(193,127,78,0.3)' }}>
-            <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
-            <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>NO SIGN-UP REQUIRED</span>
+          {/* NO SIGN-UP badge — neutral (not BETA) */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
+            <Sparkles className="w-4 h-4" style={{ color: '#A8A8A8' }} />
+            <span className="text-xs font-semibold tracking-wide" style={{ color: '#A8A8A8' }}>NO SIGN-UP REQUIRED</span>
           </div>
         </RevealOnScroll>
         <RevealOnScroll delay={0.1}>
@@ -1313,7 +1343,8 @@ function CTASection() {
             style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
           >
             Ready to Design Your{' '}
-            <span style={{ color: '#C17F4E', textShadow: '0 0 40px rgba(193,127,78,0.3)' }}>Dream Space</span>?
+            {/* "Dream Space" — bold white (dark bg), no text shadow/glow */}
+            <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Dream Space</span>?
           </h2>
         </RevealOnScroll>
         <RevealOnScroll delay={0.2}>
@@ -1323,6 +1354,7 @@ function CTASection() {
         </RevealOnScroll>
         <RevealOnScroll delay={0.3}>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* KEEP copper — "Open 3D Editor" CTA button */}
             <Link
               href="/editor"
               className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-200 hover:opacity-90 hover:shadow-xl hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
@@ -1342,16 +1374,17 @@ function CTASection() {
         </RevealOnScroll>
         <RevealOnScroll delay={0.4}>
           <div className="mt-6 flex items-center justify-center gap-6 text-sm" style={{ color: '#A8A8A8' }}>
+            {/* Check icons — green (#6B8B5E) instead of copper */}
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4" style={{ color: '#C17F4E' }} />
+              <Check className="w-4 h-4" style={{ color: '#6B8B5E' }} />
               Free during beta
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4" style={{ color: '#C17F4E' }} />
+              <Check className="w-4 h-4" style={{ color: '#6B8B5E' }} />
               No credit card
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4" style={{ color: '#C17F4E' }} />
+              <Check className="w-4 h-4" style={{ color: '#6B8B5E' }} />
               Works in browser
             </div>
           </div>
@@ -1378,6 +1411,7 @@ function Footer() {
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
+            {/* KEEP copper — "Open Editor" CTA button */}
             <Link
               href="/editor"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
@@ -1398,9 +1432,9 @@ function Footer() {
 
         {/* Middle row: link columns */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 py-12">
-          {/* Product */}
+          {/* Product — section heading neutral */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Product</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Product</h4>
             <ul className="space-y-3.5">
               {[
                 { label: '3D Editor', href: '/editor' },
@@ -1423,7 +1457,7 @@ function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Company</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Company</h4>
             <ul className="space-y-3.5">
               {[
                 { label: 'About', href: '/about' },
@@ -1445,7 +1479,7 @@ function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Legal</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Legal</h4>
             <ul className="space-y-3.5">
               {[
                 { label: 'Privacy Policy', href: '/privacy' },
@@ -1467,7 +1501,7 @@ function Footer() {
 
           {/* Connect */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#C17F4E' }}>Connect</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Connect</h4>
             <ul className="space-y-3.5">
               {[
                 { label: 'Twitter / X', href: 'https://twitter.com/instodapp' },
@@ -1517,18 +1551,15 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
         <HeroSection />
-        {/* Section divider: Dark hero → White features */}
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E40, transparent)' }} />
+        {/* Section divider — neutral warm (no copper) */}
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
         <FeaturesSection />
-        {/* Section divider: White features → Dark rooms */}
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E30, transparent)' }} />
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
         <RoomShowcase />
-        {/* Section divider: Dark rooms → Light how-it-works */}
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E30, transparent)' }} />
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
         <HowItWorksSection />
         <StatsSection />
-        {/* Section divider: Dark stats → White testimonials */}
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #C17F4E30, transparent)' }} />
+        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
         <TestimonialsSection />
         <ShowcaseBannerSection />
         <CTASection />

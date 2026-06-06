@@ -571,7 +571,7 @@ function ProfileContent() {
                 <div
                   className="flex items-center justify-between p-4 rounded-xl"
                   style={{
-                    background: currentPlan === 'free' ? '#F0E8D8' : currentPlan === 'pro' ? '#C17F4E10' : '#C17F4E20',
+                    background: currentPlan === 'free' ? '#F0E8D8' : currentPlan === 'pro' ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.08)',
                   }}
                 >
                   <div className="flex items-center gap-3">\n                    <div
@@ -581,7 +581,7 @@ function ProfileContent() {
                       {currentPlan === 'free' ? (
                         <Sofa className="w-6 h-6" style={{ color: '#8B7355' }} />
                       ) : currentPlan === 'pro' ? (
-                        <Zap className="w-6 h-6" style={{ color: '#C17F4E' }} />
+                        <Zap className="w-6 h-6" style={{ color: '#7A6E62' }} />
                       ) : (
                         <Crown className="w-6 h-6 text-white" />
                       )}
@@ -608,27 +608,27 @@ function ProfileContent() {
                 {/* Plan Features Summary */}
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                    <CheckCircle2 className="w-4 h-4" style={{ color: '#6B8B5E' }} />
                     <span style={{ color: '#2D2D2D' }}>{planConfig.maxProjects ?? 'Unlimited'} projects</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" style={{ color: '#C17F4E' }} />
+                    <CheckCircle2 className="w-4 h-4" style={{ color: '#6B8B5E' }} />
                     <span style={{ color: '#2D2D2D' }}>{planConfig.maxRoomsPerProject ?? 'Unlimited'} rooms/project</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.shareLinks ? '#C17F4E' : '#D4CFC7' }} />
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.shareLinks ? '#6B8B5E' : '#D4CFC7' }} />
                     <span style={{ color: planConfig.features.shareLinks ? '#2D2D2D' : '#5A4E42' }}>Share links</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.exportImage ? '#C17F4E' : '#D4CFC7' }} />
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.exportImage ? '#6B8B5E' : '#D4CFC7' }} />
                     <span style={{ color: planConfig.features.exportImage ? '#2D2D2D' : '#5A4E42' }}>Image/PDF export</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.customDimensions ? '#C17F4E' : '#D4CFC7' }} />
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.customDimensions ? '#6B8B5E' : '#D4CFC7' }} />
                     <span style={{ color: planConfig.features.customDimensions ? '#2D2D2D' : '#5A4E42' }}>Custom dimensions</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.allRoomTypes ? '#C17F4E' : '#D4CFC7' }} />
+                    <CheckCircle2 className="w-4 h-4" style={{ color: planConfig.features.allRoomTypes ? '#6B8B5E' : '#D4CFC7' }} />
                     <span style={{ color: planConfig.features.allRoomTypes ? '#2D2D2D' : '#5A4E42' }}>All room types</span>
                   </div>
                 </div>

@@ -27,7 +27,7 @@ function WebGLUnsupported() {
     <div className="flex items-center justify-center min-h-screen" style={{ background: '#F5F0E8' }}>
       <div className="text-center max-w-md w-full px-6">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: '#E8D5C4' }}>
-          <svg className="w-8 h-8" style={{ color: '#C17F4E' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="w-8 h-8" style={{ color: '#7A6E62' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -42,21 +42,21 @@ function WebGLUnsupported() {
         </p>
         <ul className="text-sm mt-3 space-y-1.5 text-left max-w-xs mx-auto" style={{ color: '#5A4E42' }}>
           <li className="flex items-start gap-2">
-            <span style={{ color: '#C17F4E' }}>•</span>
+            <span style={{ color: '#7A6E62' }}>•</span>
             WebGL is disabled in your browser settings
           </li>
           <li className="flex items-start gap-2">
-            <span style={{ color: '#C17F4E' }}>•</span>
+            <span style={{ color: '#7A6E62' }}>•</span>
             Your graphics drivers need updating
           </li>
           <li className="flex items-start gap-2">
-            <span style={{ color: '#C17F4E' }}>•</span>
+            <span style={{ color: '#7A6E62' }}>•</span>
             You are using an older browser that does not support WebGL
           </li>
         </ul>
 
-        <div className="mt-6 p-4 rounded-xl text-left" style={{ background: 'rgba(193,127,78,0.08)', border: '1px solid rgba(193,127,78,0.15)' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#C17F4E' }}>How to fix this:</p>
+        <div className="mt-6 p-4 rounded-xl text-left" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid #E8DFD4' }}>
+          <p className="text-xs font-semibold mb-2" style={{ color: '#7A6E62' }}>How to fix this:</p>
           <ul className="text-xs space-y-1" style={{ color: '#5A4E42' }}>
             <li>1. Update to the latest version of Chrome, Firefox, Safari, or Edge</li>
             <li>2. Enable hardware acceleration in your browser settings</li>

@@ -161,8 +161,8 @@ export default function SignupPage() {
               'Revision snapshots & export tools',
             ].map((benefit) => (
               <div key={benefit} className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(193,127,78,0.2)' }}>
-                  <Check className="w-3 h-3" style={{ color: '#C17F4E' }} />
+                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,139,94,0.2)' }}>
+                  <Check className="w-3 h-3" style={{ color: '#6B8B5E' }} />
                 </div>
                 <span className="text-white/80 text-sm">{benefit}</span>
               </div>
@@ -218,8 +218,8 @@ export default function SignupPage() {
                   'Free during beta — no credit card',
                 ].map((benefit) => (
                   <div key={benefit} className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(193,127,78,0.15)' }}>
-                      <Check className="w-2.5 h-2.5" style={{ color: '#C17F4E' }} />
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,139,94,0.15)' }}>
+                      <Check className="w-2.5 h-2.5" style={{ color: '#6B8B5E' }} />
                     </div>
                     <span className="text-xs" style={{ color: '#5A4E42' }}>{benefit}</span>
                   </div>

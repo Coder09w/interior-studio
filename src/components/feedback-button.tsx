@@ -102,7 +102,7 @@ export function FeedbackButton() {
           className="fixed bottom-24 right-6 z-50 w-[340px] rounded-2xl border-2 shadow-2xl overflow-hidden"
           style={{
             background: '#FFFFFF',
-            borderColor: '#C17F4E30',
+            borderColor: '#E8DFD4',
           }}
         >
           {/* Header */}

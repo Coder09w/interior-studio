@@ -69,7 +69,7 @@ export function UpgradePrompt({
     return (
       <div
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer hover:opacity-90 transition-opacity"
-        style={{ background: '#C17F4E15', color: '#C17F4E' }}
+        style={{ background: 'rgba(0,0,0,0.05)', color: '#5A4E42' }}
         onClick={handleUpgrade}
       >
         <Lock className="w-3 h-3" />
@@ -84,7 +84,7 @@ export function UpgradePrompt({
       className="relative rounded-xl border-2 p-5"
       style={{
         background: 'linear-gradient(135deg, #FFFAF5, #FFF5EB)',
-        borderColor: '#C17F4E40',
+        borderColor: '#E8DFD4',
       }}
     >
       {onDismiss && (
@@ -100,9 +100,9 @@ export function UpgradePrompt({
       <div className="flex items-start gap-3">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: '#C17F4E15' }}
+          style={{ background: '#F0E8D8' }}
         >
-          <Zap className="w-5 h-5" style={{ color: '#C17F4E' }} />
+          <Zap className="w-5 h-5" style={{ color: '#7A6E62' }} />
         </div>
         <div className="flex-1">
           <h4 className="font-semibold text-sm" style={{ color: '#2D2D2D' }}>
@@ -172,14 +172,14 @@ export function FeatureGate({
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           className="flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-          style={{ background: '#FFFFFF', border: '1px solid #C17F4E40' }}
+          style={{ background: '#FFFFFF', border: '1px solid #E8DFD4' }}
           onClick={() => window.location.href = '/pricing'}
         >
-          <Lock className="w-4 h-4" style={{ color: '#C17F4E' }} />
-          <span className="text-xs font-semibold" style={{ color: '#C17F4E' }}>
+          <Lock className="w-4 h-4" style={{ color: '#7A6E62' }} />
+          <span className="text-xs font-semibold" style={{ color: '#5A4E42' }}>
             {feature} — {PLAN_CONFIG[requiredPlan].name} only
           </span>
-          <ChevronRight className="w-3 h-3" style={{ color: '#C17F4E' }} />
+          <ChevronRight className="w-3 h-3" style={{ color: '#7A6E62' }} />
         </div>
       </div>
     </div>

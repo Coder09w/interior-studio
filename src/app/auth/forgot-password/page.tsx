@@ -178,7 +178,7 @@ export default function ForgotPasswordPage() {
               style={{ backgroundColor: '#FAF8F4' }}
             >
               <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#C17F4E' }} />
+                <Mail className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#7A6E62' }} />
                 <p className="text-xs text-left" style={{ color: '#5A4E42' }}>
                   If you don&apos;t see the email, check your spam folder. The link will expire in 1 hour.
                 </p>
