@@ -585,3 +585,24 @@ Stage Summary:
 - Commit: cdc5820 "Pre-launch sprint: security, design, performance, and mobile fixes"
 - 8 files changed, 301 insertions, 84 deletions
 - Build passes clean, TypeScript passes clean
+
+---
+Task ID: bugfix-round-2
+Agent: Main (Super Z)
+Task: Fix 4 editor bugs — floor/wall color mismatch, daylight lock, presets relocation, save toast spam
+
+Work Log:
+- Analyzed screenshot with VLM — identified floor color not matching selection due to texture map multiplication
+- Diagnosed daylight background being overridden by preset lightMood and skin lighting overrides
+- Identified presets in sidebar as destructive UX risk (accidental clicks destroy work)
+- Diagnosed auto-save toast appearing every 30s as annoying UX
+- Fixed floor color: Added color parameter to makeHardwoodTexture, makeMarbleTexture, makeConcreteTexture, makeTileTexture; updateFloorColor() now calls buildRoom() to regenerate textures
+- Fixed daylight lock: loadPreset() no longer sets lightMood; applySkinToSkeleton() skips lighting changes entirely
+- Moved presets: Removed from desktop sidebar, added floating panel triggered by magic wand button in bottom toolbar, added confirm() dialog before loading any preset
+- Fixed save toast: saveRoom() no longer calls showToast; only manual Save button shows "Room saved!" toast
+- Build passes clean (tsc + next build), pushed commit e3a9978
+
+Stage Summary:
+- 4 bugs fixed, 2 files changed, 73 insertions, 115 deletions (net -42 lines)
+- Commit: e3a9978 on main
+- Deployed to https://instod.vercel.app
