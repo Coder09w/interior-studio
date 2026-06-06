@@ -67,11 +67,11 @@ function getCachedTex(key: string, gen: () => THREE.CanvasTexture): THREE.Canvas
   return t;
 }
 
-function makeHardwoodTexture(w: number, d: number): THREE.CanvasTexture {
-  return getCachedTex(`hw_${w}_${d}`, () => {
+function makeHardwoodTexture(w: number, d: number, color = '#B8956A'): THREE.CanvasTexture {
+  return getCachedTex(`hw_${w}_${d}_${color}`, () => {
     const c = document.createElement('canvas'); c.width = 256; c.height = 256;
     const ctx = c.getContext('2d')!;
-    ctx.fillStyle = '#B8956A'; ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = color; ctx.fillRect(0, 0, 256, 256);
     for (let i = 0; i < 30; i++) {
       const y = Math.random() * 256;
       ctx.strokeStyle = `rgba(90,60,30,${Math.random() * 0.12})`; ctx.lineWidth = Math.random() * 2 + 0.5;
@@ -89,11 +89,11 @@ function makeHardwoodTexture(w: number, d: number): THREE.CanvasTexture {
   });
 }
 
-function makeMarbleTexture(w: number, d: number): THREE.CanvasTexture {
-  return getCachedTex(`mb_${w}_${d}`, () => {
+function makeMarbleTexture(w: number, d: number, color = '#F0EDE8'): THREE.CanvasTexture {
+  return getCachedTex(`mb_${w}_${d}_${color}`, () => {
     const c = document.createElement('canvas'); c.width = 256; c.height = 256;
     const ctx = c.getContext('2d')!;
-    ctx.fillStyle = '#F0EDE8'; ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = color; ctx.fillRect(0, 0, 256, 256);
     for (let i = 0; i < 12; i++) {
       ctx.strokeStyle = `rgba(160,150,140,${Math.random() * 0.15 + 0.03})`; ctx.lineWidth = Math.random() * 1.5 + 0.3;
       ctx.beginPath(); const sy = Math.random() * 256;
@@ -107,11 +107,11 @@ function makeMarbleTexture(w: number, d: number): THREE.CanvasTexture {
   });
 }
 
-function makeConcreteTexture(w: number, d: number): THREE.CanvasTexture {
-  return getCachedTex(`cn_${w}_${d}`, () => {
+function makeConcreteTexture(w: number, d: number, color = '#8A8680'): THREE.CanvasTexture {
+  return getCachedTex(`cn_${w}_${d}_${color}`, () => {
     const c = document.createElement('canvas'); c.width = 256; c.height = 256;
     const ctx = c.getContext('2d')!;
-    ctx.fillStyle = '#B8B4B0'; ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = color; ctx.fillRect(0, 0, 256, 256);
     for (let i = 0; i < 200; i++) {
       const x = Math.random() * 256; const y = Math.random() * 256;
       ctx.fillStyle = `rgba(${130 + Math.random() * 30},${125 + Math.random() * 30},${120 + Math.random() * 30},${Math.random() * 0.15})`;
@@ -138,11 +138,11 @@ function makeCarpetTexture(w: number, d: number, color = '#B8A898'): THREE.Canva
   });
 }
 
-function makeTileTexture(w: number, d: number): THREE.CanvasTexture {
-  return getCachedTex(`tl_${w}_${d}`, () => {
+function makeTileTexture(w: number, d: number, color = '#E8E0D8'): THREE.CanvasTexture {
+  return getCachedTex(`tl_${w}_${d}_${color}`, () => {
     const c = document.createElement('canvas'); c.width = 256; c.height = 256;
     const ctx = c.getContext('2d')!;
-    ctx.fillStyle = '#E8E4E0'; ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = color; ctx.fillRect(0, 0, 256, 256);
     const tileSize = 32;
     ctx.strokeStyle = 'rgba(180,170,160,0.4)'; ctx.lineWidth = 2;
     for (let x = 0; x <= 256; x += tileSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 256); ctx.stroke(); }
@@ -259,6 +259,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const [snapshots, setSnapshots] = useState<Array<{ name: string; data: FurnitureData[]; roomSettings: Record<string, unknown>; timestamp: number }>>([]);
   const [showSnapshots, setShowSnapshots] = useState(false);
   const [snapshotName, setSnapshotName] = useState('');
+  const [presetPanelOpen, setPresetPanelOpen] = useState(false);
 
   // Skin System state
   const [activeSkin, setActiveSkin] = useState<string>('default');
@@ -668,9 +669,9 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     setTimeout(() => {
       setSaveStatus('saved');
       saveStatusRef.current = 'saved';
-      showToast('Room saved!');
+      // Silent save — no toast for auto-saves. User sees "Saved" indicator in UI.
     }, 500);
-  }, [currentRoomId, serializeFurniture, showToast, designName]);
+  }, [currentRoomId, serializeFurniture, designName]);
 
   /* ===== BUILD ROOM ===== */
   const buildRoom = useCallback(() => {
@@ -710,11 +711,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     let floorTex: THREE.CanvasTexture;
     let floorRoughness = 0.65;
     switch (ft) {
-      case 'marble': floorTex = makeMarbleTexture(w, d); floorRoughness = 0.2; break;
-      case 'concrete': floorTex = makeConcreteTexture(w, d); floorRoughness = 0.85; break;
+      case 'marble': floorTex = makeMarbleTexture(w, d, fc); floorRoughness = 0.2; break;
+      case 'concrete': floorTex = makeConcreteTexture(w, d, fc); floorRoughness = 0.85; break;
       case 'carpet': floorTex = makeCarpetTexture(w, d, fc); floorRoughness = 0.95; break;
-      case 'tile': floorTex = makeTileTexture(w, d); floorRoughness = 0.5; break;
-      default: floorTex = makeHardwoodTexture(w, d);
+      case 'tile': floorTex = makeTileTexture(w, d, fc); floorRoughness = 0.5; break;
+      default: floorTex = makeHardwoodTexture(w, d, fc);
     }
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: floorTex, roughness: floorRoughness, metalness: 0 }));
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.name = 'floor'; roomGroup.add(floor);
@@ -1491,25 +1492,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   }, [markSceneDirty]);
 
   const updateFloorColor = useCallback((color: string) => {
-    const roomGroup = roomGroupRef.current;
-    if (!roomGroup) return;
     floorColorRef.current = color;
-    roomGroup.traverse(c => {
-      if (c instanceof THREE.Mesh && c.name === 'floor') {
-        const ft = floorTypeRef.current;
-        if (ft === 'carpet') {
-          const w = roomWRef.current, d = roomDRef.current;
-          const newTex = makeCarpetTexture(w, d, color);
-          (c.material as THREE.MeshStandardMaterial).map = newTex;
-          (c.material as THREE.MeshStandardMaterial).needsUpdate = true; // Texture swap = structural change
-        } else {
-          (c.material as THREE.MeshStandardMaterial).color.set(color);
-          // Phase 3.1 — color.set() is a uniform update, no needsUpdate needed
-        }
-      }
-    });
+    // All floor types bake the color into their texture — must rebuild
+    buildRoom();
     markSceneDirty();
-  }, [markSceneDirty]);
+  }, [buildRoom, markSceneDirty]);
 
   /* ===== SELECT / DESELECT ===== */
   const selectItem = useCallback((obj: THREE.Group) => {
@@ -1703,6 +1690,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
   /* ===== LOAD DESIGN PRESET ===== */
   const loadPreset = useCallback((preset: DesignPreset) => {
+    if (!confirm('Load this preset? This will replace your current room design.')) return;
+
     // Clear existing furniture
     placedItemsRef.current.forEach(item => {
       sceneRef.current?.remove(item);
@@ -1721,7 +1710,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     wallColRef.current = preset.wallColor; setWallCol(preset.wallColor);
     floorTypeRef.current = preset.floorType; setFloorType(preset.floorType);
     floorColorRef.current = preset.floorColor; setFloorColor(preset.floorColor);
-    lightMoodRef.current = preset.lightMood; setLightMood(preset.lightMood);
+    // Don't override user's lighting mood — user controls lighting explicitly
     setDesignName(preset.name); designNameRef.current = preset.name;
 
     // Rebuild room
@@ -3195,42 +3184,6 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       </div>
       <div className="int-section-divider" />
 
-      {/* Design Presets */}
-      <div className="p-5">
-        <p className="int-section-header">Design Presets</p>
-        <div className="flex gap-1.5 mb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => {
-            const lockedTypes = new Set(['kitchen', 'dining', 'bathroom']);
-            const isLocked = isGuest && lockedTypes.has(type);
-            return (
-            <button key={type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + type.charAt(0).toUpperCase() + type.slice(1)); return; } setSelectedRoomType(type); }}
-              className={`px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer transition-all whitespace-nowrap border relative ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
-              {isLocked && <i className="fas fa-lock text-[7px] absolute top-0.5 right-0.5" style={{ color: '#7A6E62' }} />}
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </button>
-          );})}
-        </div>
-        <div className="space-y-1.5 max-h-40 overflow-y-auto int-scrollbar">
-          {getPresetsForRoom(selectedRoomType).map(preset => (
-            <button key={preset.id} onClick={() => loadPreset(preset)}
-              className="w-full p-4 rounded-2xl border cursor-pointer transition-all text-left hover:shadow-lg hover:-translate-y-1"
-              style={{ borderColor: preset.accent + '30', background: '#FFFFFF' }}>
-              <div className="int-preset-accent-bar" style={{ background: `linear-gradient(90deg, ${preset.accent}, transparent)` }} />
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
-                  <i className={`fas ${preset.icon} text-[14px]`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
-                  <p className="text-[11px] truncate" style={{ color: '#7A6E62' }}>{preset.description}</p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="int-section-divider" />
-
       {/* Design Skins */}
       <div className="p-5">
         <p className="int-section-header">Design Skins</p>
@@ -3287,7 +3240,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       <div className="p-5">
         <p className="int-section-header">Actions</p>
         <div className="flex flex-col gap-2">
-          <button onClick={saveRoom} className="int-btn-primary w-full"><i className="fas fa-save" />Save Room</button>
+          <button onClick={() => { saveRoom(); showToast('Room saved!'); }} className="int-btn-primary w-full"><i className="fas fa-save" />Save Room</button>
           <button onClick={() => window.location.href = '/dashboard'} className="int-btn-secondary w-full"><i className="fas fa-th-large" />Dashboard</button>
           <div className="flex gap-2">
             <button onClick={() => setShowSnapshots(true)} className="int-btn-secondary flex-1"><i className="fas fa-camera-retro" />Snapshots</button>
@@ -3942,6 +3895,45 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
             <button onClick={undo} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} aria-label="Undo" title="Undo (Ctrl+Z)"><i className="fas fa-undo text-xs" /></button>
             <button onClick={redo} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} aria-label="Redo" title="Redo (Ctrl+Y)"><i className="fas fa-redo text-xs" /></button>
+            {/* Presets toggle button - Desktop */}
+            <button onClick={() => setPresetPanelOpen(!presetPanelOpen)} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: presetPanelOpen ? '#C17F4E' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: presetPanelOpen ? '#C17F4E' : '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: presetPanelOpen ? '#fff' : '#2D2D2D', fontSize: 11, transition: 'background 0.4s ease' }} aria-label="Presets" title="Design Presets"><i className="fas fa-magic" /></button>
+          </div>
+        )}
+
+        {/* Presets floating panel - Desktop */}
+        {!isMobile && presetPanelOpen && (
+          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 border rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', borderColor: '#E2DDD4', width: 320, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold" style={{ color: '#2D2D2D' }}>Design Presets</p>
+              <button onClick={() => setPresetPanelOpen(false)} className="text-xs cursor-pointer" style={{ color: '#7A6E62' }}><i className="fas fa-times" /></button>
+            </div>
+            <div className="flex gap-1 mb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => {
+                const lockedTypes = new Set(['kitchen', 'dining', 'bathroom']);
+                const isLocked = isGuest && lockedTypes.has(type);
+                return (
+                <button key={type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + type.charAt(0).toUpperCase() + type.slice(1)); return; } setSelectedRoomType(type); }}
+                  className={`px-2 py-1 rounded text-[10px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${isLocked ? 'opacity-50' : ''} ${selectedRoomType === type ? 'border-[#C17F4E] text-[#C17F4E] bg-[rgba(193,127,78,0.05)]' : 'border-[#E2DDD4] text-[#5A4E42] bg-[#FAF8F4]'}`}>
+                  {isLocked && <i className="fas fa-lock text-[6px] mr-0.5" style={{ color: '#7A6E62' }} />}
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              );})}
+            </div>
+            <div className="space-y-1.5">
+              {getPresetsForRoom(selectedRoomType).map(preset => (
+                <button key={preset.id} onClick={() => { loadPreset(preset); setPresetPanelOpen(false); }}
+                  className="w-full p-2.5 rounded-xl border cursor-pointer transition-all text-left hover:shadow-sm flex items-center gap-2"
+                  style={{ borderColor: preset.accent + '30', background: '#FFFFFF' }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
+                    <i className={`fas ${preset.icon} text-[12px]`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
+                    <p className="text-[9px]" style={{ color: '#7A6E62' }}>{preset.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -3999,7 +3991,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {/* Expanded action buttons */}
             {mobileActionsOpen && (
               <div className="flex flex-col gap-1.5 mt-1.5 items-center">
-                <button onClick={() => { saveRoom(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
+                <button onClick={() => { saveRoom(); showToast('Room saved!'); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
                 <button onClick={() => { undo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Undo" title="Undo"><i className="fas fa-undo text-[11px]" /></button>
                 <button onClick={() => { redo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Redo" title="Redo"><i className="fas fa-redo text-[11px]" /></button>
                 <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>

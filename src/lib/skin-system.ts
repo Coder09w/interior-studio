@@ -223,11 +223,11 @@ export function applySkinToSkeleton(
   roomGroup: THREE.Group,
   placedItems: THREE.Group[],
   skin: SkinDefinition,
-  ambientLight: THREE.AmbientLight | null,
-  dirLight: THREE.DirectionalLight | null,
-  renderer: THREE.WebGLRenderer | null,
-  hemiLight?: THREE.HemisphereLight | null,
-  fillLight?: THREE.DirectionalLight | null
+  _ambientLight: THREE.AmbientLight | null,
+  _dirLight: THREE.DirectionalLight | null,
+  _renderer: THREE.WebGLRenderer | null,
+  _hemiLight?: THREE.HemisphereLight | null,
+  _fillLight?: THREE.DirectionalLight | null
 ): void {
   // 1. Apply room structure materials
   roomGroup.traverse(child => {
@@ -287,42 +287,8 @@ export function applySkinToSkeleton(
     });
   });
 
-  // 3. Apply lighting changes
-  if (skin.lighting) {
-    const l = skin.lighting;
-    if (ambientLight && l.ambientColor) {
-      ambientLight.color.set(l.ambientColor);
-      if (l.ambientIntensity !== undefined) ambientLight.intensity = l.ambientIntensity;
-    }
-    if (dirLight && l.dirColor) {
-      dirLight.color.set(l.dirColor);
-      if (l.dirIntensity !== undefined) dirLight.intensity = l.dirIntensity;
-    }
-    if (renderer && l.exposure !== undefined) {
-      // Clamp exposure to prevent ACES Filmic clipping (above ~1.15 blows out highlights)
-      renderer.toneMappingExposure = Math.max(0.3, Math.min(l.exposure, 1.15));
-    }
-    if (l.bgColor) {
-      // Only apply skin bgColor if the current mood is NOT a dark mood (evening/night)
-      // Dark moods should keep their dark background for proper atmosphere
-      const currentBg = scene.background as THREE.Color | null;
-      const currentBgHex = currentBg ? currentBg.getHex() : 0xFFFFFF;
-      const isDarkMood = currentBgHex < 0x808080; // dark backgrounds have low hex values
-      if (!isDarkMood) {
-        scene.background = new THREE.Color(l.bgColor);
-        scene.fog = new THREE.FogExp2(new THREE.Color(l.bgColor).getHex(), 0.018);
-      }
-    }
-    // Update hemisphere light intensity based on skin's ambient ratio
-    if (hemiLight && l.ambientIntensity !== undefined) {
-      hemiLight.intensity = l.ambientIntensity * 0.7;
-    }
-    // Update fill light to match skin tone
-    if (fillLight && l.dirColor) {
-      fillLight.color.set(l.dirColor);
-      fillLight.intensity = (l.dirIntensity || 1.0) * 0.2;
-    }
-  }
+  // 3. Lighting changes — SKIPPED. User controls lighting mood explicitly.
+  // Skins only affect material appearance (color, roughness, metalness), not scene lighting.
 
   // 4. Batch needsUpdate — mark all modified materials once, then render once
   // This avoids per-material shader recompilation spikes
