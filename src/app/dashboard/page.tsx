@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { useProjects, useUsageStats, type SWRProject, type SWRUsageStats } from '@/hooks/use-swr';
 import { formatDistanceToNow } from 'date-fns';
 import {
   Sofa,
@@ -50,29 +51,11 @@ import { type PlanKey, PLAN_CONFIG, getUpgradePlan } from '@/lib/plans';
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+// Project and UsageStats types are now imported from @/hooks/use-swr
+// to maintain consistency between the SWR hooks and component consumers.
 
-interface Room {
-  id: string;
-  name: string;
-  roomType: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  rooms: Room[];
-}
-
-interface UsageStats {
-  projects: { current: number; limit: number | null };
-  roomsPerProject: { current: number; limit: number | null };
-  furniturePerRoom: { current: number; limit: number | null };
-  plan: PlanKey;
-  planName: string;
-}
+type Project = SWRProject;
+type UsageStats = SWRUsageStats;
 
 // ─── Room type display helpers ───────────────────────────────────────────────
 
@@ -106,8 +89,14 @@ function DashboardContent() {
   const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // ── Phase 2: SWR for data fetching ──
+  // Replaces raw fetch() calls with stale-while-revalidate pattern.
+  // On return visits, cached data renders instantly; fresh data
+  // loads silently in the background.
+  const { projects, isLoading: projectsLoading, mutate: mutateProjects } = useProjects();
+  const { usageStats, isLoading: usageLoading, mutate: mutateUsage } = useUsageStats();
+
   const [isCreating, setIsCreating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -115,8 +104,10 @@ function DashboardContent() {
   const [renameValue, setRenameValue] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
-  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
+
+  // Derive overall loading state from SWR + auth
+  const isLoading = status === 'loading' || (status === 'authenticated' && projectsLoading && usageLoading);
 
   const currentPlan = (session?.user as Record<string, unknown>)?.plan as PlanKey || 'free';
   const planConfig = PLAN_CONFIG[currentPlan];
@@ -134,54 +125,22 @@ function DashboardContent() {
     if (searchParams.get('upgraded') === 'true') {
       // Refresh session to get new plan
       updateSession();
-      // Show a brief success indicator
+      // Revalidate SWR cache to pick up new plan limits
+      mutateUsage();
       const timer = setTimeout(() => {
-        // Remove query param
         window.history.replaceState({}, '', '/dashboard');
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [searchParams, updateSession]);
+  }, [searchParams, updateSession, mutateUsage]);
 
-  // Fetch projects
-  const fetchProjects = useCallback(async () => {
-    try {
-      const res = await fetch('/api/projects');
-      if (res.ok) {
-        const data = await res.json();
-        setProjects(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Fetch usage stats
-  const fetchUsageStats = useCallback(async () => {
-    try {
-      const res = await fetch('/api/plan/usage');
-      if (res.ok) {
-        const data = await res.json();
-        setUsageStats(data);
-        // Show upgrade banner for free users approaching limits
-        if (data.plan === 'free') {
-          const projectPct = data.projects.limit ? data.projects.current / data.projects.limit : 0;
-          setShowUpgradeBanner(projectPct >= 0.66); // Show at 2/3 projects used
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch usage stats:', error);
-    }
-  }, []);
-
+  // Show upgrade banner for free users approaching limits
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchProjects();
-      fetchUsageStats();
+    if (usageStats && usageStats.plan === 'free') {
+      const projectPct = usageStats.projects.limit ? usageStats.projects.current / usageStats.projects.limit : 0;
+      setShowUpgradeBanner(projectPct >= 0.66);
     }
-  }, [status, fetchProjects, fetchUsageStats]);
+  }, [usageStats]);
 
   // Create new project
   const handleCreateProject = async () => {
@@ -204,7 +163,7 @@ function DashboardContent() {
 
       if (res.ok) {
         const project = await res.json();
-        fetchUsageStats(); // Refresh usage
+        mutateUsage(); // Refresh usage stats via SWR
         router.push(`/editor/${project.id}`);
       }
     } catch (error) {
@@ -223,12 +182,14 @@ function DashboardContent() {
         method: 'DELETE',
       });
       if (res.ok) {
-        setProjects((prev) =>
-          prev.filter((p) => p.id !== selectedProject.id)
+        // Optimistic update: remove project from SWR cache immediately
+        await mutateProjects(
+          projects.filter((p) => p.id !== selectedProject.id),
+          { revalidate: true } // Then revalidate in background
         );
         setDeleteDialogOpen(false);
         setSelectedProject(null);
-        fetchUsageStats(); // Refresh usage
+        mutateUsage(); // Refresh usage stats
       }
     } catch (error) {
       console.error('Failed to delete project:', error);
@@ -249,8 +210,10 @@ function DashboardContent() {
       });
       if (res.ok) {
         const updated = await res.json();
-        setProjects((prev) =>
-          prev.map((p) => (p.id === updated.id ? updated : p))
+        // Optimistic update: replace project in SWR cache immediately
+        await mutateProjects(
+          projects.map((p) => (p.id === updated.id ? updated : p)),
+          { revalidate: true } // Then revalidate in background
         );
         setRenameDialogOpen(false);
         setSelectedProject(null);
@@ -296,8 +259,8 @@ function DashboardContent() {
     return Math.min(Math.round((current / limit) * 100), 100);
   };
 
-  // Loading state
-  if (status === 'loading' || (status === 'authenticated' && isLoading)) {
+  // Loading state (derived from auth + SWR)
+  if (status === 'loading' || (status === 'authenticated' && projectsLoading && projects.length === 0)) {
     return <PageLoader />;
   }
 
