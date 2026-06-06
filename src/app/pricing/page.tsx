@@ -481,6 +481,7 @@ export default function PricingPage() {
           {!session && (
             <Link
               href="/editor"
+              prefetch={false}
               className="mt-3 inline-flex items-center gap-2 text-sm font-medium transition-colors"
               style={{ color: '#C17F4E' }}
             >

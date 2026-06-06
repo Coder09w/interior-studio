@@ -53,12 +53,51 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['three'],
   // Provide empty turbopack config to suppress warnings
   turbopack: {},
-  // Security headers applied to all responses
+  // ── Phase 1.2: Tree-shake barrel exports ──
+  // optimizePackageImports tells Next.js's bundler to treat barrel-export
+  // packages as tree-shakeable. 'three' CANNOT be listed here because it
+  // conflicts with serverExternalPackages in Turbopack — but the webpack
+  // externals config below already handles server-side tree shaking.
+  // lucide-react is the main win here: 1000+ icons, only ~20 used.
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
+  // ── Phase 1.3: AVIF/WebP image optimization pipeline ──
+  // next/image will automatically serve AVIF (best compression) to browsers
+  // that support it, falling back to WebP, then to the original format.
+  // Vercel's image optimization CDN handles the conversion on-the-fly.
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+  // ── Headers ──
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      // ── Phase 1.5: Immutable cache for static 3D model assets ──
+      // GLB/KTX2/thumbnail files use content-hash filenames — they will NEVER
+      // change at the same URL. This tells browsers and CDNs to cache them
+      // for a full year without revalidation, eliminating repeat downloads.
+      {
+        source: "/models/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/thumbnails/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // Next.js static assets already have immutable hashes in filenames
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
       },
     ];
   },

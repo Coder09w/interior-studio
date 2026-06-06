@@ -233,6 +233,13 @@
   box-shadow: var(--int-card-shadow);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+  /* Phase 1.6 — content-visibility: auto skips rendering off-screen cards.
+     TRAP AVOIDED: Fixed height (80px) prevents scrollbar jumping.
+     Without contain-intrinsic-size, the browser assumes 0px height for
+     off-screen items, causing erratic scroll behavior as items scroll
+     into view and their real height is calculated. */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 80px;
 }
 .int-furniture-card:hover {
   border-color: var(--int-accent);

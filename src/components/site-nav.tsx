@@ -93,6 +93,7 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
                 </Link>
                 <Link
                   href="/editor"
+                  prefetch={false}
                   className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
                   style={{ background: '#C17F4E' }}
                 >
@@ -121,7 +122,7 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
             <a href="#features" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#5A4E42' }}>Features</a>
             <Link href="/pricing" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#5A4E42' }}>Pricing</Link>
             <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#5A4E42' }}>Sign In</Link>
-            <Link href="/editor" onClick={() => setMobileOpen(false)} className="block text-sm font-medium px-4 py-2 rounded-lg text-white text-center" style={{ background: '#C17F4E' }}>Open Editor</Link>
+            <Link href="/editor" prefetch={false} onClick={() => setMobileOpen(false)} className="block text-sm font-medium px-4 py-2 rounded-lg text-white text-center" style={{ background: '#C17F4E' }}>Open Editor</Link>
           </div>
         </div>
       )}

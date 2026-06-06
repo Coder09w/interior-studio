@@ -252,6 +252,7 @@ function Navbar() {
                 {/* KEEP copper — CTA button */}
                 <Link
                   href="/editor"
+                  prefetch={false}
                   className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md hover:shadow-[#C17F4E]/20"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
                 >
@@ -293,7 +294,7 @@ function Navbar() {
                 <>
                   <Link href="/auth/login" className="text-sm font-medium px-5 py-2.5 rounded-lg border text-center" style={{ borderColor, color: textColor }} onClick={() => setMobileOpen(false)}>Sign In</Link>
                   {/* KEEP copper — CTA button */}
-                  <Link href="/editor" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Open Editor</Link>
+                  <Link href="/editor" prefetch={false} className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Open Editor</Link>
                 </>
               )}
             </div>
@@ -396,6 +397,7 @@ function HeroSection() {
                 {/* KEEP copper — "Start Designing" CTA button */}
                 <Link
                   href="/editor"
+                  prefetch={false}
                   className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
                 >
@@ -885,7 +887,7 @@ function RoomShowcase() {
         </RevealOnScroll>
         <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-6">
           {roomTypes.map(({ icon: Icon, label, color, image, type }) => (
-            <Link key={label} href={`/editor?room=${type}`} className="block">
+            <Link key={label} href={`/editor?room=${type}`} prefetch={false} className="block">
               <motion.div
                 variants={staggerItem}
                 whileHover={{ y: -6, scale: 1.02 }}
@@ -1024,6 +1026,7 @@ function HowItWorksSection() {
           <div className="text-center mt-10">
             <Link
               href="/editor"
+              prefetch={false}
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
             >
@@ -1217,6 +1220,7 @@ function ShowcaseBannerSection() {
                 {/* KEEP copper — "Try It Now" CTA button */}
                 <Link
                   href="/editor"
+                  prefetch={false}
                   className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
                 >
@@ -1357,6 +1361,7 @@ function CTASection() {
             {/* KEEP copper — "Open 3D Editor" CTA button */}
             <Link
               href="/editor"
+              prefetch={false}
               className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-200 hover:opacity-90 hover:shadow-xl hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
             >
@@ -1414,6 +1419,7 @@ function Footer() {
             {/* KEEP copper — "Open Editor" CTA button */}
             <Link
               href="/editor"
+              prefetch={false}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
             >
@@ -1445,6 +1451,7 @@ function Footer() {
                 <li key={label}>
                   <Link
                     href={href}
+                    prefetch={String(href).startsWith('/editor') ? false : undefined}
                     className="text-[15px] text-gray-400 hover:text-white transition-colors"
                     style={{ fontFamily: "'DM Sans', sans-serif" }}
                   >

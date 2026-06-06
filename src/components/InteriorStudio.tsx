@@ -199,6 +199,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const autoRotateRef = useRef(false);
   const animFrameRef = useRef<number>(0);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Phase 1.7 — Debounced save after drag interaction ends.
+  // Saves to localStorage 500ms after the user finishes dragging,
+  // so they don't lose work between the 30s auto-save intervals.
+  const dragSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const historyRef = useRef<FurnitureData[][]>([[]]);
   const historyIdxRef = useRef(0);
 
@@ -233,6 +237,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [shadowsEnabled, setShadowsEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  // Phase 1.7 — Debounced search query. The input updates instantly (no lag),
+  // but the heavy filter + re-render only fires 300ms after the user stops typing.
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [designName, setDesignName] = useState('Untitled Room');
@@ -264,6 +272,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const [selectedRoomType, setSelectedRoomType] = useState<PresetRoomType>('living');
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [hasCachedDesign, setHasCachedDesign] = useState(false);
+
+  // Phase 1.7 — Debounce search query: input updates instantly, but the
+  // expensive useMemo filter only recalculates 300ms after typing stops.
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
+  }, [searchQuery]);
 
   // Apply initialRoomType from URL query param (e.g. ?room=bedroom)
   useEffect(() => {
@@ -1949,11 +1965,20 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         controls.enabled = true;
         canvas.style.cursor = 'crosshair';
         needsRenderRef.current?.();
+        // Phase 1.7 — Debounced save after ceiling light drag
+        if (dragSaveTimeoutRef.current) clearTimeout(dragSaveTimeoutRef.current);
+        dragSaveTimeoutRef.current = setTimeout(() => { saveRoom(); }, 500);
         return;
       }
       // Normal mode - push history if we were dragging
       if (isDragRef.current && dragItemRef.current) {
         pushHistory();
+        // Phase 1.7 — Debounced save after furniture drag (500ms).
+        // The Three.js scene already updated optimistically during drag.
+        // Now persist to localStorage after a short delay, allowing
+        // rapid sequential drags to batch into a single save.
+        if (dragSaveTimeoutRef.current) clearTimeout(dragSaveTimeoutRef.current);
+        dragSaveTimeoutRef.current = setTimeout(() => { saveRoom(); }, 500);
       }
       isDragRef.current = false; dragItemRef.current = null; controls.enabled = true; canvas.style.cursor = 'grab';
     };
@@ -2142,6 +2167,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       // Dispose texture cache
       texCache.forEach(v => v.dispose()); texCache.clear();
       if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
+      if (dragSaveTimeoutRef.current) clearTimeout(dragSaveTimeoutRef.current);
       clearTimeout(minLoadTimer);
     };
   }, []);
@@ -2398,7 +2424,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   }, [designName, showToast]);
 
   // Filtered furniture items
-  const filteredItems = useMemo(() => searchQuery ? furnitureItems[currentCat].filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())) : furnitureItems[currentCat], [searchQuery, currentCat]);
+  // Phase 1.7 — Uses debouncedSearch instead of searchQuery so the filter
+  // only recalculates 300ms after the user stops typing, preventing rapid
+  // re-renders on every keystroke in the furniture catalog.
+  const filteredItems = useMemo(() => debouncedSearch ? furnitureItems[currentCat].filter(i => i.name.toLowerCase().includes(debouncedSearch.toLowerCase())) : furnitureItems[currentCat], [debouncedSearch, currentCat]);
 
   const floorTypeOptions = [
     { id: 'hardwood', label: 'Hardwood', color: '#B8956A' },

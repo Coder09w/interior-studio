@@ -118,6 +118,7 @@ export default function AboutPage() {
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/editor"
+              prefetch={false}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
             >

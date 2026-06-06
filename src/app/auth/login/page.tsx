@@ -242,6 +242,7 @@ export default function LoginPage() {
             <div className="mt-4 pt-4 border-t" style={{ borderColor: '#E2DDD4' }}>
               <Link
                 href="/editor"
+                prefetch={false}
                 className="w-full h-10 flex items-center justify-center gap-2 rounded-lg text-sm font-medium border cursor-pointer transition-colors hover:opacity-90"
                 style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FFFFFF' }}
               >

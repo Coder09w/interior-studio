@@ -35,6 +35,7 @@ export default function NotFound() {
           </Link>
           <Link
             href="/editor"
+            prefetch={false}
             className="inline-flex items-center justify-center px-6 py-3 rounded-xl font-medium text-sm border transition-all hover:shadow-sm"
             style={{ borderColor: "#E2DDD4", color: "#2D2D2D" }}
           >
