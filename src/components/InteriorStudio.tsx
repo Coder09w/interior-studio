@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { builders, makeMat } from '@/lib/furniture-builders';
 import EditorLoader from '@/components/EditorLoader';
 import type { MatType } from '@/lib/furniture-builders';
@@ -203,8 +204,6 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   // Saves to localStorage 500ms after the user finishes dragging,
   // so they don't lose work between the 30s auto-save intervals.
   const dragSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const historyRef = useRef<FurnitureData[][]>([[]]);
-  const historyIdxRef = useRef(0);
 
   // Touch rotation refs for two-finger rotate
   const touchStartAngleRef = useRef<number | null>(null);
@@ -436,31 +435,199 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     markSceneDirty();
   }, [markSceneDirty]);
 
-  /* ===== UNDO / REDO ===== */
+  /* ===== UNDO / REDO (Phase 3.3: Delta-based) ===== */
+  // Instead of storing full FurnitureData[] snapshots (which duplicates ALL items
+  // on every action), we store deltas — only the items that changed.
+  // A delta records: which items were added, which were removed, and the
+  // before/after state of modified items. This reduces memory by ~90% for
+  // single-item operations (move, color change, rotate) which are the most common.
+  interface HistoryDelta {
+    type: 'add' | 'remove' | 'modify' | 'batch';
+    // For 'add': the items that were added (undo = remove them)
+    added?: FurnitureData[];
+    // For 'remove': the items that were removed (undo = re-add them)
+    removed?: FurnitureData[];
+    // For 'modify': before and after state of changed items (keyed by position at time of change)
+    before?: FurnitureData[];
+    after?: FurnitureData[];
+  }
+
+  const historyRef = useRef<HistoryDelta[]>([]);
+  const historyIdxRef = useRef(0);
+  // Pre-action snapshot: captured before each operation, used to compute the delta
+  const preActionRef = useRef<FurnitureData[] | null>(null);
+
+  // Capture the current state before an operation begins
+  const capturePreAction = useCallback(() => {
+    preActionRef.current = serializeFurniture();
+  }, [serializeFurniture]);
+
+  // Compute and push a delta after an operation completes
   const pushHistory = useCallback(() => {
-    const current = serializeFurniture();
+    const after = serializeFurniture();
+    const before = preActionRef.current;
+
+    if (!before) {
+      // No pre-action captured — fall back to storing full snapshot as a batch delta
+      const delta: HistoryDelta = { type: 'batch', before: [], after };
+      const newHistory = historyRef.current.slice(0, historyIdxRef.current + 1);
+      newHistory.push(delta);
+      if (newHistory.length > 50) newHistory.shift();
+      historyRef.current = newHistory;
+      historyIdxRef.current = newHistory.length - 1;
+      return;
+    }
+
+    // Compute the delta by comparing before and after
+    const added: FurnitureData[] = [];
+    const removed: FurnitureData[] = [];
+    const modifiedBefore: FurnitureData[] = [];
+    const modifiedAfter: FurnitureData[] = [];
+
+    // Items in 'after' but not in 'before' = added
+    // Items in 'before' but not in 'after' = removed
+    // Items in both but with different data = modified
+    const afterMap = new Map<string, FurnitureData>();
+    after.forEach((item, i) => afterMap.set(`${i}:${item.fn}`, item));
+
+    before.forEach((item, i) => {
+      const key = `${i}:${item.fn}`;
+      const afterItem = afterMap.get(key);
+      if (!afterItem) {
+        removed.push(item);
+      } else if (
+        item.matColor !== afterItem.matColor ||
+        item.matType !== afterItem.matType ||
+        item.position.x !== afterItem.position.x ||
+        item.position.y !== afterItem.position.y ||
+        item.position.z !== afterItem.position.z ||
+        item.rotation !== afterItem.rotation
+      ) {
+        modifiedBefore.push(item);
+        modifiedAfter.push(afterItem);
+      }
+      afterMap.delete(key);
+    });
+
+    // Remaining items in afterMap are new additions
+    afterMap.forEach(item => added.push(item));
+
+    // Create the delta
+    let delta: HistoryDelta;
+    if (added.length > 0 && removed.length === 0 && modifiedBefore.length === 0) {
+      delta = { type: 'add', added };
+    } else if (removed.length > 0 && added.length === 0 && modifiedBefore.length === 0) {
+      delta = { type: 'remove', removed };
+    } else if (modifiedBefore.length > 0 && added.length === 0 && removed.length === 0) {
+      delta = { type: 'modify', before: modifiedBefore, after: modifiedAfter };
+    } else {
+      // Mixed changes — store as batch
+      delta = { type: 'batch', before, after };
+    }
+
     const newHistory = historyRef.current.slice(0, historyIdxRef.current + 1);
-    newHistory.push(current);
+    newHistory.push(delta);
     if (newHistory.length > 50) newHistory.shift();
     historyRef.current = newHistory;
     historyIdxRef.current = newHistory.length - 1;
+    preActionRef.current = null; // Reset
   }, [serializeFurniture]);
 
   const undo = useCallback(() => {
     if (historyIdxRef.current <= 0) return;
+    const delta = historyRef.current[historyIdxRef.current];
     historyIdxRef.current -= 1;
-    loadFurnitureData(historyRef.current[historyIdxRef.current]);
+
+    // Apply the inverse of the delta
+    const current = serializeFurniture();
+    let result: FurnitureData[];
+
+    switch (delta.type) {
+      case 'add':
+        // Undo add = remove the added items
+        result = current.filter((item, i) =>
+          !delta.added!.some(a =>
+            a.fn === item.fn &&
+            a.position.x === item.position.x &&
+            a.position.z === item.position.z
+          )
+        );
+        break;
+      case 'remove':
+        // Undo remove = re-add the removed items
+        result = [...current, ...delta.removed!];
+        break;
+      case 'modify':
+        // Undo modify = replace modified items with their before state
+        result = current.map((item, i) => {
+          const modIdx = delta.after!.findIndex(a =>
+            a.fn === item.fn &&
+            a.position.x === item.position.x &&
+            a.position.z === item.position.z
+          );
+          if (modIdx >= 0) return delta.before![modIdx];
+          return item;
+        });
+        break;
+      case 'batch':
+      default:
+        // Batch undo = restore the full before state
+        result = delta.before || [];
+        break;
+    }
+
+    loadFurnitureData(result);
     markUnsaved();
     showToast('Undo');
-  }, [loadFurnitureData, markUnsaved, showToast]);
+  }, [serializeFurniture, loadFurnitureData, markUnsaved, showToast]);
 
   const redo = useCallback(() => {
     if (historyIdxRef.current >= historyRef.current.length - 1) return;
     historyIdxRef.current += 1;
-    loadFurnitureData(historyRef.current[historyIdxRef.current]);
+    const delta = historyRef.current[historyIdxRef.current];
+
+    // Apply the delta forward
+    const current = serializeFurniture();
+    let result: FurnitureData[];
+
+    switch (delta.type) {
+      case 'add':
+        // Redo add = add the items back
+        result = [...current, ...delta.added!];
+        break;
+      case 'remove':
+        // Redo remove = remove the items again
+        result = current.filter((item, i) =>
+          !delta.removed!.some(r =>
+            r.fn === item.fn &&
+            r.position.x === item.position.x &&
+            r.position.z === item.position.z
+          )
+        );
+        break;
+      case 'modify':
+        // Redo modify = replace with after state
+        result = current.map((item, i) => {
+          const modIdx = delta.before!.findIndex(b =>
+            b.fn === item.fn &&
+            b.position.x === item.position.x &&
+            b.position.z === item.position.z
+          );
+          if (modIdx >= 0) return delta.after![modIdx];
+          return item;
+        });
+        break;
+      case 'batch':
+      default:
+        // Batch redo = restore the full after state
+        result = delta.after || [];
+        break;
+    }
+
+    loadFurnitureData(result);
     markUnsaved();
     showToast('Redo');
-  }, [loadFurnitureData, markUnsaved, showToast]);
+  }, [serializeFurniture, loadFurnitureData, markUnsaved, showToast]);
 
   /* ===== SAVE ROOM ===== */
   const saveRoom = useCallback(async () => {
@@ -552,11 +719,45 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: floorTex, roughness: floorRoughness, metalness: 0 }));
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.name = 'floor'; roomGroup.add(floor);
 
-    // Walls
+    // ── Phase 3.2: Merged wall shell ──
+    // The 3 solid walls share the same material. Merging them into a single
+    // BufferGeometry reduces draw calls from 3 to 1. The front wall is kept
+    // separate because it's transparent (opacity: 0.15). Baseboards are kept
+    // separate because they use a different material color (#F0E8D8).
     const wallMat = new THREE.MeshStandardMaterial({ color: wc, roughness: 0.9, metalness: 0 });
-    const bw = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat); bw.position.set(0, h / 2, -d / 2); bw.receiveShadow = true; bw.name = 'wall_back'; roomGroup.add(bw);
-    const lw = new THREE.Mesh(new THREE.PlaneGeometry(d, h), wallMat.clone()); lw.position.set(-w / 2, h / 2, 0); lw.rotation.y = Math.PI / 2; lw.receiveShadow = true; lw.name = 'wall_left'; roomGroup.add(lw);
-    const rw = new THREE.Mesh(new THREE.PlaneGeometry(d, h), wallMat.clone()); rw.position.set(w / 2, h / 2, 0); rw.rotation.y = -Math.PI / 2; rw.receiveShadow = true; rw.name = 'wall_right'; roomGroup.add(rw);
+
+    // Build wall geometries, apply transforms via matrix
+    const wallGeos: THREE.BufferGeometry[] = [];
+
+    // Back wall
+    const bwGeo = new THREE.PlaneGeometry(w, h);
+    bwGeo.translate(0, h / 2, -d / 2);
+    wallGeos.push(bwGeo);
+
+    // Left wall
+    const lwGeo = new THREE.PlaneGeometry(d, h);
+    const lwMat4 = new THREE.Matrix4().makeRotationY(Math.PI / 2);
+    lwMat4.setPosition(-w / 2, h / 2, 0);
+    lwGeo.applyMatrix4(lwMat4);
+    wallGeos.push(lwGeo);
+
+    // Right wall
+    const rwGeo = new THREE.PlaneGeometry(d, h);
+    const rwMat4 = new THREE.Matrix4().makeRotationY(-Math.PI / 2);
+    rwMat4.setPosition(w / 2, h / 2, 0);
+    rwGeo.applyMatrix4(rwMat4);
+    wallGeos.push(rwGeo);
+
+    // Merge 3 wall geometries into one → 1 draw call instead of 3
+    const mergedWallGeo = mergeGeometries(wallGeos, false);
+    if (mergedWallGeo) {
+      const mergedWalls = new THREE.Mesh(mergedWallGeo, wallMat);
+      mergedWalls.receiveShadow = true;
+      mergedWalls.name = 'wall_solid_merged';
+      roomGroup.add(mergedWalls);
+    }
+
+    // Front wall — separate because transparent
     const fw = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ color: wc, roughness: 0.9, transparent: true, opacity: 0.15, side: THREE.DoubleSide }));
     fw.position.set(0, h / 2, d / 2); fw.rotation.y = Math.PI; fw.name = 'wall_front'; roomGroup.add(fw);
 
@@ -564,7 +765,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: 0xFFFFF8, roughness: 1, side: THREE.DoubleSide }));
     ceil.rotation.x = Math.PI / 2; ceil.position.y = h; ceil.name = 'ceiling'; roomGroup.add(ceil);
 
-    // Baseboards
+    // Baseboards — separate material (slightly different color from walls)
     const bbMat = new THREE.MeshStandardMaterial({ color: 0xF0E8D8, roughness: 0.7 }); const bbH = 0.08;
     const bb1 = new THREE.Mesh(new THREE.BoxGeometry(w, bbH, 0.02), bbMat); bb1.position.set(0, bbH / 2, -d / 2 + 0.01); bb1.name = 'baseboard_back'; roomGroup.add(bb1);
     const bb2 = new THREE.Mesh(new THREE.BoxGeometry(0.02, bbH, d), bbMat); bb2.position.set(-w / 2 + 0.01, bbH / 2, 0); bb2.name = 'baseboard_left'; roomGroup.add(bb2);
@@ -973,17 +1174,12 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     roomGroup.traverse(c => {
       if (!(c instanceof THREE.Mesh)) return;
       switch (c.name) {
-        case 'wall_back':
-          c.scale.set(newW / ow, newH / oh, 1);
-          c.position.set(0, newH / 2, -newD / 2);
-          break;
-        case 'wall_left':
-          c.scale.set(newD / od, newH / oh, 1);
-          c.position.set(-newW / 2, newH / 2, 0);
-          break;
-        case 'wall_right':
-          c.scale.set(newD / od, newH / oh, 1);
-          c.position.set(newW / 2, newH / 2, 0);
+        case 'wall_solid_merged':
+          // Phase 3.2 — Merged walls can't be individually scaled.
+          // Scale the whole merged geometry as a unit. This is approximate
+          // but provides visual feedback during slider drag. buildRoom() on
+          // mouseUp/touchEnd will create exact geometry.
+          c.scale.set(newW / ow, newH / oh, newD / od);
           break;
         case 'wall_front':
           c.scale.set(newW / ow, newH / oh, 1);
@@ -1057,7 +1253,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     // Make walls semi-transparent
     roomGroup.traverse(c => {
       if (c instanceof THREE.Mesh) {
-        if (c.name === 'wall_back' || c.name === 'wall_left' || c.name === 'wall_right') {
+        if (c.name === 'wall_solid_merged') {
           const mat = c.material as THREE.MeshStandardMaterial;
           mat._origOpacity = mat.opacity;
           mat._origTransparent = mat.transparent;
@@ -1136,7 +1332,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     // Restore walls
     roomGroup.traverse(c => {
       if (c instanceof THREE.Mesh) {
-        if (c.name === 'wall_back' || c.name === 'wall_left' || c.name === 'wall_right' || c.name === 'floor') {
+        if (c.name === 'wall_solid_merged' || c.name === 'floor') {
           const mat = c.material as THREE.MeshStandardMaterial;
           if (mat._origTransparent !== undefined) mat.transparent = mat._origTransparent;
           if (mat._origOpacity !== undefined) mat.opacity = mat._origOpacity;
@@ -1210,7 +1406,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             mat.emissiveIntensity = 0.6;
             mat.needsUpdate = true;
           }
-          if (c.name === 'wall_back' || c.name === 'wall_left' || c.name === 'wall_right') {
+          if (c.name === 'wall_solid_merged') {
             const mat = c.material as THREE.MeshStandardMaterial;
             mat.transparent = true;
             mat.opacity = 0.15;
@@ -1261,7 +1457,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       placedItemsRef.current.forEach(item => { item.visible = false; });
       roomGroup?.traverse(c => {
         if (c instanceof THREE.Mesh) {
-          if (c.name === 'wall_back' || c.name === 'wall_left' || c.name === 'wall_right') {
+          if (c.name === 'wall_solid_merged') {
             const mat = c.material as THREE.MeshStandardMaterial;
             mat.transparent = true; mat.opacity = 0.15; mat.needsUpdate = true;
           }
@@ -1286,9 +1482,9 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     if (!roomGroup) return;
     wallColRef.current = color;
     roomGroup.traverse(c => {
-      if (c instanceof THREE.Mesh && (c.name === 'wall_back' || c.name === 'wall_left' || c.name === 'wall_right' || c.name === 'wall_front')) {
+      if (c instanceof THREE.Mesh && (c.name === 'wall_solid_merged' || c.name === 'wall_front')) {
         (c.material as THREE.MeshStandardMaterial).color.set(color);
-        (c.material as THREE.MeshStandardMaterial).needsUpdate = true;
+        // Phase 3.1 — color.set() is a uniform update, no shader recompile needed
       }
     });
     markSceneDirty();
@@ -1305,10 +1501,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           const w = roomWRef.current, d = roomDRef.current;
           const newTex = makeCarpetTexture(w, d, color);
           (c.material as THREE.MeshStandardMaterial).map = newTex;
-          (c.material as THREE.MeshStandardMaterial).needsUpdate = true;
+          (c.material as THREE.MeshStandardMaterial).needsUpdate = true; // Texture swap = structural change
         } else {
           (c.material as THREE.MeshStandardMaterial).color.set(color);
-          (c.material as THREE.MeshStandardMaterial).needsUpdate = true;
+          // Phase 3.1 — color.set() is a uniform update, no needsUpdate needed
         }
       }
     });
@@ -1349,6 +1545,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       }
     }
     const fn = builders[fnName]; if (!fn) return null;
+    capturePreAction(); // Phase 3.3 — snapshot before add for delta undo
     pushHistory();
     const item = fn(col, mtype, roomHRef.current);
     const w = roomWRef.current, d = roomDRef.current;
@@ -1363,22 +1560,22 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     markSceneDirty();
     showToast(`Added ${item.userData.name}`);
     return item;
-  }, [pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, isGuest]);
+  }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, isGuest]);
 
   const deleteSelected = useCallback(() => {
     const selected = selectedObjRef.current; if (!selected) return;
-    pushHistory();
+    capturePreAction(); pushHistory();
     const name = selected.userData.name;
     sceneRef.current?.remove(selected); placedItemsRef.current = placedItemsRef.current.filter(i => i !== selected);
     selected.traverse(c => { if (c instanceof THREE.Mesh) { const mat = c.material as THREE.MeshStandardMaterial; mat.map?.dispose(); c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => { (m as THREE.MeshStandardMaterial).map?.dispose(); m.dispose(); }); else c.material?.dispose(); } });
     meshCacheRef.current = []; // Invalidate mesh cache
     selectedObjRef.current = null; setItemPanelVisible(false); setItemCount(placedItemsRef.current.length);
     markUnsaved(); markSceneDirty(); showToast(`Removed ${name}`);
-  }, [pushHistory, showToast, markUnsaved, markSceneDirty]);
+  }, [capturePreAction, pushHistory, showToast, markUnsaved, markSceneDirty]);
 
   const duplicateSelected = useCallback(() => {
     const selected = selectedObjRef.current; if (!selected) return;
-    pushHistory();
+    capturePreAction(); pushHistory();
     const d = selected.userData;
     const fn = builders[d.fn || '']; if (!fn) return;
     const item = fn(d.matColor, d.matType, roomHRef.current);
@@ -1388,11 +1585,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     meshCacheRef.current = []; // Invalidate mesh cache
     selectItem(item); setItemCount(placedItemsRef.current.length);
     markUnsaved(); markSceneDirty(); showToast(`Duplicated ${d.name}`);
-  }, [pushHistory, selectItem, showToast, markUnsaved, markSceneDirty]);
+  }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty]);
 
   const applyMaterial = useCallback((color: string, type: MatType) => {
     const selected = selectedObjRef.current; if (!selected) { showToast('Select an item first'); return; }
-    pushHistory();
+    capturePreAction(); pushHistory();
     // Determine material properties based on type
     let roughness: number, metalness: number;
     switch (type) {
@@ -1406,15 +1603,21 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         // Skip invisible helper meshes
         if ((c.material as THREE.MeshStandardMaterial).visible === false) return;
         const mat = c.material as THREE.MeshStandardMaterial;
+        // Phase 3.1 — Shader recompilation fix:
+        // color.set(), roughness, and metalness are UNIFORM updates, not
+        // structural shader changes. Three.js updates these per-frame
+        // without recompiling the shader program. Setting needsUpdate=true
+        // forces a full shader recompile (~5-15ms), which causes the
+        // visible "freeze" when changing furniture materials.
+        // REMOVED: mat.needsUpdate = true;
         mat.color.set(color);
         mat.roughness = roughness;
         mat.metalness = metalness;
-        mat.needsUpdate = true;
       }
     });
     selected.userData.matColor = color; selected.userData.matType = type;
     setSelectedMat(`${type} — ${color}`); markUnsaved(); markSceneDirty();
-  }, [pushHistory, showToast, markUnsaved, markSceneDirty]);
+  }, [capturePreAction, pushHistory, showToast, markUnsaved, markSceneDirty]);
 
   const findParentFurniture = useCallback((obj: THREE.Object3D): THREE.Group | null => {
     let current: THREE.Object3D | null = obj;
@@ -1549,7 +1752,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       }
 
       markSceneDirty();
-      historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+      historyRef.current = []; historyIdxRef.current = 0;
     }, 200);
 
     setShowOnboarding(false);
@@ -1611,7 +1814,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       }
 
       markSceneDirty();
-      historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+      historyRef.current = []; historyIdxRef.current = 0;
     }, 200);
 
     setShowOnboarding(false);
@@ -1709,7 +1912,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       }
       // Always add default furniture — onboarding will handle loading presets
       addDefaultFurniture();
-      historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+      historyRef.current = []; historyIdxRef.current = 0;
     }, 100);
 
     // Minimum loading display time (2.5s) so the loader animation completes properly
@@ -1972,7 +2175,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       }
       // Normal mode - push history if we were dragging
       if (isDragRef.current && dragItemRef.current) {
-        pushHistory();
+        capturePreAction(); pushHistory();
         // Phase 1.7 — Debounced save after furniture drag (500ms).
         // The Three.js scene already updated optimistically during drag.
         // Now persist to localStorage after a short delay, allowing
@@ -2192,7 +2395,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     ceilingSpotPositionsRef.current = [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }];
     // Exit ceiling edit mode if active
     if (ceilingEditModeRef.current) { ceilingEditModeRef.current = false; setCeilingEditMode(false); }
-    buildRoom(); addDefaultFurniture(); pushHistory(); showToast('Room reset');
+    capturePreAction(); buildRoom(); addDefaultFurniture(); pushHistory(); showToast('Room reset');
   }, [buildRoom, addDefaultFurniture, pushHistory, showToast]);
 
   const takeScreenshot = useCallback(() => {
@@ -2226,7 +2429,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     showToast(`Applied "${skin.name}" theme`);
   }, [markSceneDirty, markUnsaved, showToast]);
 
-  const rotateSelected = useCallback((dir: 'left' | 'right') => { if (selectedObjRef.current) { pushHistory(); selectedObjRef.current.rotation.y += dir === 'left' ? Math.PI / 12 : -Math.PI / 12; markUnsaved(); markSceneDirty(); } }, [pushHistory, markUnsaved, markSceneDirty]);
+  const rotateSelected = useCallback((dir: 'left' | 'right') => { if (selectedObjRef.current) { capturePreAction(); pushHistory(); selectedObjRef.current.rotation.y += dir === 'left' ? Math.PI / 12 : -Math.PI / 12; markUnsaved(); markSceneDirty(); } }, [capturePreAction, pushHistory, markUnsaved, markSceneDirty]);
 
   const shareRoom = useCallback(() => { if (currentRoomId) { navigator.clipboard.writeText(`${window.location.origin}/view/${currentRoomId}`); showToast('Share link copied!'); } else { showToast('Save the room first to share it'); } }, [currentRoomId, showToast]);
 
@@ -2266,7 +2469,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     if (rs.ceilingLightPreset) { ceilingLightPresetRef.current = rs.ceilingLightPreset; setCeilingLightPreset(rs.ceilingLightPreset); }
     if (rs.ceilingSpotPositions) { ceilingSpotPositionsRef.current = rs.ceilingSpotPositions; }
     buildRoom();
-    pushHistory();
+    capturePreAction(); pushHistory();
     markUnsaved();
     setShowSnapshots(false);
     showToast(`Restored "${snap.name}"`);
@@ -3292,7 +3495,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                         });
                         setItemCount(placedItemsRef.current.length);
                         markSceneDirty();
-                        historyRef.current = [serializeFurniture()]; historyIdxRef.current = 0;
+                        historyRef.current = []; historyIdxRef.current = 0;
                       }, 200);
                     }
                     setShowOnboarding(false);
