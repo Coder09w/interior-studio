@@ -2093,6 +2093,9 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         }
         if (f) {
           selectItem(f); dragItemRef.current = f; isDragRef.current = true;
+          // Reset drag smoothing state for this object
+          f.userData._prevDragDx = 0;
+          f.userData._prevDragDz = 0;
           controls.enabled = false;
           raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current);
           dragOffsetRef.current.copy(intersectionRef.current).sub(f.position);
@@ -2138,14 +2141,28 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       pointerRef.current.y = -((e.clientY - r.top) / r.height) * 2 + 1;
       raycasterRef.current.setFromCamera(pointerRef.current, camera);
       if (raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current)) {
-        // Delta-based drag: compute how much the intersection point moved since last frame
+        // Delta-based drag with dampened sensitivity
+        // Uses a low sensitivity factor + damping to prevent the erratic
+        // side-to-side jitter that occurs at perspective camera angles.
         const dx = intersectionRef.current.x - lastDragWorldRef.current.x;
         const dz = intersectionRef.current.z - lastDragWorldRef.current.z;
-        // Sensitivity factor: 0.7 slows drag to feel controllable without being sluggish
-        const sensitivity = 0.7;
-        const scaledDx = dx * sensitivity;
-        const scaledDz = dz * sensitivity;
-        // Apply delta to current position (not raw intersection, so camera angle doesn't distort)
+        // Low sensitivity (0.35) prevents fast, uncontrollable movement.
+        // The "1:1 feel" comes from consistency, not speed.
+        const sensitivity = 0.35;
+        // Deadzone: ignore sub-millimeter deltas that cause micro-jitter
+        const deadzone = 0.002;
+        const rawDx = Math.abs(dx) < deadzone ? 0 : dx * sensitivity;
+        const rawDz = Math.abs(dz) < deadzone ? 0 : dz * sensitivity;
+        // Exponential smoothing: blend 70% of new delta with 30% of previous
+        // This eliminates sudden jumps while keeping movement responsive
+        const smoothFactor = 0.7;
+        const prevDx = dragItemRef.current.userData._prevDragDx || 0;
+        const prevDz = dragItemRef.current.userData._prevDragDz || 0;
+        const scaledDx = rawDx * smoothFactor + prevDx * (1 - smoothFactor);
+        const scaledDz = rawDz * smoothFactor + prevDz * (1 - smoothFactor);
+        dragItemRef.current.userData._prevDragDx = scaledDx;
+        dragItemRef.current.userData._prevDragDz = scaledDz;
+        // Apply delta to current position
         let nx = dragItemRef.current.position.x + scaledDx;
         let nz = dragItemRef.current.position.z + scaledDz;
         // Calculate furniture bounding box for wall constraint
@@ -2193,6 +2210,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         dragSaveTimeoutRef.current = setTimeout(() => { saveRoom(); }, 500);
       }
       isDragRef.current = false; dragItemRef.current = null; controls.enabled = true; canvas.style.cursor = 'grab';
+      // Clear drag smoothing state to prevent stale values on next drag
+      if (selectedObjRef.current) {
+        selectedObjRef.current.userData._prevDragDx = 0;
+        selectedObjRef.current.userData._prevDragDz = 0;
+      }
     };
 
     canvas.addEventListener('pointerdown', onPointerDown); canvas.addEventListener('pointermove', onPointerMove); canvas.addEventListener('pointerup', onPointerUp);
