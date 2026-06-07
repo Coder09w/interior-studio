@@ -593,6 +593,48 @@ canvas {
   transform: translateZ(0);
 }
 
+/* Sidebar resize handle — smooth feedback */
+aside > div:first-child:hover {
+  transition: background 0.15s ease;
+}
+
+/* Smooth panel transitions */
+[data-sidebar-theme] {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reduce layout thrashing on resize */
+aside {
+  will-change: width;
+}
+
+/* Smooth hover micro-interactions for all interactive elements */
+button:not(:disabled) {
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* Smooth input focus */
+input:focus, select:focus, textarea:focus {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Prevent janky scroll on sidebar */
+.int-scrollbar {
+  scroll-behavior: smooth;
+}
+
+/* GPU compositing for frequently animated elements */
+.absolute {
+  will-change: auto;
+}
+
+/* Prevent text flicker during transitions on animated panels */
+aside, .absolute, main {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 /* Hero decorative blob animations — CSS-based for GPU efficiency */
 @keyframes float1 {
   0%, 100% { transform: scale(1); opacity: 0.2; }

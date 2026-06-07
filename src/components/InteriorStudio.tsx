@@ -213,6 +213,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   // State
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarDark, setSidebarDark] = useState(false); // dark editor sidebar toggle
+  const [sidebarWidth, setSidebarWidth] = useState(320); // resizable sidebar width
+  const sidebarResizeRef = useRef<{ startX: number; startW: number } | null>(null);
   const [currentCat, setCurrentCat] = useState<CategoryId>('seating');
   const [currentMatType, setCurrentMatType] = useState<MatType>('fabric');
   const [currentColor, setCurrentColor] = useState('#5A4E42');
@@ -2382,7 +2384,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     };
   }, []);
 
-  // Resize on sidebar toggle only — mobile panel changes do NOT resize the canvas
+  // Resize on sidebar toggle/resize — mobile panel changes do NOT resize the canvas
   // (the canvas uses flex-1 min-h-0 so CSS handles the layout; programmatic resize
   //  causes a blank flash on mobile when the bottom panel opens/closes)
   useEffect(() => {
@@ -2391,7 +2393,31 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       if (c && r && cam && p) { r.setSize(p.clientWidth, p.clientHeight); cam.aspect = p.clientWidth / p.clientHeight; cam.updateProjectionMatrix(); }
     }, 200);
     return () => clearTimeout(t);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, sidebarWidth]);
+
+  // Sidebar resize handlers (desktop only)
+  const handleSidebarResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    sidebarResizeRef.current = { startX: e.clientX, startW: sidebarWidth };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const onMove = (ev: MouseEvent) => {
+      if (!sidebarResizeRef.current) return;
+      const delta = ev.clientX - sidebarResizeRef.current.startX;
+      const newW = Math.max(260, Math.min(520, sidebarResizeRef.current.startW + delta));
+      setSidebarWidth(newW);
+    };
+    const onUp = () => {
+      sidebarResizeRef.current = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, [sidebarWidth]);
 
   const resetRoom = useCallback(() => {
     placedItemsRef.current.forEach(item => { sceneRef.current?.remove(item); item.traverse(c => { if (c instanceof THREE.Mesh) { c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => m.dispose()); else c.material?.dispose(); } }); });
@@ -2910,28 +2936,17 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             </div>
           </div>
 
-          {/* Skin status */}
-          <div className="p-3 rounded-xl mb-3" style={{ background: activeSkin === 'default' ? 'rgba(92,64,51,0.06)' : '#FAF8F4', border: `1px solid ${activeSkin === 'default' ? '#5C4033' : '#E8DFD4'}` }}>
-            <div className="flex items-center gap-2 mb-1">
-              <i className={`fas ${activeSkin === 'default' ? 'fa-check-circle' : 'fa-paint-brush'} text-xs`} style={{ color: activeSkin === 'default' ? '#5C4033' : '#7A6E62' }} />
-              <p className="text-[11px] font-bold" style={{ color: activeSkin === 'default' ? '#5C4033' : '#7A6E62' }}>
-                {activeSkin === 'default' ? 'Skeleton Active' : `Skin: ${SKINS_DICTIONARY[activeSkin]?.name || activeSkin}`}
-              </p>
-            </div>
-            <p className="text-[11px]" style={{ color: '#7A6E62' }}>
-              {activeSkin === 'default'
-                ? 'Your room is in its original skeleton state — no theme skin applied.'
-                : 'A design skin is currently applied. Reset to skeleton to remove it.'}
-            </p>
-          </div>
-
-          {/* Reset to Skeleton button */}
+          {/* Skin quick link — directs users to the Skins tab instead of duplicating */}
           {activeSkin !== 'default' && (
-            <button onClick={() => applySkin('default')}
-              className="w-full py-3 rounded-xl text-[13px] font-bold cursor-pointer border-none mb-3 flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #5C4033, #3B2F28)', color: '#fff' }}>
-              <i className="fas fa-bone" />Reset to Skeleton
-            </button>
+            <div className="p-2.5 rounded-xl mb-3 flex items-center justify-between" style={{ background: `${SKINS_DICTIONARY[activeSkin]?.accent || '#C17F4E'}10`, border: `1px solid ${SKINS_DICTIONARY[activeSkin]?.accent || '#C17F4E'}30` }}>
+              <div className="flex items-center gap-2">
+                <i className="fas fa-paint-brush text-xs" style={{ color: SKINS_DICTIONARY[activeSkin]?.accent || '#7A6E62' }} />
+                <span className="text-[11px] font-bold" style={{ color: '#2D2D2D' }}>{SKINS_DICTIONARY[activeSkin]?.name || activeSkin}</span>
+              </div>
+              <button onClick={() => setMobilePanel('skin')} className="text-[10px] font-bold cursor-pointer" style={{ color: '#C17F4E', background: 'none', border: 'none' }}>
+                Manage <i className="fas fa-chevron-right text-[7px]" />
+              </button>
+            </div>
           )}
 
           {/* Save & Export actions */}
@@ -3036,7 +3051,21 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
   /* ===== DESKTOP SIDEBAR CONTENT ===== */
   const renderDesktopSidebar = () => (
-    <aside data-sidebar-theme={sidebarDark ? 'dark' : 'light'} className={`int-scrollbar h-screen overflow-y-auto ${sidebarDark ? '' : `int-sidebar int-sidebar-glow-${lightMood}`}`} style={{ width: sidebarOpen ? 320 : 0, minWidth: sidebarOpen ? 320 : 0, borderRight: sidebarOpen ? `1px solid ${sidebarDark ? 'rgba(255,255,255,0.06)' : '#E8DFD4'}` : 'none', overflow: sidebarOpen ? 'auto' : 'hidden', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)', backgroundColor: sidebarDark ? '#1E1B18' : undefined, color: sidebarDark ? '#E8E0D6' : undefined }}>
+    <aside data-sidebar-theme={sidebarDark ? 'dark' : 'light'} className={`int-scrollbar h-screen overflow-y-auto ${sidebarDark ? '' : `int-sidebar int-sidebar-glow-${lightMood}`}`} style={{ width: sidebarOpen ? sidebarWidth : 0, minWidth: sidebarOpen ? sidebarWidth : 0, borderRight: sidebarOpen ? `1px solid ${sidebarDark ? 'rgba(255,255,255,0.06)' : '#E8DFD4'}` : 'none', overflow: sidebarOpen ? 'auto' : 'hidden', transition: sidebarOpen ? 'width 0.35s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.35s cubic-bezier(0.16, 1, 0.3, 1)' : 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)', backgroundColor: sidebarDark ? '#1E1B18' : undefined, color: sidebarDark ? '#E8E0D6' : undefined, position: 'relative', contain: 'layout style' }}>
+      {/* Resize handle — desktop only, right edge of sidebar */}
+      {sidebarOpen && (
+        <div
+          onMouseDown={handleSidebarResizeStart}
+          style={{
+            position: 'absolute', top: 0, right: -4, width: 8, height: '100%', cursor: 'col-resize',
+            zIndex: 50, background: 'transparent',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(193,127,78,0.3)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+        >
+          <div style={{ position: 'absolute', top: '50%', left: 3, transform: 'translateY(-50%)', width: 2, height: 32, borderRadius: 1, background: sidebarDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)', transition: 'background 0.2s ease' }} />
+        </div>
+      )}
       {/* Logo */}
       <div className="p-5 int-logo-border">
         <div className="flex items-center gap-3">
@@ -3271,15 +3300,6 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             </button>
           ))}
         </div>
-        {/* Clear & Reset */}
-        <div className="mt-3 pt-2">
-          <div className="flex gap-1.5">
-            <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); activeSkinRef.current = 'default'; applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
-              className="int-btn-danger flex-1"><i className="fas fa-eraser" />Clear</button>
-            <button onClick={() => { if (confirm('Reset the entire room?')) resetRoom(); }}
-              className="int-btn-danger flex-1"><i className="fas fa-trash-alt" />Reset</button>
-          </div>
-        </div>
       </div>
 
       {/* Actions */}
@@ -3295,6 +3315,15 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div className="flex gap-2">
             <button onClick={exportHD} className="int-btn-secondary flex-1"><i className="fas fa-expand" />Export HD</button>
             <button onClick={exportFloorPlan} className="int-btn-secondary flex-1"><i className="fas fa-drafting-compass" />Floor Plan</button>
+          </div>
+          {/* Clear & Reset — consolidated into Actions section */}
+          <div className="pt-2 border-t" style={{ borderColor: '#E8DFD4' }}>
+            <div className="flex gap-2">
+              <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); activeSkinRef.current = 'default'; applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
+                className="int-btn-danger flex-1"><i className="fas fa-eraser" />Clear</button>
+              <button onClick={() => { if (confirm('Reset the entire room?')) resetRoom(); }}
+                className="int-btn-danger flex-1"><i className="fas fa-trash-alt" />Reset</button>
+            </div>
           </div>
         </div>
       </div>
@@ -3798,7 +3827,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease' }}>
+      <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: 'layout style paint' }}>
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined }}>
           {!isMobile && (
@@ -4024,21 +4053,21 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
         {/* Mobile: Zoom controls — bottom-left floating buttons */}
         {isMobile && !ceilingEditMode && (
-          <div className="absolute bottom-2 left-2 flex flex-col gap-1 z-10" style={{ bottom: itemPanelVisible ? 60 : 8 }}>
+          <div className="absolute bottom-2 left-2 flex flex-col gap-1 z-10" style={{ bottom: itemPanelVisible ? 128 : 68 }}>
             <button onClick={() => zoomCamera('in')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom In">+</button>
             <button onClick={() => zoomCamera('out')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom Out">&minus;</button>
           </div>
         )}
 
-        {/* Mobile: Selected item floating action bar — sits just above footer */}
+        {/* Mobile: Selected item floating action bar — sits just above footer tab bar */}
         {isMobile && itemPanelVisible && !ceilingEditMode && (
-          <div className="absolute left-2 right-14 z-20 flex items-center gap-1 px-2 rounded-xl" style={{ bottom: mobilePanel ? 'calc(50vh + 6px)' : 66, height: 48, background: lightMood === 'night' ? 'rgba(30,28,25,0.95)' : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', boxShadow: '0 2px 12px rgba(0,0,0,0.12)', transition: 'bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-            <span className="text-[11px] font-semibold truncate flex-1" style={{ fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
-            <button onClick={() => rotateSelected('left')} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 12, border: 'none', minHeight: 36, minWidth: 36 }} aria-label="Rotate Left"><i className="fas fa-undo" /></button>
-            <button onClick={() => rotateSelected('right')} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 12, border: 'none', minHeight: 36, minWidth: 36 }} aria-label="Rotate Right"><i className="fas fa-redo" /></button>
-            <button onClick={duplicateSelected} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 12, border: 'none', minHeight: 36, minWidth: 36 }} aria-label="Duplicate"><i className="fas fa-clone" /></button>
-            <button onClick={deleteSelected} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 12, border: 'none', minHeight: 36, minWidth: 36 }} aria-label="Delete"><i className="fas fa-trash-alt" /></button>
-            <button onClick={deselectAll} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 10, border: 'none' }} aria-label="Deselect"><i className="fas fa-times" /></button>
+          <div className="absolute left-3 right-14 z-20 flex items-center gap-1.5 px-3 rounded-2xl" style={{ bottom: mobilePanel ? 'calc(50vh + 10px)' : 68, height: 50, background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', transition: 'bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'bottom' }}>
+            <span className="text-[12px] font-bold truncate flex-1" style={{ fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
+            <button onClick={() => rotateSelected('left')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+            <button onClick={() => rotateSelected('right')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+            <button onClick={duplicateSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Duplicate" title="Duplicate"><i className="fas fa-clone" /></button>
+            <button onClick={deleteSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Delete" title="Delete"><i className="fas fa-trash-alt" /></button>
+            <button onClick={deselectAll} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 11, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
           </div>
         )}
 
@@ -4077,10 +4106,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))', flexShrink: 0, transition: 'height 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', flexShrink: 0, transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
 
-          {/* Tab bar — compact, sharp, icon-first. 48px for tight mobile feel */}
-          <div role="tablist" className="flex" style={{ height: 48, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4' }}>
+          {/* Tab bar — compact, sharp, icon-first. 52px for comfortable touch targets */}
+          <div role="tablist" className="flex" style={{ height: 52, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
             {([
               { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture' },
               { id: 'material' as const, icon: 'fa-palette', label: 'Colors' },
