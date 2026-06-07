@@ -1232,7 +1232,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   }, [markSceneDirty]);
 
   /* ===== CAMERA ===== */
-  const animateCamera = useCallback((pos: [number, number, number], target: [number, number, number], dur = 800) => {
+  const animateCamera = useCallback((pos: [number, number, number], target: [number, number, number], dur = 350) => {
     const camera = cameraRef.current, ctrl = controlsRef.current; if (!camera || !ctrl) return;
     const startPos = camera.position.clone(), startTarget = ctrl.target.clone();
     const endPos = new THREE.Vector3(...pos), endTarget = new THREE.Vector3(...target);
@@ -1240,7 +1240,17 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     // Capture non-null references for closure
     const cam = camera;
     const ctl = ctrl;
-    function step() { const t = Math.min(1, (performance.now() - startTime) / dur); const ease = 1 - Math.pow(1 - t, 3); cam.position.lerpVectors(startPos, endPos, ease); ctl.target.lerpVectors(startTarget, endTarget, ease); ctl.update(); if (t < 1) requestAnimationFrame(step); }
+    function step() {
+      const t = Math.min(1, (performance.now() - startTime) / dur);
+      // Ease-out quartic — starts fast, ends smooth
+      const ease = 1 - Math.pow(1 - t, 4);
+      cam.position.lerpVectors(startPos, endPos, ease);
+      ctl.target.lerpVectors(startTarget, endTarget, ease);
+      ctl.update();
+      // Trigger the render loop so each animation frame is drawn immediately
+      needsRenderRef.current?.();
+      if (t < 1) requestAnimationFrame(step);
+    }
     step();
   }, []);
 
@@ -1260,7 +1270,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const d = roomDRef.current;
 
     // Animate camera to floor looking up
-    animateCamera([0, 0.3, 0], [0, h, 0], 800);
+    animateCamera([0, 0.3, 0], [0, h, 0], 400);
 
     // Hide furniture
     placedItemsRef.current.forEach(item => { item.visible = false; });
@@ -1338,7 +1348,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     animateCamera(
       [savedCameraPosRef.current.x, savedCameraPosRef.current.y, savedCameraPosRef.current.z],
       [savedCameraTargetRef.current.x, savedCameraTargetRef.current.y, savedCameraTargetRef.current.z],
-      800
+      400
     );
 
     // Show furniture
@@ -4040,19 +4050,28 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           </div>
         )}
 
-        {/* View controls - Desktop */}
+        {/* View controls - Desktop — vertical panel on right middle */}
         {!isMobile && (
-          <div className="absolute bottom-5 right-5 flex gap-1.5 z-10">
-            <button onClick={resetRoom} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#2D2D2D', fontSize: 11, transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }} aria-label="Reset Room" title="Reset Room"><i className="fas fa-undo-alt" /></button>
+          <div className="absolute right-4 z-10 flex flex-col gap-2" style={{ top: '50%', transform: 'translateY(-50%)' }}>
             {[
-              { id: 'top', icon: 'fa-border-all', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
-              { id: 'front', icon: 'fa-square', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
-              { id: 'persp', icon: 'fa-cube', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+              { id: 'top', icon: 'fa-border-all', label: 'Top', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
+              { id: 'front', icon: 'fa-square', label: 'Front', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+              { id: 'persp', icon: 'fa-cube', label: '3D', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
             ].map(v => (
-              <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#2D2D2D', fontSize: 11, transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}><i className={`fas ${v.icon}`} /></button>
+              <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} title={`${v.label} view`} className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 12, fontWeight: 600, minWidth: 72, transition: 'background 0.2s ease, border-color 0.2s ease, transform 0.15s ease' }}>
+                <i className={`fas ${v.icon}`} style={{ fontSize: 14, color: '#C17F4E' }} />
+                <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>{v.label}</span>
+              </button>
             ))}
             <button onClick={() => { autoRotateRef.current = !autoRotateRef.current; setAutoRotActive(autoRotateRef.current); if (controlsRef.current) { controlsRef.current.autoRotate = autoRotateRef.current; controlsRef.current.autoRotateSpeed = 1.5; } }}
-              aria-label={autoRotActive ? 'Stop auto-rotate' : 'Start auto-rotate'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: autoRotActive ? '#C17F4E' : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: autoRotActive ? '#C17F4E' : (lightMood === 'night' ? '#C8C0B0' : '#2D2D2D'), fontSize: 11, transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}><i className="fas fa-sync-alt" /></button>
+              aria-label={autoRotActive ? 'Stop auto-rotate' : 'Start auto-rotate'} title="Auto-rotate" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: autoRotActive ? 'rgba(193,127,78,0.12)' : (lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)'), backdropFilter: 'blur(12px)', borderColor: autoRotActive ? '#C17F4E' : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: autoRotActive ? '#C17F4E' : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32'), fontSize: 12, fontWeight: 600, minWidth: 72, transition: 'background 0.2s ease, border-color 0.2s ease' }}>
+              <i className="fas fa-sync-alt" style={{ fontSize: 14, color: autoRotActive ? '#C17F4E' : undefined }} />
+              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Spin</span>
+            </button>
+            <button onClick={resetRoom} title="Reset Room" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: '#c0392b', fontSize: 12, fontWeight: 600, minWidth: 72, transition: 'background 0.2s ease, border-color 0.2s ease' }}>
+              <i className="fas fa-undo-alt" style={{ fontSize: 14 }} />
+              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Reset</span>
+            </button>
           </div>
         )}
 
