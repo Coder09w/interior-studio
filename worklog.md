@@ -717,3 +717,39 @@ Stage Summary:
 - Wall color changes were already fast (in-place material.color.set())
 - Full buildRoom() is now only called for dimension changes and room reset (which genuinely need it)
 - The 600ms loading overlay has been completely removed since changes are now near-instant
+
+---
+Task ID: coc-loader
+Agent: Main (Super Z)
+Task: Replace EditorLoader with CoC-style cinematic loader + dual theme (teal for auth, warm for guests) + fix guest vs auth panel differentiation
+
+Work Log:
+- Read and analyzed the current EditorLoader.tsx (361 lines) — found it used exponential progress that asymptotes before 100%, light cream background that flashes, broken isometric room transforms, and no auth differentiation
+- Read the user's detailed CoC-style loader HTML specification with 5 core fixes
+- Created THEMES object with 2 complete token sets: teal (authenticated) and warm (guest)
+- Replaced EditorLoader.tsx entirely with new CoC-style component featuring:
+  1. Stage-based progress with 9 milestones that always reaches 100%
+  2. CoC-style fill physics in rAF loop (speed 1.2 when far, 0.25 when close)
+  3. Proper dark background (teal #0D1B16 for auth, warm #1B1410 for guest)
+  4. Correct isometric room with rotateX(45deg) rotateZ(-30deg) + preserve-3d
+  5. 9 stage dots that light up sequentially
+  6. Noise grain overlay + subtle grid lines for atmosphere
+  7. Window glow animation, furniture bounce-in, ceiling light pulse
+- Added 15+ new CSS keyframe animations to globals.css (cocSceneIn, cocGlowBreath, cocFadeUp, cocFurnitureIn, cocLightOn, cocLightPulse, cocLetterIn, cocDotPulse, cocShimmerSlide, cocScenePart, cocWindowGlow, cocDotGlow, cocLoaderFadeOut, cocBrandIn)
+- Dual theme: uses useSession() from next-auth to detect auth status → teal tokens vs warm tokens
+- Guest theme: dark warm brown bg, amber/copper accents, same structure
+- Auth theme: dark teal bg, teal/green accents, same structure
+- Fixed TypeScript type error (union type for theme prop)
+- Added isGuestRef to InteriorStudio.tsx for use in non-React keyboard callbacks
+- Fixed keyboard Ctrl+Z/Ctrl+Y to respect guest status (shows "Sign in for undo/redo history" toast)
+- Added Redo button to Actions panel (was missing, only Undo was present)
+- Design name now changes from "Guest Design" to "My Design" when auth is confirmed
+- Build verified: compiles successfully with zero errors
+
+Stage Summary:
+- New CoC-style loader with proper dark background, isometric room, and dual theme
+- Progress bar actually reaches 100% with satisfying rush-then-ease physics
+- Guest sees warm amber theme, authenticated user sees teal theme
+- Undo/Redo keyboard shortcuts now gated behind auth for guests
+- Redo button added to Actions panel alongside Undo
+- Build passes clean

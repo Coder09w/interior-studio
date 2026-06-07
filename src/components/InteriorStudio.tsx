@@ -284,6 +284,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
   // Guest mode state
   const [isGuest, setIsGuest] = useState(true); // default to guest until we verify auth
+  const isGuestRef = useRef(true); // ref mirror for use inside non-React callbacks (keyboard, etc.)
   const [guestBannerCollapsed, setGuestBannerCollapsed] = useState(false); // auto-collapse after 5s
 
   // Dynamic accent color: warm (#C17F4E) for guests, teal (#2A9D8F) for authenticated users
@@ -2206,7 +2207,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       try {
         // Check if user is authenticated (has session)
         fetch('/api/auth/session').then(r => r.json()).then(session => {
-          if (session?.user) setIsGuest(false);
+          if (session?.user) { setIsGuest(false); isGuestRef.current = false; setDesignName('My Design'); }
         }).catch(() => { /* guest mode */ });
 
         const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
@@ -2544,8 +2545,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       else if (e.key === 'd' || e.key === 'D') { if (!e.ctrlKey && !e.metaKey) duplicateSelected(); }
       else if (e.key === 'r' || e.key === 'R') { if (!e.ctrlKey && !e.metaKey && selectedObjRef.current) { selectedObjRef.current.rotation.y += Math.PI / 12; markUnsaved(); markSceneDirty(); } }
       else if (e.key === 'Escape') { if (ceilingEditModeRef.current) { exitCeilingEditMode(); } else { deselectAll(); } }
-      else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
-      else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); if (isGuestRef.current) { showToast('Sign in for undo history'); return; } undo(); }
+      else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); if (isGuestRef.current) { showToast('Sign in for redo history'); return; } redo(); }
     };
     window.addEventListener('keydown', onKeyDown);
 
@@ -3280,6 +3281,12 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               style={{ background: '#fff', color: isGuest ? '#B8A898' : '#5A4E42', border: '1.5px solid #E2DDD4', opacity: isGuest ? 0.5 : 1 }}>
               <i className="fas fa-undo text-sm" />
               {isGuest ? 'Undo (PRO)' : 'Undo'}
+            </button>
+            <button onClick={() => { if (isGuest) { showToast('Sign in for redo history'); return; } redo(); }}
+              className="py-3 rounded-xl text-[11px] font-bold cursor-pointer flex flex-col items-center justify-center gap-1.5"
+              style={{ background: '#fff', color: isGuest ? '#B8A898' : '#5A4E42', border: '1.5px solid #E2DDD4', opacity: isGuest ? 0.5 : 1 }}>
+              <i className="fas fa-redo text-sm" />
+              {isGuest ? 'Redo (PRO)' : 'Redo'}
             </button>
           </div>
 

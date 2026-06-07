@@ -1,359 +1,447 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 
-/* ===== EPIC CINEMATIC LOADER FOR INSTOD EDITOR ===== */
+/* ===== CLASH-OF-CLANS STYLE CINEMATIC LOADER FOR INSTOD ===== */
 
 const STAGES = [
-  { at: 5, text: 'Initializing 3D Engine' },
-  { at: 15, text: 'Setting up WebGL renderer' },
-  { at: 25, text: 'Loading room geometry' },
-  { at: 40, text: 'Preparing furniture library' },
-  { at: 55, text: 'Loading materials & textures' },
-  { at: 70, text: 'Building lighting system' },
-  { at: 82, text: 'Rendering environment' },
-  { at: 92, text: 'Almost ready' },
-  { at: 100, text: 'Ready!' },
+  { pct: 8,  label: 'Initializing engine',      scene: 'Starting up...' },
+  { pct: 18, label: 'Setting up WebGL',          scene: 'WebGL ready' },
+  { pct: 30, label: 'Loading room geometry',     scene: 'Building walls' },
+  { pct: 44, label: 'Preparing furniture',       scene: 'Placing furniture' },
+  { pct: 58, label: 'Loading materials',         scene: 'Applying textures' },
+  { pct: 72, label: 'Building lighting',         scene: 'Adding lights' },
+  { pct: 84, label: 'Rendering environment',     scene: 'Final touches' },
+  { pct: 93, label: 'Almost ready',              scene: 'Nearly there...' },
+  { pct: 100, label: 'Ready!',                   scene: 'Welcome!' },
 ];
 
 const TIPS = [
   'Click & drag to orbit the 3D view',
   'Scroll to zoom in and out',
-  'Right-click & drag to pan around',
-  'Double-click furniture to select it',
-  'Use the skin system to change room aesthetics',
-  'Switch lighting moods for different atmospheres',
-  'Add ceiling lights in the lighting panel',
+  'Tap furniture to select and move it',
+  'Use two fingers to rotate items on mobile',
+  'Switch lighting moods for different vibes',
+  'Save your design with the button in the top bar',
+  'Try the Design Presets for instant room styles',
 ];
 
-/* Isometric CSS Room that builds itself */
-function IsometricRoom({ progress }: { progress: number }) {
+const BRAND = 'Instod';
+
+/* ── Theme tokens ── */
+const THEMES = {
+  teal: {
+    bg: '#0D1B16',
+    bgGrad1: 'rgba(15,158,126,.18)',
+    bgGrad2: 'rgba(193,127,78,.12)',
+    bgGrad3: 'rgba(77,217,184,.07)',
+    accent: '#0f9e7e',
+    accentLt: '#4dd9b8',
+    cardBg: 'linear-gradient(145deg, #1a2e26 0%, #162822 50%, #1e3329 100%)',
+    cardBorder: 'rgba(77,217,184,.18)',
+    glowCenter: 'rgba(15,158,126,.22)',
+    gridLine: 'rgba(77,217,184,.025)',
+    particleColor: 'rgba(77,217,184,.6)',
+    sceneLabelColor: 'rgba(77,217,184,.5)',
+    statusDot: '#4dd9b8',
+    textPrimary: '#e8f5f2',
+    textSecondary: 'rgba(160,196,186,.8)',
+    textMuted: 'rgba(160,196,186,.55)',
+    tipStrong: 'rgba(77,217,184,.7)',
+    tipBorder: 'rgba(77,217,184,.1)',
+    tipBg: 'rgba(255,255,255,.03)',
+    barGrad: 'linear-gradient(90deg, #0f9e7e 0%, #4dd9b8 100%)',
+    completeGrad: 'linear-gradient(90deg, #2ecc8e, #5ae8b0)',
+    completeTip: '#5ae8b0',
+    rugColor: 'rgba(15,158,126,.25)',
+    rugBorder: 'rgba(15,158,126,.2)',
+    rugGrad2: 'rgba(77,217,184,.12)',
+    iconGrad: 'linear-gradient(135deg, #0f9e7e 0%, #0d8a6c 100%)',
+    iconShadow: 'rgba(15,158,126,.4)',
+    iconBorder: 'rgba(77,217,184,.2)',
+    barTipShadow: 'rgba(77,217,184,.8)',
+    stageDotPassed: '#0f9e7e',
+    stageDotGlow: 'rgba(77,217,184,.3)',
+    completeGlow: 'rgba(46,204,142,.28)',
+  },
+  warm: {
+    bg: '#1B1410',
+    bgGrad1: 'rgba(193,127,78,.18)',
+    bgGrad2: 'rgba(139,90,43,.12)',
+    bgGrad3: 'rgba(212,167,106,.07)',
+    accent: '#C17F4E',
+    accentLt: '#D4A76A',
+    cardBg: 'linear-gradient(145deg, #2a1f18 0%, #241a12 50%, #2e221a 100%)',
+    cardBorder: 'rgba(212,167,106,.18)',
+    glowCenter: 'rgba(193,127,78,.22)',
+    gridLine: 'rgba(212,167,106,.025)',
+    particleColor: 'rgba(212,167,106,.6)',
+    sceneLabelColor: 'rgba(212,167,106,.5)',
+    statusDot: '#D4A76A',
+    textPrimary: '#f5efe4',
+    textSecondary: 'rgba(196,176,150,.8)',
+    textMuted: 'rgba(196,176,150,.55)',
+    tipStrong: 'rgba(212,167,106,.7)',
+    tipBorder: 'rgba(212,167,106,.1)',
+    tipBg: 'rgba(255,255,255,.03)',
+    barGrad: 'linear-gradient(90deg, #C17F4E 0%, #D4A76A 100%)',
+    completeGrad: 'linear-gradient(90deg, #8fb85a, #b8d88a)',
+    completeTip: '#b8d88a',
+    rugColor: 'rgba(193,127,78,.25)',
+    rugBorder: 'rgba(193,127,78,.2)',
+    rugGrad2: 'rgba(212,167,106,.12)',
+    iconGrad: 'linear-gradient(135deg, #C17F4E 0%, #A86A3D 100%)',
+    iconShadow: 'rgba(193,127,78,.4)',
+    iconBorder: 'rgba(212,167,106,.2)',
+    barTipShadow: 'rgba(212,167,106,.8)',
+    stageDotPassed: '#C17F4E',
+    stageDotGlow: 'rgba(212,167,106,.3)',
+    completeGlow: 'rgba(143,184,90,.28)',
+  },
+} as const;
+
+type ThemeKey = keyof typeof THEMES;
+
+/* ── Isometric CSS Room ── */
+type ThemeTokens = typeof THEMES.teal | typeof THEMES.warm;
+
+function IsometricRoom({ progress, theme }: { progress: number; theme: ThemeTokens }) {
   const furnitureVisible = progress > 40;
   const lightVisible = progress > 60;
+  const windowVisible = progress > 30;
 
   return (
-    <div className="loader-iso-room" style={{ margin: '0 auto' }}>
+    <div className="coc-iso" style={{ perspective: '600px' }}>
       {/* Floor */}
-      <div className="loader-iso-floor" />
+      <div className="coc-iso-floor" />
 
       {/* Left wall */}
-      <div className="loader-iso-wall-left" />
-
-      {/* Back wall */}
-      <div className="loader-iso-wall-back">
-        {/* Window on back wall */}
-        {progress > 30 && (
-          <div style={{
-            position: 'absolute', top: '25%', left: '30%',
-            width: '40%', height: '50%',
-            background: 'linear-gradient(180deg, #E8F0F8, #C8D8E8)',
-            border: '2px solid #B8A898',
-            opacity: progress > 30 ? 1 : 0,
-            transition: 'opacity 0.5s ease',
+      <div className="coc-iso-wall-l">
+        {windowVisible && (
+          <div className="coc-iso-window" style={{
+            opacity: windowVisible ? undefined : 0,
+            animationDelay: '1.4s',
           }} />
         )}
       </div>
 
-      {/* Right wall */}
-      <div className="loader-iso-wall-right" />
+      {/* Back wall */}
+      <div className="coc-iso-wall-b" />
 
-      {/* Furniture - sofa silhouette */}
+      {/* Rug */}
+      <div className="coc-iso-rug" style={{
+        background: `linear-gradient(135deg, ${theme.rugColor} 0%, ${theme.rugGrad2} 100%)`,
+        borderColor: theme.rugBorder,
+      }} />
+
+      {/* Sofa */}
       {furnitureVisible && (
-        <div className="loader-iso-furniture" style={{ animationDelay: '0.8s' }}>
-          <svg width="60" height="30" viewBox="0 0 60 30" fill="none">
-            <rect x="5" y="10" width="50" height="15" rx="3" fill="#8B7355" />
-            <rect x="5" y="5" width="50" height="8" rx="3" fill="#7A6348" />
-            <rect x="8" y="12" width="20" height="10" rx="2" fill="#9B8365" />
-            <rect x="32" y="12" width="20" height="10" rx="2" fill="#9B8365" />
-            <rect x="8" y="25" width="3" height="4" rx="1" fill="#5C4033" />
-            <rect x="49" y="25" width="3" height="4" rx="1" fill="#5C4033" />
+        <div className="coc-iso-sofa">
+          <svg width="72" height="38" viewBox="0 0 72 38" fill="none">
+            <rect x="6" y="14" width="60" height="18" rx="4" fill="#8B7355" />
+            <rect x="6" y="7"  width="60" height="10" rx="4" fill="#7A6348" />
+            <rect x="6" y="16" width="24" height="12" rx="2" fill="#9B8365" />
+            <rect x="34" y="16" width="24" height="12" rx="2" fill="#9B8365" />
+            <rect x="9"  y="32" width="4" height="5" rx="1.5" fill="#5C4033" />
+            <rect x="59" y="32" width="4" height="5" rx="1.5" fill="#5C4033" />
+            <rect x="8"  y="16" width="22" height="4" rx="1" fill="rgba(255,255,255,.1)" />
+            <rect x="36" y="16" width="22" height="4" rx="1" fill="rgba(255,255,255,.1)" />
           </svg>
         </div>
       )}
 
       {/* Side table */}
       {furnitureVisible && (
-        <div style={{
-          position: 'absolute', bottom: '20%', right: '20%',
-          animation: 'loaderFurnitureSlide 0.5s ease forwards',
-          animationDelay: '1s',
-          opacity: 0,
-        }}>
-          <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
-            <rect x="2" y="0" width="14" height="3" rx="1" fill="#A08060" />
-            <rect x="4" y="3" width="2" height="16" fill="#8B7355" />
-            <rect x="12" y="3" width="2" height="16" fill="#8B7355" />
+        <div className="coc-iso-table">
+          <svg width="20" height="26" viewBox="0 0 20 26" fill="none">
+            <rect x="2" y="0" width="16" height="3" rx="1.5" fill="#A08060" />
+            <circle cx="10" cy="3" r="3" fill="rgba(255,232,160,.5)" />
+            <rect x="5" y="3"  width="2" height="14" fill="#8B7355" />
+            <rect x="13" y="3" width="2" height="14" fill="#8B7355" />
+            <rect x="3" y="17" width="14" height="2" rx="1" fill="#7A6348" />
           </svg>
         </div>
       )}
 
-      {/* Ceiling light glow */}
+      {/* Ceiling light */}
       {lightVisible && (
         <>
-          <div className="loader-iso-light" style={{ opacity: undefined }} />
-          <div className="loader-iso-light-beam" style={{ opacity: undefined }} />
+          <div className="coc-iso-light-beam" />
+          <div className="coc-iso-light" />
         </>
       )}
     </div>
   );
 }
 
-/* Floating particles */
-function Particles() {
-  const particles = useMemo(() =>
-    Array.from({ length: 8 }, (_, i) => ({
-      id: i,
-      left: `${10 + Math.random() * 80}%`,
-      top: `${30 + Math.random() * 50}%`,
-      delay: `${i * 0.4}s`,
-      duration: `${2.5 + Math.random() * 2}s`,
-      px: `${(Math.random() - 0.5) * 60}px`,
-      size: `${3 + Math.random() * 4}px`,
-      opacity: 0.3 + Math.random() * 0.4,
-    })),
-  []);
+/* ── Scene particles ── */
+function SceneParticles({ color }: { color: string }) {
+  const particles = useMemo(() => [
+    { w: 3, h: 3, left: '20%', top: '60%', dur: '4s', delay: '0s' },
+    { w: 2, h: 2, left: '70%', top: '75%', dur: '5s', delay: '1s' },
+    { w: 4, h: 4, left: '45%', top: '65%', dur: '3.5s', delay: '.5s' },
+    { w: 2, h: 2, left: '85%', top: '55%', dur: '6s', delay: '2s' },
+    { w: 3, h: 3, left: '30%', top: '80%', dur: '4.5s', delay: '1.5s' },
+  ], []);
 
   return (
     <>
-      {particles.map(p => (
+      {particles.map((p, i) => (
         <div
-          key={p.id}
-          className="loader-particle"
+          key={i}
+          className="coc-scene-particle"
           style={{
-            left: p.left,
-            top: p.top,
-            width: p.size,
-            height: p.size,
+            width: p.w, height: p.h,
+            left: p.left, top: p.top,
+            animationDuration: p.dur,
             animationDelay: p.delay,
-            animationDuration: p.duration,
-            '--px': p.px,
-            opacity: p.opacity,
-          } as React.CSSProperties}
+            background: color,
+          }}
         />
       ))}
     </>
   );
 }
 
-/* Letter-by-letter animated text */
-function AnimatedTitle({ text, delay = 0 }: { text: string; delay?: number }) {
+/* ── Animated brand name ── */
+function AnimatedBrand({ text, color }: { text: string; color: string }) {
   return (
-    <span style={{ display: 'inline-block' }}>
-      {text.split('').map((char, i) => (
+    <div className="coc-brand-name" style={{ color }}>
+      {text.split('').map((ch, i) => (
         <span
           key={i}
-          className="loader-letter"
-          style={{
-            animationDelay: `${delay + i * 0.06}s`,
-            whiteSpace: char === ' ' ? 'pre' : undefined,
-          }}
+          className="coc-letter"
+          style={{ animationDelay: `${0.5 + i * 0.07}s` }}
         >
-          {char}
+          {ch === ' ' ? '\u00A0' : ch}
         </span>
       ))}
-    </span>
+    </div>
   );
 }
 
-/* Main Loader Component */
+/* ── Stage dots ── */
+function StageDots({ stageIdx, passedColor, glowColor }: { stageIdx: number; passedColor: string; glowColor: string }) {
+  return (
+    <div className="coc-stage-dots">
+      {STAGES.map((_, i) => (
+        <div
+          key={i}
+          className={`coc-stage-dot${i <= stageIdx ? ' passed' : ''}`}
+          style={{
+            background: i <= stageIdx ? passedColor : 'rgba(255,255,255,.12)',
+            transform: i <= stageIdx ? 'scale(1.3)' : undefined,
+          }}
+        >
+          {i <= stageIdx && (
+            <span style={{
+              position: 'absolute', inset: '-3px',
+              borderRadius: '50%',
+              background: glowColor,
+              animation: 'cocDotGlow 1s ease forwards',
+            }} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   MAIN LOADER COMPONENT
+   ════════════════════════════════════════════════ */
 export default function EditorLoader() {
+  const { status } = useSession();
+  const themeKey: ThemeKey = status === 'authenticated' ? 'teal' : 'warm';
+  const t = THEMES[themeKey];
+
+  // Progress state
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState(STAGES[0].text);
-  const [tipIndex, setTipIndex] = useState(0);
+  const [stageIdx, setStageIdx] = useState(0);
+  const [statusText, setStatusText] = useState(STAGES[0].label);
+  const [sceneText, setSceneText] = useState(STAGES[0].scene);
   const [isComplete, setIsComplete] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
 
+  // Refs for rAF loop
+  const currentRef = useRef(0);
+  const targetRef = useRef(STAGES[0].pct);
+  const stageIdxRef = useRef(0);
+  const rafRef = useRef<number>(0);
+
+  // Stage advancement timer
   useEffect(() => {
-    let current = 0;
-    const interval = setInterval(() => {
-      // Steadier progress with less randomness
-      const remaining = 100 - current;
-      const increment = Math.max(0.3, remaining * 0.06 + 0.5);
-      current = Math.min(current + increment, 100);
-      setProgress(current); // Use raw float for smoother CSS transition
+    const stageIntervals = [280, 320, 380, 420, 380, 420, 460, 520, 600];
+    let idx = 0;
 
-      const stage = [...STAGES].reverse().find(s => current >= s.at);
-      if (stage) setStatusText(stage.text);
+    function advanceStage() {
+      if (idx >= STAGES.length - 1) return;
+      idx++;
+      stageIdxRef.current = idx;
+      targetRef.current = STAGES[idx].pct;
+      setStageIdx(idx);
+      setStatusText(STAGES[idx].label);
+      setSceneText(STAGES[idx].scene);
 
-      // When we reach 100%, mark complete and pause before allowing transition
-      if (current >= 100) {
-        setProgress(100);
-        setStatusText('Ready!');
+      if (idx < STAGES.length - 1) {
+        setTimeout(advanceStage, stageIntervals[idx] || 400);
+      } else {
+        // Reached 100%
         setIsComplete(true);
-        clearInterval(interval);
+        setTimeout(() => setIsFadingOut(true), 1200);
       }
-    }, 300); // Faster interval with smaller increments = smoother
+    }
 
+    // Start first advance
+    const initialTimer = setTimeout(advanceStage, stageIntervals[0] || 280);
+    return () => clearTimeout(initialTimer);
+  }, []);
+
+  // rAF loop: smooth CoC-style fill physics
+  useEffect(() => {
+    function tick() {
+      const current = currentRef.current;
+      const target = targetRef.current;
+
+      if (current < target) {
+        const gap = target - current;
+        // Fast when far, slow when close — CoC feel
+        const speed = gap > 20 ? 1.2 : gap > 5 ? 0.55 : 0.25;
+        currentRef.current = Math.min(current + speed, target);
+        setProgress(currentRef.current);
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  // Rotate tips
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipIndex(prev => (prev + 1) % TIPS.length);
+    }, 3500);
     return () => clearInterval(interval);
   }, []);
 
-  // Rotate tips every 4 seconds
-  useEffect(() => {
-    const tipInterval = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % TIPS.length);
-    }, 4000);
-    return () => clearInterval(tipInterval);
-  }, []);
+  const pctDisplay = Math.floor(progress);
 
   return (
     <div
-      className="flex items-center justify-center h-screen relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #F5F0E8 0%, #EDE5D8 50%, #F0E8DC 100%)',
-        transition: 'opacity 0.6s ease-out',
-        opacity: isComplete ? 0.7 : 1,
-      }}
+      className={`coc-loader${isComplete ? ' complete' : ''}${isFadingOut ? ' fade-out' : ''}`}
+      style={{ '--coc-accent': t.accent, '--coc-accent-lt': t.accentLt } as React.CSSProperties}
     >
-      {/* Background floating particles */}
-      <Particles />
-
-      {/* Subtle background pattern */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(139,115,85,0.04) 0%, transparent 50%),
-                          radial-gradient(circle at 75% 75%, rgba(0,0,0,0.03) 0%, transparent 50%)`,
-        pointerEvents: 'none',
+      {/* ── Background ── */}
+      <div className="coc-bg" style={{
+        background: `
+          radial-gradient(ellipse 80% 60% at 50% 0%,   ${t.bgGrad1} 0%, transparent 60%),
+          radial-gradient(ellipse 60% 40% at 80% 100%,  ${t.bgGrad2} 0%, transparent 55%),
+          radial-gradient(ellipse 40% 50% at 10% 80%,   ${t.bgGrad3} 0%, transparent 50%),
+          linear-gradient(160deg, ${t.bg} 0%, ${t.bg} 45%, ${t.bg} 100%)
+        `,
       }} />
 
-      <div className="text-center w-full max-w-lg px-6 relative z-10">
-        {/* Isometric animated room */}
-        <div className="loader-room-container loader-glow mx-auto mb-6"
-          style={{
-            width: '220px', height: '180px',
-            background: 'rgba(255,255,255,0.5)',
-            borderRadius: '24px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'none',
-            border: '1px solid rgba(0,0,0,0.08)',
-          }}
-        >
-          <IsometricRoom progress={progress} />
+      {/* Noise grain */}
+      <div className="coc-grain" />
+
+      {/* Grid lines */}
+      <div className="coc-grid-bg" style={{
+        backgroundImage: `
+          linear-gradient(${t.gridLine} 1px, transparent 1px),
+          linear-gradient(90deg, ${t.gridLine} 1px, transparent 1px)
+        `,
+      }} />
+
+      {/* ── Scene Card ── */}
+      <div className="coc-scene-wrap">
+        <div className="coc-scene-glow" style={{
+          background: `radial-gradient(ellipse at 50% 60%, ${isComplete ? t.completeGlow : t.glowCenter} 0%, transparent 65%)`,
+        }} />
+        <div className="coc-scene-card" style={{
+          background: t.cardBg,
+          borderColor: t.cardBorder,
+        }}>
+          {/* Corner accent line */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
+            background: `linear-gradient(90deg, transparent 0%, ${t.accentLt}50 50%, transparent 100%)`,
+          }} />
+
+          {/* Scene particles */}
+          <SceneParticles color={t.particleColor} />
+
+          {/* Isometric room */}
+          <IsometricRoom progress={progress} theme={t} />
+
+          {/* Scene label */}
+          <div className="coc-scene-label" style={{ color: t.sceneLabelColor }}>
+            {sceneText}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Brand ── */}
+      <div className="coc-brand">
+        <div className="coc-brand-icon" style={{
+          background: t.iconGrad,
+          boxShadow: `0 8px 24px ${t.iconShadow}, 0 0 0 1px ${t.iconBorder}`,
+        }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </div>
+        <AnimatedBrand text={BRAND} color={t.textPrimary} />
+        <div className="coc-brand-sub" style={{ color: t.textMuted }}>
+          3D Room Designer
+        </div>
+      </div>
+
+      {/* ── Progress ── */}
+      <div className="coc-progress-wrap">
+        <div className="coc-progress-top">
+          <div className="coc-status-text" style={{ color: t.textSecondary }}>
+            <div className="coc-status-dot" style={{
+              background: isComplete ? t.completeTip : t.statusDot,
+              animation: isComplete ? 'none' : undefined,
+            }} />
+            <span>{statusText}</span>
+          </div>
+          <div className="coc-pct-text" style={{
+            color: isComplete ? t.completeTip : t.accentLt,
+          }}>
+            {pctDisplay}%
+          </div>
         </div>
 
-        {/* Logo */}
-        <img src="/logo.svg" alt="Instod" style={{ width: '56px', height: '56px', borderRadius: '16px', margin: '0 auto 12px', display: 'block' }} />
-
-        {/* Brand name with letter-by-letter animation */}
-        <h1 style={{
-          fontFamily: "'Outfit', sans-serif",
-          fontSize: '2rem',
-          fontWeight: 800,
-          color: '#2D2D2D',
-          letterSpacing: '-0.02em',
-          marginBottom: '4px',
-        }}>
-          <AnimatedTitle text="Instod" delay={0.3} />
-        </h1>
-
-        {/* Subtitle */}
-        <p style={{
-          fontFamily: "'Outfit', sans-serif",
-          fontSize: '0.85rem',
-          color: '#5A4E42',
-          marginBottom: '28px',
-          opacity: 0.8,
-        }}>
-          3D Room Design Previewer
-        </p>
-
-        {/* Progress bar */}
-        <div
-          className="loader-shimmer-bar"
-          style={{
-            width: '100%',
-            height: '8px',
-            borderRadius: '8px',
-            background: '#E2DDD4',
-            marginBottom: '12px',
-          }}
-        >
+        <div className="coc-bar-track">
           <div
+            className="coc-bar-fill"
             style={{
-              height: '100%',
-              borderRadius: '8px',
               width: `${progress}%`,
-              background: isComplete
-                ? 'linear-gradient(90deg, #5A8F4E, #7AB86A, #5A8F4E)' // Green when complete
-                : 'linear-gradient(90deg, #C17F4E, #D4A76A, #C17F4E)',
-              backgroundSize: '200% 100%',
-              transition: 'width 0.3s ease-out, background 0.5s ease',
-              position: 'relative',
+              background: isComplete ? t.completeGrad : t.barGrad,
             }}
           />
         </div>
 
-        {/* Status text with typing dots */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          marginBottom: '4px',
-        }}>
-          <p style={{
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: '0.85rem',
-            fontWeight: isComplete ? 700 : 500,
-            color: isComplete ? '#5A8F4E' : '#5A4E42',
-            transition: 'color 0.3s ease, font-weight 0.3s ease',
-          }}>
-            {statusText}
-          </p>
-          {!isComplete && (
-            <div className="loader-dot-pulse">
-              <span /><span /><span />
-            </div>
-          )}
-          {isComplete && (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A8F4E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          )}
-        </div>
+        <StageDots
+          stageIdx={stageIdx}
+          passedColor={t.stageDotPassed}
+          glowColor={t.stageDotGlow}
+        />
+      </div>
 
-        {/* Percentage */}
-        <p style={{
-          fontFamily: "'Outfit', sans-serif",
-          fontSize: '0.75rem',
-          color: isComplete ? '#5A8F4E' : '#8B7355',
-          fontWeight: 600,
-          marginBottom: '24px',
-          transition: 'color 0.3s ease',
-        }}>
-          {progress}%
-        </p>
-
-        {/* Tip box — rotating tips */}
-        <div style={{
-          padding: '14px 18px',
-          borderRadius: '16px',
-          background: 'rgba(0,0,0,0.03)',
-          border: '1px solid rgba(0,0,0,0.08)',
-          textAlign: 'left',
-          minHeight: '52px',
-        }}>
-          <p style={{
-            fontSize: '0.8rem',
-            color: '#5A4E42',
-            transition: 'opacity 0.3s ease',
-          }}>
-            <span style={{
-              fontWeight: 700,
-              color: '#7A6E62',
-              marginRight: '6px',
-            }}>Tip:</span>
-            {TIPS[tipIndex]}
-          </p>
-        </div>
-
-        {/* WebGL notice */}
-        <p style={{
-          fontSize: '0.65rem',
-          color: '#8B7355',
-          marginTop: '20px',
-          opacity: 0.6,
-        }}>
-          Taking too long? Make sure WebGL is enabled in your browser.
-        </p>
+      {/* ── Tip ── */}
+      <div className="coc-tip-box" style={{
+        background: t.tipBg,
+        borderColor: t.tipBorder,
+        color: t.textMuted,
+      }}>
+        <strong style={{ color: t.tipStrong }}>Tip:</strong>{' '}
+        <span style={{ transition: 'opacity .3s' }}>{TIPS[tipIndex]}</span>
       </div>
     </div>
   );
