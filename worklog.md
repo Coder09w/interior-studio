@@ -790,3 +790,32 @@ Stage Summary:
 - Window count/wall: already instant (rebuildWindowsOnly())
 - Ceiling lights: already instant (rebuildCeilingLightsOnly())
 - Full `buildRoom()` only used for initial load, reset, presets, room type changes
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Add 1.5x drag sensitivity, fix room dimension lag, fix door UI glitches, add final UI polish
+
+Work Log:
+- Added 1.5x drag sensitivity multiplier to furniture drag (DRAG_SENSITIVITY = 1.5)
+- Added 1.5x drag sensitivity multiplier to ceiling light drag (CEIL_DRAG_SENSITIVITY = 1.5)
+- Fixed drag formula: dragOffset + (intersection - dragOffset) * sensitivity
+- Fixed room dimension lag: changed desktop number input from direct rebuildRoomGeometry() to updateRoomVisualPreview() + debouncedBuildRoom()
+- Reduced debounce from 80ms to 60ms and added requestAnimationFrame wrapper for smoother rebuild
+- Improved door 3D geometry: centered door panel (was offset at 0.2), added door knob (SphereGeometry with metallic material)
+- Updated door removal in rebuildDoorOnly() to include 'doorKnob' name
+- Updated buildRoom() door code to match incremental rebuild code with centered panel and knob
+- Added door/window position updates to updateRoomVisualPreview() for smooth slider drag experience
+- Updated door UI buttons with icons (fa-ban, fa-arrow-down, fa-arrow-left, fa-arrow-right)
+- Made door and window buttons consistent with border-2, rounded-lg, font-semibold, icon+label style
+- Added missing Door and Windows controls to mobile room panel
+- Updated desktop sidebar Windows section to use same icon-based button style
+- Build verified successful
+
+Stage Summary:
+- All drag now has 1.5x sensitivity for smoother object movement
+- Room dimension changes are instant (visual preview + debounced precise rebuild)
+- Door 3D model improved with centered panel and door knob
+- Door/Window UI buttons now have icons and consistent styling across desktop and mobile
+- Mobile panel now has Door and Windows controls (were missing)
+- Door and window positions update smoothly during dimension slider drag

@@ -742,18 +742,32 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const rebuildDoorOnly = useCallback(() => {
     const roomGroup = roomGroupRef.current;
     if (!roomGroup) return;
-    removeByNames(roomGroup, ['doorFrame', 'doorPanel']);
+    removeByNames(roomGroup, ['doorFrame', 'doorPanel', 'doorKnob']);
     const dw = doorWallRef.current;
     const w = roomWRef.current, d = roomDRef.current, h = roomHRef.current;
     if (dw !== 'none') {
       const doorW = 0.9, doorH = 2.1;
-      const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW + 0.1 : 0.08, doorH + 0.1, dw === 'left' || dw === 'right' ? doorW + 0.1 : 0.08), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
-      const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW : 0.04, doorH, dw === 'left' || dw === 'right' ? doorW : 0.04), new THREE.MeshStandardMaterial({ color: 0xC4B8A8, roughness: 0.6 }));
-      doorFrame.name = 'doorFrame'; doorPanel.name = 'doorPanel';
-      if (dw === 'back') { doorFrame.position.set(0, doorH / 2, -d / 2 + 0.03); doorPanel.position.set(0.2, doorH / 2, -d / 2 + 0.05); }
-      else if (dw === 'left') { doorFrame.position.set(-w / 2 + 0.03, doorH / 2, 0); doorPanel.position.set(-w / 2 + 0.05, doorH / 2, 0.2); }
-      else if (dw === 'right') { doorFrame.position.set(w / 2 - 0.03, doorH / 2, 0); doorPanel.position.set(w / 2 - 0.05, doorH / 2, 0.2); }
-      roomGroup.add(doorFrame, doorPanel);
+      const isBackFront = dw === 'back' || dw === 'front';
+      const isLeftRight = dw === 'left' || dw === 'right';
+      const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(isBackFront ? doorW + 0.1 : 0.08, doorH + 0.1, isLeftRight ? doorW + 0.1 : 0.08), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
+      const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(isBackFront ? doorW : 0.04, doorH, isLeftRight ? doorW : 0.04), new THREE.MeshStandardMaterial({ color: 0xC4B8A8, roughness: 0.6 }));
+      // Door knob — small sphere on the interior side of the door
+      const doorKnob = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), new THREE.MeshStandardMaterial({ color: 0xB8A080, roughness: 0.3, metalness: 0.6 }));
+      doorFrame.name = 'doorFrame'; doorPanel.name = 'doorPanel'; doorKnob.name = 'doorKnob';
+      if (dw === 'back') {
+        doorFrame.position.set(0, doorH / 2, -d / 2 + 0.03);
+        doorPanel.position.set(0, doorH / 2, -d / 2 + 0.055);
+        doorKnob.position.set(0.3, doorH * 0.48, -d / 2 + 0.08);
+      } else if (dw === 'left') {
+        doorFrame.position.set(-w / 2 + 0.03, doorH / 2, 0);
+        doorPanel.position.set(-w / 2 + 0.055, doorH / 2, 0);
+        doorKnob.position.set(-w / 2 + 0.08, doorH * 0.48, 0.3);
+      } else if (dw === 'right') {
+        doorFrame.position.set(w / 2 - 0.03, doorH / 2, 0);
+        doorPanel.position.set(w / 2 - 0.055, doorH / 2, 0);
+        doorKnob.position.set(w / 2 - 0.08, doorH * 0.48, 0.3);
+      }
+      roomGroup.add(doorFrame, doorPanel, doorKnob);
     }
     markSceneDirty();
   }, [removeByNames, markSceneDirty]);
@@ -1206,13 +1220,26 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     // Door — named for incremental rebuild
     if (dw !== 'none') {
       const doorW = 0.9, doorH = 2.1;
-      const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW + 0.1 : 0.08, doorH + 0.1, dw === 'left' || dw === 'right' ? doorW + 0.1 : 0.08), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
-      const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW : 0.04, doorH, dw === 'left' || dw === 'right' ? doorW : 0.04), new THREE.MeshStandardMaterial({ color: 0xC4B8A8, roughness: 0.6 }));
-      doorFrame.name = 'doorFrame'; doorPanel.name = 'doorPanel';
-      if (dw === 'back') { doorFrame.position.set(0, doorH / 2, -d / 2 + 0.03); doorPanel.position.set(0.2, doorH / 2, -d / 2 + 0.05); }
-      else if (dw === 'left') { doorFrame.position.set(-w / 2 + 0.03, doorH / 2, 0); doorPanel.position.set(-w / 2 + 0.05, doorH / 2, 0.2); }
-      else if (dw === 'right') { doorFrame.position.set(w / 2 - 0.03, doorH / 2, 0); doorPanel.position.set(w / 2 - 0.05, doorH / 2, 0.2); }
-      roomGroup.add(doorFrame, doorPanel);
+      const isBackFront = dw === 'back' || dw === 'front';
+      const isLeftRight = dw === 'left' || dw === 'right';
+      const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(isBackFront ? doorW + 0.1 : 0.08, doorH + 0.1, isLeftRight ? doorW + 0.1 : 0.08), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
+      const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(isBackFront ? doorW : 0.04, doorH, isLeftRight ? doorW : 0.04), new THREE.MeshStandardMaterial({ color: 0xC4B8A8, roughness: 0.6 }));
+      const doorKnob = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), new THREE.MeshStandardMaterial({ color: 0xB8A080, roughness: 0.3, metalness: 0.6 }));
+      doorFrame.name = 'doorFrame'; doorPanel.name = 'doorPanel'; doorKnob.name = 'doorKnob';
+      if (dw === 'back') {
+        doorFrame.position.set(0, doorH / 2, -d / 2 + 0.03);
+        doorPanel.position.set(0, doorH / 2, -d / 2 + 0.055);
+        doorKnob.position.set(0.3, doorH * 0.48, -d / 2 + 0.08);
+      } else if (dw === 'left') {
+        doorFrame.position.set(-w / 2 + 0.03, doorH / 2, 0);
+        doorPanel.position.set(-w / 2 + 0.055, doorH / 2, 0);
+        doorKnob.position.set(-w / 2 + 0.08, doorH * 0.48, 0.3);
+      } else if (dw === 'right') {
+        doorFrame.position.set(w / 2 - 0.03, doorH / 2, 0);
+        doorPanel.position.set(w / 2 - 0.055, doorH / 2, 0);
+        doorKnob.position.set(w / 2 - 0.08, doorH * 0.48, 0.3);
+      }
+      roomGroup.add(doorFrame, doorPanel, doorKnob);
     }
 
     // Ceiling spots (from persisted positions, style based on preset)
@@ -1560,9 +1587,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const debouncedBuildRoom = useCallback(() => {
     if (buildRoomTimeoutRef.current) clearTimeout(buildRoomTimeoutRef.current);
     buildRoomTimeoutRef.current = setTimeout(() => {
-      rebuildRoomGeometry();
-      buildRoomTimeoutRef.current = null;
-    }, 80);
+      requestAnimationFrame(() => {
+        rebuildRoomGeometry();
+        buildRoomTimeoutRef.current = null;
+      });
+    }, 60);
   }, [rebuildRoomGeometry]);
 
   /* ===== UPDATE ROOM VISUAL PREVIEW (instant in-place wall scaling) ===== */
@@ -1613,6 +1642,45 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     roomGroup.children.forEach(child => {
       if (child.name && child.name.startsWith('ceilingSpot_')) {
         child.position.y = newH - 0.015;
+      }
+    });
+
+    // Update door position during preview (approximate — precise rebuild on release)
+    const dw = doorWallRef.current;
+    const doorH = 2.1;
+    roomGroup.children.forEach(child => {
+      if (child.name === 'doorFrame') {
+        if (dw === 'back') child.position.set(0, doorH / 2, -newD / 2 + 0.03);
+        else if (dw === 'left') child.position.set(-newW / 2 + 0.03, doorH / 2, 0);
+        else if (dw === 'right') child.position.set(newW / 2 - 0.03, doorH / 2, 0);
+      } else if (child.name === 'doorPanel') {
+        if (dw === 'back') child.position.set(0, doorH / 2, -newD / 2 + 0.055);
+        else if (dw === 'left') child.position.set(-newW / 2 + 0.055, doorH / 2, 0);
+        else if (dw === 'right') child.position.set(newW / 2 - 0.055, doorH / 2, 0);
+      } else if (child.name === 'doorKnob') {
+        if (dw === 'back') child.position.set(0.3, doorH * 0.48, -newD / 2 + 0.08);
+        else if (dw === 'left') child.position.set(-newW / 2 + 0.08, doorH * 0.48, 0.3);
+        else if (dw === 'right') child.position.set(newW / 2 - 0.08, doorH * 0.48, 0.3);
+      }
+    });
+
+    // Update window positions during preview (approximate — precise rebuild on release)
+    const wcnt = windowCountRef.current;
+    const wwall = windowWallRef.current;
+    roomGroup.children.forEach(child => {
+      if (child.name === 'windowFrame' || child.name === 'windowGlass' || child.name === 'windowCrossV' || child.name === 'windowCrossH') {
+        const winW = Math.min(newW * 0.3, 2.2), winH = Math.min(newH * 0.45, 1.6);
+        if (wwall === 'back') {
+          const xOff = wcnt === 1 ? newW * 0.15 : (wcnt === 2 ? 0 : 0);
+          child.position.y = newH * 0.55;
+          child.position.z = -newD / 2 + 0.02;
+        } else if (wwall === 'left') {
+          child.position.x = -newW / 2 + 0.02;
+          child.position.y = newH * 0.55;
+        } else if (wwall === 'right') {
+          child.position.x = newW / 2 - 0.02;
+          child.position.y = newH * 0.55;
+        }
       }
     });
 
@@ -2510,10 +2578,12 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         pointerRef.current.y = -((e.clientY - r.top) / r.height) * 2 + 1;
         raycasterRef.current.setFromCamera(pointerRef.current, camera);
         if (raycasterRef.current.ray.intersectPlane(ceilingDragPlane, intersectionRef.current)) {
-          const np = intersectionRef.current.sub(dragOffsetRef.current);
+          const CEIL_DRAG_SENSITIVITY = 1.5;
           const hw = roomWRef.current / 2 - 0.2, hd = roomDRef.current / 2 - 0.2;
-          const nx = Math.max(-hw, Math.min(hw, np.x));
-          const nz = Math.max(-hd, Math.min(hd, np.z));
+          const rawDx = intersectionRef.current.x - dragOffsetRef.current.x;
+          const rawDz = intersectionRef.current.z - dragOffsetRef.current.z;
+          const nx = Math.max(-hw, Math.min(hw, dragOffsetRef.current.x + rawDx * CEIL_DRAG_SENSITIVITY));
+          const nz = Math.max(-hd, Math.min(hd, dragOffsetRef.current.z + rawDz * CEIL_DRAG_SENSITIVITY));
           ceilingDragItemRef.current.position.x = nx;
           ceilingDragItemRef.current.position.z = nz;
           // Update position in ref
@@ -2528,18 +2598,17 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         return;
       }
 
-      // === NORMAL FURNITURE DRAG (offset-based — no accumulation, no sensitivity hack) ===
+      // === NORMAL FURNITURE DRAG (offset-based — no accumulation) ===
       if (!isDragRef.current || !dragItemRef.current) return;
       const r = canvas.getBoundingClientRect();
       pointerRef.current.x = ((e.clientX - r.left) / r.width) * 2 - 1;
       pointerRef.current.y = -((e.clientY - r.top) / r.height) * 2 + 1;
       raycasterRef.current.setFromCamera(pointerRef.current, camera);
       if (raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current)) {
-        // Offset-based drag: furniture position = ray hit - original grab offset
-        // This is 1:1 with the raycaster, zero accumulation, zero teleport on wall hit.
-        // The raycaster gives correct world-space meters — no sensitivity multiplier needed.
-        let nx = intersectionRef.current.x - dragOffsetRef.current.x;
-        let nz = intersectionRef.current.z - dragOffsetRef.current.z;
+        // Offset-based drag with 1.5x sensitivity for smoother object movement
+        const DRAG_SENSITIVITY = 1.5;
+        let nx = dragOffsetRef.current.x + (intersectionRef.current.x - dragOffsetRef.current.x) * DRAG_SENSITIVITY;
+        let nz = dragOffsetRef.current.z + (intersectionRef.current.z - dragOffsetRef.current.z) * DRAG_SENSITIVITY;
         // Calculate furniture bounding box for wall constraint
         const bbox = new THREE.Box3().setFromObject(dragItemRef.current);
         const size = new THREE.Vector3();
@@ -3275,6 +3344,30 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               </div>
             </div>
           </div>
+          {/* Door - Mobile */}
+          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
+            <div className="flex gap-1.5 mt-1.5">
+              {[{ id: 'none', icon: 'fa-ban', label: 'None' }, { id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
+                <button key={id} onClick={() => { setDoorWall(id); doorWallRef.current = id; rebuildDoorOnly(); markUnsaved(); }} className="px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1"
+                  style={{ borderColor: doorWall === id ? '#C17F4E' : '#E8DFD4', color: doorWall === id ? '#C17F4E' : '#4A3E32', background: doorWall === id ? '#F5E8DC' : 'transparent' }}>
+                  <i className={`fas ${icon} text-[9px]`} />{label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Windows - Mobile */}
+          <div className="mb-2">
+            <div className="flex justify-between mb-0.5"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Windows</span><span className="text-[12px]" style={{ color: '#5A4E42' }}>{windowCount}</span></div>
+            <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; rebuildWindowsOnly(); markUnsaved(); }} />
+            <div className="flex gap-1.5 mt-1.5">
+              {[{ id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
+                <button key={id} onClick={() => { setWindowWall(id); windowWallRef.current = id; rebuildWindowsOnly(); markUnsaved(); }} className="px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1"
+                  style={{ borderColor: windowWall === id ? '#C17F4E' : '#E8DFD4', color: windowWall === id ? '#C17F4E' : '#4A3E32', background: windowWall === id ? '#F5E8DC' : 'transparent' }}>
+                  <i className={`fas ${icon} text-[9px]`} />{label}
+                </button>
+              ))}
+            </div>
+          </div>
           {/* Lighting */}
           <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
             <div className="flex gap-1 mt-1.5 flex-wrap">
@@ -3536,7 +3629,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div key={label as string} className="mb-2">
             <div className="flex justify-between mb-0.5 items-center"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>{label as string}</span>
               <div className="flex items-center gap-0.5">
-                <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); rebuildRoomGeometry(); markUnsaved(); } }} />
+                <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); } }} />
                 <span className="text-[12px]" style={{ color: '#5A4E42' }}>m</span>
               </div>
             </div>
@@ -3590,11 +3683,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
         {/* Door */}
         <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
-          <div className="flex gap-1 mt-1.5">
-            {['none', 'back', 'left', 'right'].map(dw => (
-              <button key={dw} onClick={() => { setDoorWall(dw); doorWallRef.current = dw; rebuildDoorOnly(); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                style={{ borderColor: doorWall === dw ? '#C17F4E' : '#E8DFD4', color: doorWall === dw ? '#C17F4E' : '#4A3E32', background: doorWall === dw ? '#F5E8DC' : 'transparent' }}>
-                {dw === 'none' ? 'None' : dw.charAt(0).toUpperCase() + dw.slice(1)}
+          <div className="flex gap-1.5 mt-1.5">
+            {[{ id: 'none', icon: 'fa-ban', label: 'None' }, { id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
+              <button key={id} onClick={() => { setDoorWall(id); doorWallRef.current = id; rebuildDoorOnly(); markUnsaved(); }} className="px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1"
+                style={{ borderColor: doorWall === id ? '#C17F4E' : '#E8DFD4', color: doorWall === id ? '#C17F4E' : '#4A3E32', background: doorWall === id ? '#F5E8DC' : 'transparent' }}>
+                <i className={`fas ${icon} text-[9px]`} />{label}
               </button>
             ))}
           </div>
@@ -3604,11 +3697,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         <div className="mb-2">
           <div className="flex justify-between mb-0.5"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Windows</span><span className="text-[12px]" style={{ color: '#5A4E42' }}>{windowCount}</span></div>
           <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; rebuildWindowsOnly(); markUnsaved(); }} />
-          <div className="flex gap-1 mt-1">
-            {['back', 'left', 'right'].map(ww => (
-              <button key={ww} onClick={() => { setWindowWall(ww); windowWallRef.current = ww; rebuildWindowsOnly(); markUnsaved(); }} className="px-2 py-0.5 rounded text-[11px] font-medium cursor-pointer border transition-all"
-                style={{ borderColor: windowWall === ww ? '#C17F4E' : '#E8DFD4', color: windowWall === ww ? '#C17F4E' : '#4A3E32' }}>
-                {ww.charAt(0).toUpperCase() + ww.slice(1)}
+          <div className="flex gap-1.5 mt-1.5">
+            {[{ id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
+              <button key={id} onClick={() => { setWindowWall(id); windowWallRef.current = id; rebuildWindowsOnly(); markUnsaved(); }} className="px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1"
+                style={{ borderColor: windowWall === id ? '#C17F4E' : '#E8DFD4', color: windowWall === id ? '#C17F4E' : '#4A3E32', background: windowWall === id ? '#F5E8DC' : 'transparent' }}>
+                <i className={`fas ${icon} text-[9px]`} />{label}
               </button>
             ))}
           </div>
