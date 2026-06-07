@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
-/* ===== EPIC CINEMATIC LOADER FOR INTERIOR STUDIO ===== */
+/* ===== EPIC CINEMATIC LOADER FOR INSTOD EDITOR ===== */
 
 const STAGES = [
   { at: 5, text: 'Initializing 3D Engine' },

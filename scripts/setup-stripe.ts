@@ -49,7 +49,7 @@ const MODE = IS_LIVE ? '🔴 LIVE' : '🧪 TEST';
 
 console.log('');
 console.log(`╔══════════════════════════════════════════════════╗`);
-console.log(`║   Interior Studio — Stripe Setup (${MODE} Mode)   ║`);
+console.log(`║   Instod — Stripe Setup (${MODE} Mode)           ║`);
 console.log(`╚══════════════════════════════════════════════════╝`);
 console.log('');
 
@@ -65,15 +65,15 @@ async function main() {
   });
 
   let proProduct = existingProducts.data.find(
-    (p) => p.metadata.plan === 'pro' || p.name === 'Interior Studio Pro'
+    (p) => p.metadata.plan === 'pro' || p.name === 'Instod Pro'
   );
   let studioProduct = existingProducts.data.find(
-    (p) => p.metadata.plan === 'studio' || p.name === 'Interior Studio Studio'
+    (p) => p.metadata.plan === 'studio' || p.name === 'Instod Studio'
   );
 
   if (!proProduct) {
     proProduct = await stripe.products.create({
-      name: 'Interior Studio Pro',
+      name: 'Instod Pro',
       description: 'For serious designers and homeowners — unlimited furniture, all room types, share links, export, and more.',
       metadata: {
         plan: 'pro',
@@ -86,7 +86,7 @@ async function main() {
 
   if (!studioProduct) {
     studioProduct = await stripe.products.create({
-      name: 'Interior Studio Studio',
+      name: 'Instod Studio',
       description: 'For professional interior designers — client portal, floor plans, cost estimator, presentation mode, and more.',
       metadata: {
         plan: 'studio',
@@ -167,7 +167,7 @@ async function main() {
   if (!portalConfig) {
     portalConfig = await stripe.billingPortal.configurations.create({
       business_profile: {
-        headline: 'Interior Studio — Manage your subscription',
+        headline: 'Instod — Manage your subscription',
       },
       features: {
         payment_method_update: {
@@ -245,7 +245,7 @@ async function main() {
         'customer.subscription.trial_will_end',
       ],
       metadata: {
-        app: 'interior-studio',
+        app: 'instod',
       },
     });
     console.log(`   ✅ Created webhook endpoint: ${webhook.id}`);

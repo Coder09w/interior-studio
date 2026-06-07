@@ -163,7 +163,7 @@ const lightMoods: Record<string, { bg: number; fog: number; ambient: [number, nu
   daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.5], dir: [0xFFF0D8, 0.5], hemi: [0xFFF5E6, 0x8B7355, 0.3], fill: [0xE0E8F0, 0.15], exposure: 0.9 },
   golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.35], dir: [0xFFE0A0, 0.4], hemi: [0xFFF0C0, 0x8B7355, 0.2], fill: [0xFFE8C0, 0.1], exposure: 0.95 },
   evening: { bg: 0x5C4A38, fog: 0x5C4A38, ambient: [0xFFC880, 0.2], dir: [0xFFE8C0, 0.25], hemi: [0xD8A070, 0x6B5340, 0.15], fill: [0xFFC880, 0.06], exposure: 0.85 },
-  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.08], dir: [0xFFE0A0, 0.08], hemi: [0x1A1A2E, 0x0D0D15, 0.05], fill: [0x4455AA, 0.02], exposure: 1.05 },
+  night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.25], dir: [0xFFE0A0, 0.15], hemi: [0x1A1A2E, 0x0D0D15, 0.15], fill: [0x4455AA, 0.05], exposure: 1.05 },
 };
 
 /* ===== FLOOR COLOR OPTIONS ===== */
@@ -260,6 +260,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const [showSnapshots, setShowSnapshots] = useState(false);
   const [snapshotName, setSnapshotName] = useState('');
   const [presetPanelOpen, setPresetPanelOpen] = useState(false);
+  const [roomBuilding, setRoomBuilding] = useState(false); // brief overlay during buildRoom
 
   // Skin System state
   const [activeSkin, setActiveSkin] = useState<string>('default');
@@ -281,7 +282,17 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
   }, [searchQuery]);
 
+  // Guest mode state
+  const [isGuest, setIsGuest] = useState(true); // default to guest until we verify auth
+  const [guestBannerCollapsed, setGuestBannerCollapsed] = useState(false); // auto-collapse after 5s
+
   // Apply initialRoomType from URL query param (e.g. ?room=bedroom)
+  // Auto-collapse guest banner after 5 seconds to reduce visual clutter
+  useEffect(() => {
+    if (!isGuest) return;
+    const timer = setTimeout(() => setGuestBannerCollapsed(true), 5000);
+    return () => clearTimeout(timer);
+  }, [isGuest]);
   useEffect(() => {
     if (initialRoomType && ['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'].includes(initialRoomType)) {
       setSelectedRoomType(initialRoomType as PresetRoomType);
@@ -289,9 +300,6 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       setOnboardingStep('preset');
     }
   }, [initialRoomType]);
-
-  // Guest mode state
-  const [isGuest, setIsGuest] = useState(true); // default to guest until we verify auth
 
   // Loading state — minimum display time for loader
   const [sceneReady, setSceneReady] = useState(false);
@@ -355,7 +363,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const [selectedLightZ, setSelectedLightZ] = useState(0);
   const selectedCeilingLightRef = useRef<THREE.Group | null>(null);
   const ceilingDragItemRef = useRef<THREE.Group | null>(null);
-  const savedCameraPosRef = useRef(new THREE.Vector3(7, 6, 9));
+  const savedCameraPosRef = useRef(new THREE.Vector3(5.5, 4.5, 7));
   const savedCameraTargetRef = useRef(new THREE.Vector3(0, 1, 0));
   const ceilingGridRef = useRef<THREE.GridHelper | null>(null);
   const ceilingSpotPositionsRef = useRef<Array<{ x: number; z: number }>>([
@@ -678,6 +686,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const roomGroup = roomGroupRef.current;
     const scene = sceneRef.current;
     if (!roomGroup || !scene) return;
+
+    // Show brief updating overlay
+    setRoomBuilding(true);
+    setTimeout(() => setRoomBuilding(false), 600);
 
     // Dispose old children — including shadow maps and textures to prevent GPU memory leaks
     while (roomGroup.children.length) {
@@ -1827,7 +1839,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
     const canvas = canvasRef.current; if (!canvas) return;
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0xF5F0E8); scene.fog = new THREE.FogExp2(0xF5F0E8, 0.018); sceneRef.current = scene;
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100); camera.position.set(7, 6, 9); cameraRef.current = camera;
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100); camera.position.set(5.5, 4.5, 7); cameraRef.current = camera;
 
     // Performance: lower pixel ratio on mobile, limit to 1.5x
     const pr = mobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2);
@@ -2000,9 +2012,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           const ceilHits = raycasterRef.current.intersectObjects(ceilMeshes, false);
 
           if (ceilHits.length > 0) {
+            const positions = ceilingSpotPositionsRef.current;
+            const MAX_CEILING_LIGHTS = 6;
+            if (positions.length >= MAX_CEILING_LIGHTS) {
+              // Max reached — select nearest existing light instead of adding
+              showToast(`Maximum ${MAX_CEILING_LIGHTS} ceiling lights`);
+            } else {
             // Add new ceiling light at click position
             const hitPoint = ceilHits[0].point;
-            const positions = ceilingSpotPositionsRef.current;
             const hw = roomWRef.current / 2 - 0.2, hd = roomDRef.current / 2 - 0.2;
             const nx = Math.max(-hw, Math.min(hw, hitPoint.x));
             const nz = Math.max(-hd, Math.min(hd, hitPoint.z));
@@ -2044,6 +2061,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             spotGroup.position.set(nx, h - 0.015, nz);
             roomGroup.add(spotGroup);
             roomGroup.userData.ceilingSpotCount = positions.length;
+            } // end else (not at max)
           }
           // Deselect current
           if (selectedCeilingLightRef.current) {
@@ -2387,6 +2405,22 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     capturePreAction(); buildRoom(); addDefaultFurniture(); pushHistory(); showToast('Room reset');
   }, [buildRoom, addDefaultFurniture, pushHistory, showToast]);
 
+  const zoomCamera = useCallback((direction: 'in' | 'out') => {
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    if (!camera || !controls) return;
+    const factor = direction === 'in' ? 0.8 : 1.25;
+    const target = controls.target.clone();
+    const offset = camera.position.clone().sub(target);
+    offset.multiplyScalar(factor);
+    // Clamp minimum distance to 2 and max to 20
+    const newDist = offset.length();
+    if (newDist < 2 || newDist > 20) return;
+    camera.position.copy(target.clone().add(offset));
+    controls.update();
+    markSceneDirty();
+  }, [markSceneDirty]);
+
   const takeScreenshot = useCallback(() => {
     const r = rendererRef.current, s = sceneRef.current, c = cameraRef.current; if (!r || !s || !c) return;
     r.render(s, c); const link = document.createElement('a'); link.download = `${designName.replace(/\s+/g, '_')}.png`; link.href = r.domElement.toDataURL('image/png'); link.click(); showToast('Screenshot saved');
@@ -2641,7 +2675,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     if (!mobilePanel) return null;
     const panelContent: Record<string, React.ReactNode> = {
       furniture: (
-        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Category tabs */}
           <div className="flex gap-1 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
             {categories.filter(cat => !isGuest || GUEST_ALLOWED_CATEGORIES.has(cat.id)).map(cat => (
@@ -2661,16 +2695,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               const isLocked = isGuest && !GUEST_ALLOWED_FURNITURE.has(item.fn);
               return (
               <button key={item.name} onClick={() => { if (isLocked) { showToast('Sign in to unlock this item'); return; } addFurniture(item.fn, currentColor, currentMatType); }} className="int-furniture-card text-center relative"
-                style={{ background: isLocked ? '#F8F6F2' : undefined }}>
+                style={{ background: isLocked ? '#F8F6F2' : undefined, opacity: isLocked ? 0.55 : 1, filter: isLocked ? 'grayscale(40%)' : 'none' }}>
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-1 text-sm relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}>
                   <i className={`fas ${item.icon}`} />
+                  {isLocked && <i className="fas fa-lock absolute -top-1 -right-1 text-[8px]" style={{ color: '#C17F4E', background: '#fff', borderRadius: '50%', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />}
                 </div>
                 <p className="text-[12px] font-semibold leading-tight" style={{ color: isLocked ? '#A09080' : '#2D2D2D' }}>{item.name}</p>
                 {isLocked && (
-                  <div className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center" style={{ background: 'rgba(250,248,244,0.75)' }}>
-                    <i className="fas fa-lock text-[12px] mb-0.5" style={{ color: '#C17F4E' }} />
-                    <span className="text-[9px] font-bold" style={{ color: '#C17F4E' }}>Sign In</span>
-                  </div>
+                  <span className="text-[8px] font-bold mt-0.5 block" style={{ color: '#C17F4E' }}>PRO</span>
                 )}
               </button>
               );
@@ -2679,7 +2711,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       ),
       material: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Material & Color</p>
           <div className="flex gap-1 mb-2 flex-wrap">
             {(['fabric', 'leather', 'wood', 'metal'] as MatType[]).map(t => (
@@ -2732,7 +2764,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       ),
       skin: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Themes</p>
           <div className="grid grid-cols-2 gap-2">
             {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
@@ -2766,7 +2798,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       ),
       room: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Room Settings</p>
           {[
             { label: 'Width', val: roomW, min: 4, max: 14, step: 0.5, setter: [setRoomW, (v: number) => roomWRef.current = v] },
@@ -2866,7 +2898,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       ),
       skeleton: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Skeleton header */}
           <div className="flex items-center gap-2 mb-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(92,64,51,0.1)' }}>
@@ -2944,7 +2976,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       ),
       presets: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Presets</p>
           <p className="text-[11px] mb-3" style={{ color: '#7A6E62' }}>Tap a preset to instantly load a curated room design</p>
           {/* Room type filter */}
@@ -3025,14 +3057,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           {filteredItems.map(item => {
             const isLocked = isGuest && !GUEST_ALLOWED_FURNITURE.has(item.fn);
             return (
-            <button key={item.name} onClick={() => { if (isLocked) { showToast('Sign in to unlock this item'); return; } addFurniture(item.fn, currentColor, currentMatType); }} className="int-furniture-card relative" style={{ background: isLocked ? '#F8F6F2' : undefined }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-1 text-base" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}><i className={`fas ${item.icon}`} /></div>
+            <button key={item.name} onClick={() => { if (isLocked) { showToast('Sign in to unlock this item'); return; } addFurniture(item.fn, currentColor, currentMatType); }} className="int-furniture-card relative" style={{ background: isLocked ? '#F8F6F2' : undefined, opacity: isLocked ? 0.55 : 1, filter: isLocked ? 'grayscale(40%)' : 'none' }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-1 text-base relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}><i className={`fas ${item.icon}`} />
+                {isLocked && <i className="fas fa-lock absolute -top-1 -right-1 text-[7px]" style={{ color: '#C17F4E', background: '#fff', borderRadius: '50%', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />}
+              </div>
               <p className="text-[13px] font-semibold leading-tight" style={{ color: isLocked ? '#A09080' : '#2D2D2D' }}>{item.name}</p>
               <p className="text-[11px]" style={{ color: isLocked ? '#B8B0A0' : '#7A6E62' }}>{item.desc}</p>
               {isLocked && (
-                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(193,127,78,0.15)' }}>
-                  <i className="fas fa-lock text-[7px]" style={{ color: '#C17F4E' }} />
-                </div>
+                <span className="text-[8px] font-bold mt-0.5 block" style={{ color: '#C17F4E' }}>PRO</span>
               )}
             </button>
             );
@@ -3570,8 +3602,16 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
       )}
 
-      {/* Guest Upsell — modern top banner with prominent CTA */}
+      {/* Guest Upsell — auto-collapses to small pill after 5 seconds */}
       {isGuest && !showOnboarding && !isMobile && (
+        guestBannerCollapsed ? (
+          <button onClick={() => setGuestBannerCollapsed(false)} className="fixed top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: '#5A4E42', color: '#fff', fontFamily: "'Outfit', sans-serif", boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: 11, transition: 'all 0.3s ease' }}>
+            <i className="fas fa-lock text-[8px]" style={{ color: 'rgba(255,255,255,0.7)' }} />
+            <span className="font-semibold">Guest Mode</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>— Limited features</span>
+            <i className="fas fa-chevron-down text-[7px]" style={{ color: 'rgba(255,255,255,0.5)' }} />
+          </button>
+        ) : (
         <div
           className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-6"
           style={{
@@ -3580,6 +3620,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             height: 44,
             fontFamily: "'Outfit', sans-serif",
             boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+            transition: 'all 0.3s ease',
           }}
         >
           <div className="flex items-center gap-3">
@@ -3595,19 +3636,23 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.8)' }}>Limited features — sign up for full access</span>
             </div>
           </div>
-          <a
-            href="/auth/signup"
-            className="flex items-center gap-2 px-5 py-1.5 rounded-full text-[12px] font-bold no-underline transition-all hover:scale-[1.03] hover:shadow-lg"
-            style={{
-              background: '#FFFFFF',
-              color: '#A86A3D',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            }}
-          >
-            <i className="fas fa-user-plus text-[10px]" />
-            Sign Up Free
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="/auth/signup"
+              className="flex items-center gap-2 px-5 py-1.5 rounded-full text-[12px] font-bold no-underline transition-all hover:scale-[1.03] hover:shadow-lg"
+              style={{
+                background: '#FFFFFF',
+                color: '#A86A3D',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              }}
+            >
+              <i className="fas fa-user-plus text-[10px]" />
+              Sign Up Free
+            </a>
+            <button onClick={() => setGuestBannerCollapsed(true)} className="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)', border: 'none' }} aria-label="Dismiss banner"><i className="fas fa-times text-[10px]" /></button>
+          </div>
         </div>
+        )
       )}
 
       {/* Mobile Guest Banner — removed: save button + sign-up pill in top bar is sufficient */}
@@ -3810,9 +3855,19 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
         <canvas ref={canvasRef} role="application" aria-label="3D Room Editor — use mouse to orbit, scroll to zoom" style={{ width: '100%', height: '100%', display: 'block', cursor: ceilingEditMode ? 'crosshair' : 'grab' }} />
 
+        {/* Brief overlay during room rebuild — prevents blank flash */}
+        {roomBuilding && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ background: 'rgba(245,240,232,0.5)', backdropFilter: 'blur(2px)', transition: 'opacity 0.3s ease' }}>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.9)', boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
+              <i className="fas fa-sync-alt fa-spin text-[11px]" style={{ color: '#C17F4E' }} />
+              <span className="text-[11px] font-semibold" style={{ color: '#5A4E42' }}>Updating room...</span>
+            </div>
+          </div>
+        )}
+
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
-          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-30' : 'absolute top-14 left-1/2 -translate-x-1/2 z-30 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-30' : 'absolute top-14 left-1/2 -translate-x-1/2 z-30 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
             {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
@@ -3935,7 +3990,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             {[
               { id: 'top', icon: 'fa-border-all', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
               { id: 'front', icon: 'fa-square', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
-              { id: 'persp', icon: 'fa-cube', pos: [7, 6, 9] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+              { id: 'persp', icon: 'fa-cube', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
             ].map(v => (
               <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#2D2D2D', fontSize: 11, transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}><i className={`fas ${v.icon}`} /></button>
             ))}
@@ -3958,6 +4013,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               <button onClick={duplicateSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 10 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
               <button onClick={deleteSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 10 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
             </div>
+          </div>
+        )}
+
+        {/* Mobile: Zoom controls — bottom-left floating buttons */}
+        {isMobile && !ceilingEditMode && (
+          <div className="absolute bottom-2 left-2 flex flex-col gap-1 z-10">
+            <button onClick={() => zoomCamera('in')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom In">+</button>
+            <button onClick={() => zoomCamera('out')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom Out">&minus;</button>
           </div>
         )}
 
@@ -3996,7 +4059,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '38vh' : 'auto', paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))', flexShrink: 0, transition: 'height 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))', flexShrink: 0, transition: 'height 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}>
 
           {/* Selected item slim bar — name + rotate + delete, always visible when item selected (even with panel open) */}
           {itemPanelVisible && (

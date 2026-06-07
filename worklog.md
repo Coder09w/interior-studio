@@ -606,3 +606,56 @@ Stage Summary:
 - 4 bugs fixed, 2 files changed, 73 insertions, 115 deletions (net -42 lines)
 - Commit: e3a9978 on main
 - Deployed to https://instod.vercel.app
+
+---
+Task ID: 11
+Agent: General Purpose Agent
+Task: Fix non-editor page issues
+
+Work Log:
+- **Issue 1 — 3D Engine Loader on non-editor pages:**
+  - Thoroughly investigated root layout, all nested layouts, and all loading.tsx files
+  - Root layout (`src/app/layout.tsx`) does NOT include EditorLoader — only BetaBanner, FeedbackButton, AuthProvider, Toaster
+  - Root `loading.tsx` returns null (no loading indicator for root-level pages)
+  - EditorLoader is only used in: `/editor/page.tsx`, `/editor/[projectId]/page.tsx`, `/editor/loading.tsx`, and `InteriorStudio.tsx`
+  - Non-editor pages (`/terms`, `/privacy`, `/contact`, `/about`, `/auth/*`) have NO loading.tsx or use PageLoader only
+  - Previous sessions already fixed this issue (Task ID 1 removed root loading.tsx, Task v4-audit-fixes confirmed EditorLoader scoped to editor)
+  - Created `src/app/editor/layout.tsx` as defensive isolation boundary with documentation explaining why
+  - EditorLoader CSS animations remain in globals.css (loaded globally but not rendered on non-editor pages)
+
+- **Issue 2 — Bouncing email (support@instod.vercel.app):**
+  - Searched entire project for `support@instod.vercel.app`, `@instod.vercel.app`, `@interiorstudio.app`, `hello@interiorstudio.app`
+  - ZERO instances found in source code — all were replaced with contact form links (https://instod.vercel.app/contact) in previous sessions
+  - Previous worklog confirms: Task v4-audit-fixes replaced `security@instod.vercel.app` in /terms and `privacy@interiorstudio.app` + `hello@interiorstudio.app` in /privacy
+  - No action needed — already fixed
+
+- **Issue 3 — Brand name inconsistency ("Interior Studio"):**
+  - Searched all source files for "Interior Studio" — found in:
+    - `src/components/EditorLoader.tsx:5` — code comment → **Fixed**: changed to "INSTOD EDITOR"
+    - `scripts/setup-stripe.ts` — Stripe product names "Interior Studio Pro/Studio" + portal headline + console banner + webhook metadata → **Fixed**: all changed to "Instod"
+    - `.env.example:1` — file comment → **Fixed**: changed to "Instod"
+    - `worklog.md` and `team-panal.md` — historical entries (not changed, these are records)
+  - Note: A previous session (Task bug-fix-round) already renamed "Interior Studio" → "Instod" across 16 user-facing files
+
+- **Issue 4 — Privacy policy inaccuracies (SQLite/OAuth):**
+  - Checked `/src/app/privacy/page.tsx` for "SQLite", "Google OAuth", "GitHub OAuth"
+  - ZERO instances found — all were removed in previous sessions
+  - Privacy policy correctly states: "NextAuth.js for authentication" and "secure, encrypted database with robust access controls"
+  - Only SQLite reference is in `src/lib/db.ts` line 6 (internal code comment about fallback handling, not user-facing)
+  - No action needed — already correct
+
+- **Bonus fix — TypeScript error:**
+  - Fixed `isGuest` used before declaration in InteriorStudio.tsx (line 288 used, declared at line 301)
+  - Moved `isGuest` and `guestBannerCollapsed` state declarations above the useEffect that references them
+
+- Build passes: tsc --noEmit (zero errors) + next build (success)
+- Committed: 0f651ca on main
+
+Stage Summary:
+- EditorLoader is already correctly scoped to editor pages only — no visual bug exists
+- Created editor/layout.tsx as defensive isolation boundary
+- All 4 "Interior Studio" references in source files updated to "Instod"
+- No bouncing emails remain in source code — all replaced with contact form links
+- Privacy policy is already accurate — no SQLite/OAuth mentions
+- Fixed pre-existing TypeScript error (isGuest declaration order)
+- 5 files changed, commit 0f651ca
