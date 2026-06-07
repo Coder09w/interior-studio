@@ -262,7 +262,6 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const [showSnapshots, setShowSnapshots] = useState(false);
   const [snapshotName, setSnapshotName] = useState('');
   const [presetPanelOpen, setPresetPanelOpen] = useState(false);
-  const [roomBuilding, setRoomBuilding] = useState(false); // brief overlay during buildRoom
 
   // Skin System state
   const [activeSkin, setActiveSkin] = useState<string>('default');
@@ -683,33 +682,328 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     }, 500);
   }, [currentRoomId, serializeFurniture, designName]);
 
-  /* ===== BUILD ROOM ===== */
+  /* ===== HELPER: Dispose a single object and its children ===== */
+  const disposeObj = useCallback((obj: THREE.Object3D) => {
+    obj.traverse(c => {
+      if (c instanceof THREE.Mesh) {
+        const mat = c.material as THREE.MeshStandardMaterial;
+        mat.map?.dispose();
+        c.geometry?.dispose();
+        if (Array.isArray(mat)) mat.forEach(m => m.dispose()); else mat?.dispose();
+      }
+      if ((c instanceof THREE.SpotLight || c instanceof THREE.PointLight) && c.shadow?.map) {
+        c.shadow.map.dispose();
+        c.shadow.map = null;
+      }
+    });
+  }, []);
+
+  /* ===== HELPER: Remove children by name prefix from roomGroup ===== */
+  const removeByNames = useCallback((roomGroup: THREE.Group, names: string[]) => {
+    const toRemove: THREE.Object3D[] = [];
+    roomGroup.children.forEach(child => {
+      if (names.some(n => child.name === n || child.name.startsWith(n))) {
+        toRemove.push(child);
+      }
+    });
+    toRemove.forEach(child => {
+      roomGroup.remove(child);
+      disposeObj(child);
+    });
+  }, [disposeObj]);
+
+  /* ===== INCREMENTAL: Rebuild floor only ===== */
+  const rebuildFloorOnly = useCallback(() => {
+    const roomGroup = roomGroupRef.current;
+    if (!roomGroup) return;
+    removeByNames(roomGroup, ['floor']);
+    const w = roomWRef.current, d = roomDRef.current;
+    const ft = floorTypeRef.current, fc = floorColorRef.current;
+    let floorTex: THREE.CanvasTexture;
+    let floorRoughness = 0.65;
+    switch (ft) {
+      case 'marble': floorTex = makeMarbleTexture(w, d, fc); floorRoughness = 0.2; break;
+      case 'concrete': floorTex = makeConcreteTexture(w, d, fc); floorRoughness = 0.85; break;
+      case 'carpet': floorTex = makeCarpetTexture(w, d, fc); floorRoughness = 0.95; break;
+      case 'tile': floorTex = makeTileTexture(w, d, fc); floorRoughness = 0.5; break;
+      default: floorTex = makeHardwoodTexture(w, d, fc);
+    }
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: floorTex, roughness: floorRoughness, metalness: 0 }));
+    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.name = 'floor'; roomGroup.add(floor);
+    markSceneDirty();
+  }, [removeByNames, markSceneDirty]);
+
+  /* ===== INCREMENTAL: Rebuild door only ===== */
+  const rebuildDoorOnly = useCallback(() => {
+    const roomGroup = roomGroupRef.current;
+    if (!roomGroup) return;
+    removeByNames(roomGroup, ['doorFrame', 'doorPanel']);
+    const dw = doorWallRef.current;
+    const w = roomWRef.current, d = roomDRef.current, h = roomHRef.current;
+    if (dw !== 'none') {
+      const doorW = 0.9, doorH = 2.1;
+      const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW + 0.1 : 0.08, doorH + 0.1, dw === 'left' || dw === 'right' ? doorW + 0.1 : 0.08), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
+      const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW : 0.04, doorH, dw === 'left' || dw === 'right' ? doorW : 0.04), new THREE.MeshStandardMaterial({ color: 0xC4B8A8, roughness: 0.6 }));
+      doorFrame.name = 'doorFrame'; doorPanel.name = 'doorPanel';
+      if (dw === 'back') { doorFrame.position.set(0, doorH / 2, -d / 2 + 0.03); doorPanel.position.set(0.2, doorH / 2, -d / 2 + 0.05); }
+      else if (dw === 'left') { doorFrame.position.set(-w / 2 + 0.03, doorH / 2, 0); doorPanel.position.set(-w / 2 + 0.05, doorH / 2, 0.2); }
+      else if (dw === 'right') { doorFrame.position.set(w / 2 - 0.03, doorH / 2, 0); doorPanel.position.set(w / 2 - 0.05, doorH / 2, 0.2); }
+      roomGroup.add(doorFrame, doorPanel);
+    }
+    markSceneDirty();
+  }, [removeByNames, markSceneDirty]);
+
+  /* ===== INCREMENTAL: Rebuild windows only ===== */
+  const rebuildWindowsOnly = useCallback(() => {
+    const roomGroup = roomGroupRef.current;
+    if (!roomGroup) return;
+    // Remove all window-related meshes (frame, glass, cross vertical, cross horizontal)
+    const winNames = ['windowFrame', 'windowGlass', 'windowCrossV', 'windowCrossH'];
+    removeByNames(roomGroup, winNames);
+    const w = roomWRef.current, d = roomDRef.current, h = roomHRef.current;
+    const wcnt = windowCountRef.current, wwall = windowWallRef.current;
+    const mood = lightMoodRef.current;
+    const isDark = mood === 'night' || mood === 'evening';
+    const lightColor = isDark ? 0xFFE8C0 : 0xFFEED0;
+
+    const addWindow = (wall: string, offset: number) => {
+      const winW = Math.min(w * 0.3, 2.2), winH = Math.min(h * 0.45, 1.6);
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(winW + 0.1, winH + 0.1, 0.06), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
+      frame.name = 'windowFrame';
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(winW, winH), new THREE.MeshStandardMaterial({ color: 0xC8DDE8, emissive: 0x8AB8D0, emissiveIntensity: mood === 'night' ? 0.1 : 0.4, roughness: 0.1, metalness: 0.1 }));
+      glass.name = 'windowGlass';
+      const crossMat = new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 });
+      const cv = new THREE.Mesh(new THREE.BoxGeometry(0.04, winH, 0.06), crossMat);
+      cv.name = 'windowCrossV';
+      const ch = new THREE.Mesh(new THREE.BoxGeometry(winW, 0.04, 0.06), crossMat);
+      ch.name = 'windowCrossH';
+
+      if (wall === 'back') {
+        const xOff = wcnt === 1 ? w * 0.15 : (wcnt === 2 ? offset * (w * 0.3) : offset * (w * 0.25));
+        frame.position.set(xOff, h * 0.55, -d / 2 + 0.02);
+        glass.position.set(xOff, h * 0.55, -d / 2 + 0.04);
+        cv.position.copy(frame.position); ch.position.copy(frame.position);
+      } else if (wall === 'left') {
+        const zOff = wcnt === 1 ? 0 : offset * (d * 0.3);
+        frame.position.set(-w / 2 + 0.02, h * 0.55, zOff); frame.rotation.y = Math.PI / 2;
+        glass.position.set(-w / 2 + 0.04, h * 0.55, zOff); glass.rotation.y = Math.PI / 2;
+        cv.position.copy(frame.position); cv.rotation.y = Math.PI / 2;
+        ch.position.copy(frame.position); ch.rotation.y = Math.PI / 2;
+      } else {
+        const zOff = wcnt === 1 ? 0 : offset * (d * 0.3);
+        frame.position.set(w / 2 - 0.02, h * 0.55, zOff); frame.rotation.y = -Math.PI / 2;
+        glass.position.set(w / 2 - 0.04, h * 0.55, zOff); glass.rotation.y = -Math.PI / 2;
+        cv.position.copy(frame.position); cv.rotation.y = -Math.PI / 2;
+        ch.position.copy(frame.position); ch.rotation.y = -Math.PI / 2;
+      }
+      roomGroup.add(frame, glass, cv, ch);
+    };
+    for (let i = 0; i < wcnt; i++) addWindow(wwall, i - Math.floor(wcnt / 2));
+    markSceneDirty();
+  }, [removeByNames, markSceneDirty]);
+
+  /* ===== INCREMENTAL: Rebuild ceiling lights only ===== */
+  const rebuildCeilingLightsOnly = useCallback(() => {
+    const roomGroup = roomGroupRef.current;
+    if (!roomGroup) return;
+    // Remove ceiling spot groups, track bar, room fill light
+    removeByNames(roomGroup, ['ceilingSpot_', 'ceilingTrack', 'roomFillLight']);
+    const w = roomWRef.current, d = roomDRef.current, h = roomHRef.current;
+    const spotPositions = ceilingSpotPositionsRef.current;
+    const preset = ceilingLightPresetRef.current;
+    const mood = lightMoodRef.current;
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x333, roughness: 0.3, metalness: 0.8 });
+    const brassMat = new THREE.MeshStandardMaterial({ color: 0xB8860B, roughness: 0.35, metalness: 0.7 });
+    const isNight = mood === 'night';
+    const isEvening = mood === 'evening';
+    const isDark = isNight || isEvening;
+    const lightColor = isDark ? 0xFFE8C0 : 0xFFEED0;
+    const mainIntensity = isDark ? 0.5 : 0.8;
+    const secondaryIntensity = isDark ? 0.4 : 0.6;
+    const clampExposure = (v: number) => Math.max(0.3, Math.min(v, 1.15));
+
+    const createBulb = (radius: number): THREE.Mesh => {
+      const bulbGeo = new THREE.SphereGeometry(radius, 12, 12);
+      const bulbMat = new THREE.MeshStandardMaterial({
+        color: 0xFFF5E0,
+        emissive: isDark ? 0xFFE8A0 : 0xFFEED0,
+        emissiveIntensity: isDark ? 1.5 : 1.0,
+        roughness: 0.2,
+        metalness: 0.0,
+      });
+      return new THREE.Mesh(bulbGeo, bulbMat);
+    };
+
+    if (preset === 'chandelier') {
+      const chandGroup = new THREE.Group();
+      chandGroup.name = 'ceilingSpot_0';
+      chandGroup.userData.isCeilingSpot = true;
+      chandGroup.userData.spotIndex = 0;
+      const mount = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.04, 16), metalMat);
+      chandGroup.add(mount);
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.4, 8), metalMat);
+      rod.position.y = -0.22;
+      chandGroup.add(rod);
+      const hub = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), brassMat);
+      hub.position.y = -0.42;
+      chandGroup.add(hub);
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const armLen = 0.3;
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, armLen, 6), brassMat);
+        arm.rotation.z = Math.PI / 2;
+        arm.position.set(Math.cos(angle) * armLen / 2, -0.42, Math.sin(angle) * armLen / 2);
+        arm.rotation.y = -angle;
+        chandGroup.add(arm);
+        const crystal = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshStandardMaterial({
+          color: 0xFFFFFF, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.85,
+          emissive: lightColor, emissiveIntensity: isDark ? 0.5 : 0.3,
+        }));
+        crystal.position.set(Math.cos(angle) * armLen, -0.48, Math.sin(angle) * armLen);
+        chandGroup.add(crystal);
+      }
+      const centralLight = new THREE.PointLight(lightColor, mainIntensity, 10);
+      centralLight.position.set(0, -0.5, 0);
+      chandGroup.add(centralLight);
+      const centralBulb = createBulb(0.05);
+      centralBulb.position.set(0, -0.5, 0);
+      chandGroup.add(centralBulb);
+      chandGroup.position.set(spotPositions[0]?.x || 0, h - 0.02, spotPositions[0]?.z || 0);
+      roomGroup.add(chandGroup);
+      roomGroup.userData.ceilingSpotCount = 1;
+    } else if (preset === 'track') {
+      const trackLen = w * 0.6;
+      const trackBar = new THREE.Mesh(new THREE.BoxGeometry(trackLen, 0.04, 0.06), new THREE.MeshStandardMaterial({ color: 0x222, roughness: 0.4, metalness: 0.7 }));
+      trackBar.name = 'ceilingTrack';
+      trackBar.position.set(0, h - 0.02, spotPositions[0]?.z || 0);
+      roomGroup.add(trackBar);
+      const numHeads = Math.min(4, spotPositions.length);
+      for (let i = 0; i < numHeads; i++) {
+        const headGroup = new THREE.Group();
+        headGroup.name = `ceilingSpot_${i}`;
+        headGroup.userData.isCeilingSpot = true;
+        headGroup.userData.spotIndex = i;
+        const connector = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.04, 8), metalMat);
+        headGroup.add(connector);
+        const head = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.08, 12), metalMat);
+        head.position.y = -0.06;
+        headGroup.add(head);
+        const bulb = createBulb(0.03);
+        bulb.position.set(0, -0.1, 0);
+        headGroup.add(bulb);
+        const headLight = new THREE.PointLight(lightColor, secondaryIntensity, 8);
+        headLight.position.set(0, -0.1, 0);
+        headGroup.add(headLight);
+        const xOffset = (i - (numHeads - 1) / 2) * (trackLen / (numHeads + 1));
+        headGroup.position.set(xOffset, h - 0.04, spotPositions[0]?.z || 0);
+        roomGroup.add(headGroup);
+      }
+      roomGroup.userData.ceilingSpotCount = numHeads;
+    } else if (preset === 'panel') {
+      const panelW = Math.min(w * 0.5, 2.5);
+      const panelD = Math.min(d * 0.3, 1.2);
+      const panelGroup = new THREE.Group();
+      panelGroup.name = 'ceilingSpot_0';
+      panelGroup.userData.isCeilingSpot = true;
+      panelGroup.userData.spotIndex = 0;
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(panelW + 0.04, 0.03, panelD + 0.04), metalMat);
+      panelGroup.add(frame);
+      const panelMat = new THREE.MeshStandardMaterial({
+        color: 0xFFEED0, emissive: isDark ? 0xFFE8A0 : 0xFFEED0,
+        emissiveIntensity: isDark ? 1.5 : 0.8, roughness: 0.3,
+      });
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(panelW, panelD), panelMat);
+      panel.rotation.x = Math.PI / 2;
+      panel.position.y = -0.016;
+      panelGroup.add(panel);
+      const panelLight = new THREE.PointLight(lightColor, mainIntensity, 12);
+      panelLight.position.set(0, -0.3, 0);
+      panelGroup.add(panelLight);
+      panelGroup.position.set(spotPositions[0]?.x || 0, h - 0.015, spotPositions[0]?.z || 0);
+      roomGroup.add(panelGroup);
+      roomGroup.userData.ceilingSpotCount = 1;
+    } else if (preset === 'pendant') {
+      const numPendants = Math.min(3, spotPositions.length);
+      for (let i = 0; i < numPendants; i++) {
+        const pendGroup = new THREE.Group();
+        pendGroup.name = `ceilingSpot_${i}`;
+        pendGroup.userData.isCeilingSpot = true;
+        pendGroup.userData.spotIndex = i;
+        const pMount = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.02, 12), metalMat);
+        pendGroup.add(pMount);
+        const pRod = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.5, 6), metalMat);
+        pRod.position.y = -0.26;
+        pendGroup.add(pRod);
+        const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.12, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0x2A2A2A, roughness: 0.6, metalness: 0.3 }));
+        shade.position.y = -0.53;
+        pendGroup.add(shade);
+        const innerGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.1, 0.08, 12), new THREE.MeshStandardMaterial({
+          color: 0xFFF0D0, emissive: lightColor, emissiveIntensity: isDark ? 1.0 : 0.5, roughness: 0.5,
+        }));
+        innerGlow.position.y = -0.54;
+        pendGroup.add(innerGlow);
+        const bulb = createBulb(0.025);
+        bulb.position.set(0, -0.58, 0);
+        pendGroup.add(bulb);
+        const pendLight = new THREE.PointLight(lightColor, secondaryIntensity, 8);
+        pendLight.position.set(0, -0.5, 0);
+        pendGroup.add(pendLight);
+        const px = (i - (numPendants - 1) / 2) * 1.2;
+        pendGroup.position.set(spotPositions[i]?.x || px, h - 0.01, spotPositions[i]?.z || 0);
+        roomGroup.add(pendGroup);
+      }
+      roomGroup.userData.ceilingSpotCount = numPendants;
+    } else {
+      // Default recessed spots
+      spotPositions.forEach((pos, idx) => {
+        const spotGroup = new THREE.Group();
+        spotGroup.name = `ceilingSpot_${idx}`;
+        spotGroup.userData.isCeilingSpot = true;
+        spotGroup.userData.spotIndex = idx;
+        const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.03, 16), metalMat);
+        housing.name = `ceilingSpotMesh_${idx}`;
+        spotGroup.add(housing);
+        const ringMat = new THREE.MeshStandardMaterial({
+          color: 0xFFEED0, emissive: lightColor, emissiveIntensity: isDark ? 1.5 : 0.8,
+          roughness: 0.3, metalness: 0.0,
+        });
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.11, 16), ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = -0.016;
+        spotGroup.add(ring);
+        const bulb = createBulb(0.03);
+        bulb.position.set(0, -0.06, 0);
+        spotGroup.add(bulb);
+        const spot = new THREE.PointLight(lightColor, mainIntensity, 10);
+        spot.position.set(0, -0.06, 0);
+        spotGroup.add(spot);
+        spotGroup.position.set(pos.x, h - 0.015, pos.z);
+        roomGroup.add(spotGroup);
+      });
+      roomGroup.userData.ceilingSpotCount = spotPositions.length;
+    }
+
+    // Room fill light
+    const roomFillIntensity = isDark ? 0.3 : 0.5;
+    const roomFill = new THREE.PointLight(lightColor, roomFillIntensity, 0);
+    roomFill.position.set(0, h * 0.7, 0);
+    roomFill.name = 'roomFillLight';
+    roomGroup.add(roomFill);
+
+    markSceneDirty();
+  }, [removeByNames, markSceneDirty]);
+
+  /* ===== BUILD ROOM (full rebuild — only for dimension changes / reset) ===== */
   const buildRoom = useCallback(() => {
     const roomGroup = roomGroupRef.current;
     const scene = sceneRef.current;
     if (!roomGroup || !scene) return;
 
-    // Show brief updating overlay
-    setRoomBuilding(true);
-    setTimeout(() => setRoomBuilding(false), 600);
-
     // Dispose old children — including shadow maps and textures to prevent GPU memory leaks
     while (roomGroup.children.length) {
       const child = roomGroup.children[0];
       roomGroup.remove(child);
-      child.traverse(c => {
-        if (c instanceof THREE.Mesh) {
-          const mat = c.material as THREE.MeshStandardMaterial;
-          mat.map?.dispose(); // Dispose texture before material
-          c.geometry?.dispose();
-          if (Array.isArray(mat)) mat.forEach(m => m.dispose()); else mat?.dispose();
-        }
-        // Dispose shadow map textures for SpotLights and PointLights
-        if ((c instanceof THREE.SpotLight || c instanceof THREE.PointLight) && c.shadow?.map) {
-          c.shadow.map.dispose();
-          c.shadow.map = null;
-        }
-      });
+      disposeObj(child);
     }
 
     const w = roomWRef.current, d = roomDRef.current, h = roomHRef.current;
@@ -785,14 +1079,18 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const bb1 = new THREE.Mesh(new THREE.BoxGeometry(w, bbH, 0.02), bbMat); bb1.position.set(0, bbH / 2, -d / 2 + 0.01); bb1.name = 'baseboard_back'; roomGroup.add(bb1);
     const bb2 = new THREE.Mesh(new THREE.BoxGeometry(0.02, bbH, d), bbMat); bb2.position.set(-w / 2 + 0.01, bbH / 2, 0); bb2.name = 'baseboard_left'; roomGroup.add(bb2);
 
-    // Windows
+    // Windows — named for incremental rebuild
     const addWindow = (wall: string, offset: number) => {
       const winW = Math.min(w * 0.3, 2.2), winH = Math.min(h * 0.45, 1.6);
       const frame = new THREE.Mesh(new THREE.BoxGeometry(winW + 0.1, winH + 0.1, 0.06), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
+      frame.name = 'windowFrame';
       const glass = new THREE.Mesh(new THREE.PlaneGeometry(winW, winH), new THREE.MeshStandardMaterial({ color: 0xC8DDE8, emissive: 0x8AB8D0, emissiveIntensity: mood === 'night' ? 0.1 : 0.4, roughness: 0.1, metalness: 0.1 }));
+      glass.name = 'windowGlass';
       const crossMat = new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 });
       const cv = new THREE.Mesh(new THREE.BoxGeometry(0.04, winH, 0.06), crossMat);
+      cv.name = 'windowCrossV';
       const ch = new THREE.Mesh(new THREE.BoxGeometry(winW, 0.04, 0.06), crossMat);
+      ch.name = 'windowCrossH';
 
       if (wall === 'back') {
         const xOff = wcnt === 1 ? w * 0.15 : (wcnt === 2 ? offset * (w * 0.3) : offset * (w * 0.25));
@@ -816,11 +1114,12 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     };
     for (let i = 0; i < wcnt; i++) addWindow(wwall, i - Math.floor(wcnt / 2));
 
-    // Door
+    // Door — named for incremental rebuild
     if (dw !== 'none') {
       const doorW = 0.9, doorH = 2.1;
       const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW + 0.1 : 0.08, doorH + 0.1, dw === 'left' || dw === 'right' ? doorW + 0.1 : 0.08), new THREE.MeshStandardMaterial({ color: 0xDDD8D0, roughness: 0.5 }));
       const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(dw === 'back' || dw === 'front' ? doorW : 0.04, doorH, dw === 'left' || dw === 'right' ? doorW : 0.04), new THREE.MeshStandardMaterial({ color: 0xC4B8A8, roughness: 0.6 }));
+      doorFrame.name = 'doorFrame'; doorPanel.name = 'doorPanel';
       if (dw === 'back') { doorFrame.position.set(0, doorH / 2, -d / 2 + 0.03); doorPanel.position.set(0.2, doorH / 2, -d / 2 + 0.05); }
       else if (dw === 'left') { doorFrame.position.set(-w / 2 + 0.03, doorH / 2, 0); doorPanel.position.set(-w / 2 + 0.05, doorH / 2, 0.2); }
       else if (dw === 'right') { doorFrame.position.set(w / 2 - 0.03, doorH / 2, 0); doorPanel.position.set(w / 2 - 0.05, doorH / 2, 0.2); }
@@ -1416,10 +1715,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     };
     positions.push(newPos);
 
-    // Rebuild room to properly create the new light (avoids duplicate objects)
-    buildRoom();
+    // Only rebuild ceiling lights — much faster than full buildRoom
+    rebuildCeilingLightsOnly();
 
-    // Re-apply ceiling edit mode styling since buildRoom resets materials
+    // Re-apply ceiling edit mode styling since rebuild resets materials
     if (ceilingEditModeRef.current) {
       const roomGroup = roomGroupRef.current;
       if (roomGroup) {
@@ -1448,9 +1747,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     }
 
     const idx = positions.length - 1;
-    markSceneDirty();
     showToast(`Added ceiling light #${idx + 1}`);
-  }, [buildRoom, markSceneDirty, showToast]);
+  }, [rebuildCeilingLightsOnly, showToast]);
 
   const deleteSelectedCeilingLight = useCallback(() => {
     const idx = selectedCeilingLightIdx;
@@ -1462,8 +1760,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     selectedCeilingLightRef.current = null;
     setSelectedCeilingLightIdx(-1);
 
-    // Rebuild room to refresh spot indices
-    buildRoom();
+    // Only rebuild ceiling lights — much faster than full buildRoom
+    rebuildCeilingLightsOnly();
 
     // Re-apply ceiling edit mode styling if still in edit mode
     if (ceilingEditModeRef.current) {
@@ -1499,7 +1797,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     }
 
     showToast('Removed ceiling light');
-  }, [selectedCeilingLightIdx, buildRoom, showToast]);
+  }, [selectedCeilingLightIdx, rebuildCeilingLightsOnly, showToast]);
 
   /* ===== UPDATE WALL/FLOOR COLOR IN-PLACE ===== */
   const updateWallColor = useCallback((color: string) => {
@@ -1517,10 +1815,9 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
   const updateFloorColor = useCallback((color: string) => {
     floorColorRef.current = color;
-    // All floor types bake the color into their texture — must rebuild
-    buildRoom();
-    markSceneDirty();
-  }, [buildRoom, markSceneDirty]);
+    // Only rebuild the floor mesh — no need to rebuild walls/ceiling/doors/windows
+    rebuildFloorOnly();
+  }, [rebuildFloorOnly]);
 
   /* ===== SELECT / DESELECT ===== */
   const selectItem = useCallback((obj: THREE.Group) => {
@@ -2894,7 +3191,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {floorTypeOptions.map(ft => (
-                <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; buildRoom(); markUnsaved(); }}
+                <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; rebuildFloorOnly(); markUnsaved(); }}
                   className={`int-color-swatch ${floorType === ft.id ? 'int-color-swatch-active' : ''}`}
                   style={{ background: ft.color }} aria-label={ft.label} role="radio" aria-checked={floorType === ft.id} />
               ))}
@@ -2937,7 +3234,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             <span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Ceiling Light Style</span>
             <div className="flex gap-1 mt-1.5 flex-wrap">
               {ceilingLightPresets.map(p => (
-                <button key={p.id} onClick={() => { setCeilingLightPreset(p.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'); ceilingLightPresetRef.current = p.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'; const newPositions: Record<string, Array<{ x: number; z: number }>> = { recessed: [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }], chandelier: [{ x: 0, z: 0 }], track: [{ x: -1.2, z: 0 }, { x: -0.4, z: 0 }, { x: 0.4, z: 0 }, { x: 1.2, z: 0 }], panel: [{ x: 0, z: 0 }], pendant: [{ x: -1.2, z: 0 }, { x: 0, z: 0 }, { x: 1.2, z: 0 }] }; ceilingSpotPositionsRef.current = newPositions[p.id] || [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }]; buildRoom(); markUnsaved(); }}
+                <button key={p.id} onClick={() => { setCeilingLightPreset(p.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'); ceilingLightPresetRef.current = p.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'; const newPositions: Record<string, Array<{ x: number; z: number }>> = { recessed: [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }], chandelier: [{ x: 0, z: 0 }], track: [{ x: -1.2, z: 0 }, { x: -0.4, z: 0 }, { x: 0.4, z: 0 }, { x: 1.2, z: 0 }], panel: [{ x: 0, z: 0 }], pendant: [{ x: -1.2, z: 0 }, { x: 0, z: 0 }, { x: 1.2, z: 0 }] }; ceilingSpotPositionsRef.current = newPositions[p.id] || [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }]; rebuildCeilingLightsOnly(); markUnsaved(); }}
                   className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
                   style={{ borderColor: ceilingLightPreset === p.id ? '#C17F4E' : '#E8DFD4', color: ceilingLightPreset === p.id ? '#C17F4E' : '#4A3E32', background: ceilingLightPreset === p.id ? '#F5E8DC' : 'transparent' }}>
                   <i className={`fas ${p.icon} mr-0.5`} />{p.label}
@@ -3201,7 +3498,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
           <div className="flex gap-1.5 mt-1.5">
             {floorTypeOptions.map(ft => (
-              <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; buildRoom(); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
+              <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; rebuildFloorOnly(); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
                 style={{ background: ft.color, borderColor: floorType === ft.id ? '#C17F4E' : 'transparent' }} title={ft.label} />
             ))}
           </div>
@@ -3228,7 +3525,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
           <div className="flex gap-1 mt-1.5">
             {['none', 'back', 'left', 'right'].map(dw => (
-              <button key={dw} onClick={() => { setDoorWall(dw); doorWallRef.current = dw; buildRoom(); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
+              <button key={dw} onClick={() => { setDoorWall(dw); doorWallRef.current = dw; rebuildDoorOnly(); markUnsaved(); }} className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
                 style={{ borderColor: doorWall === dw ? '#C17F4E' : '#E8DFD4', color: doorWall === dw ? '#C17F4E' : '#4A3E32', background: doorWall === dw ? '#F5E8DC' : 'transparent' }}>
                 {dw === 'none' ? 'None' : dw.charAt(0).toUpperCase() + dw.slice(1)}
               </button>
@@ -3239,10 +3536,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         {/* Windows */}
         <div className="mb-2">
           <div className="flex justify-between mb-0.5"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Windows</span><span className="text-[12px]" style={{ color: '#5A4E42' }}>{windowCount}</span></div>
-          <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; buildRoom(); markUnsaved(); }} />
+          <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; rebuildWindowsOnly(); markUnsaved(); }} />
           <div className="flex gap-1 mt-1">
             {['back', 'left', 'right'].map(ww => (
-              <button key={ww} onClick={() => { setWindowWall(ww); windowWallRef.current = ww; buildRoom(); markUnsaved(); }} className="px-2 py-0.5 rounded text-[11px] font-medium cursor-pointer border transition-all"
+              <button key={ww} onClick={() => { setWindowWall(ww); windowWallRef.current = ww; rebuildWindowsOnly(); markUnsaved(); }} className="px-2 py-0.5 rounded text-[11px] font-medium cursor-pointer border transition-all"
                 style={{ borderColor: windowWall === ww ? '#C17F4E' : '#E8DFD4', color: windowWall === ww ? '#C17F4E' : '#4A3E32' }}>
                 {ww.charAt(0).toUpperCase() + ww.slice(1)}
               </button>
@@ -3271,7 +3568,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Ceiling Light Style</span>
           <div className="flex gap-1 mt-1.5 flex-wrap">
             {ceilingLightPresets.map(preset => (
-              <button key={preset.id} onClick={() => { setCeilingLightPreset(preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'); ceilingLightPresetRef.current = preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'; const newPositions: Record<string, Array<{ x: number; z: number }>> = { recessed: [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }], chandelier: [{ x: 0, z: 0 }], track: [{ x: -1.2, z: 0 }, { x: -0.4, z: 0 }, { x: 0.4, z: 0 }, { x: 1.2, z: 0 }], panel: [{ x: 0, z: 0 }], pendant: [{ x: -1.2, z: 0 }, { x: 0, z: 0 }, { x: 1.2, z: 0 }] }; ceilingSpotPositionsRef.current = newPositions[preset.id] || [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }]; buildRoom(); markUnsaved(); }}
+              <button key={preset.id} onClick={() => { setCeilingLightPreset(preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'); ceilingLightPresetRef.current = preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'; const newPositions: Record<string, Array<{ x: number; z: number }>> = { recessed: [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }], chandelier: [{ x: 0, z: 0 }], track: [{ x: -1.2, z: 0 }, { x: -0.4, z: 0 }, { x: 0.4, z: 0 }, { x: 1.2, z: 0 }], panel: [{ x: 0, z: 0 }], pendant: [{ x: -1.2, z: 0 }, { x: 0, z: 0 }, { x: 1.2, z: 0 }] }; ceilingSpotPositionsRef.current = newPositions[preset.id] || [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }]; rebuildCeilingLightsOnly(); markUnsaved(); }}
                 className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
                 style={{ borderColor: ceilingLightPreset === preset.id ? '#C17F4E' : '#E8DFD4', color: ceilingLightPreset === preset.id ? '#C17F4E' : '#4A3E32', background: ceilingLightPreset === preset.id ? '#F5E8DC' : 'transparent' }}>
                 <i className={`fas ${preset.icon} mr-0.5`} />{preset.label}
@@ -3921,16 +4218,6 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         </div>
 
         <canvas ref={canvasRef} role="application" aria-label="3D Room Editor — use mouse to orbit, scroll to zoom" style={{ width: '100%', height: '100%', display: 'block', cursor: ceilingEditMode ? 'crosshair' : 'grab' }} />
-
-        {/* Brief overlay during room rebuild — prevents blank flash */}
-        {roomBuilding && (
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ background: 'rgba(245,240,232,0.5)', backdropFilter: 'blur(2px)', transition: 'opacity 0.3s ease' }}>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.9)', boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
-              <i className="fas fa-sync-alt fa-spin text-[11px]" style={{ color: '#C17F4E' }} />
-              <span className="text-[11px] font-semibold" style={{ color: '#5A4E42' }}>Updating room...</span>
-            </div>
-          </div>
-        )}
 
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
