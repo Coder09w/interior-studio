@@ -114,8 +114,8 @@ export default function SignupPage() {
   const hasNumber = /[0-9]/.test(password);
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#1a1612' }}>
-      {/* ===== LEFT SIDE — Interior Image ===== */}
+    <div className="min-h-screen flex flex-col lg:flex-row" style={{ background: '#1a1612' }}>
+      {/* ===== LEFT SIDE — Interior Image (Desktop) ===== */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <Image
           src="/images/auth-bedroom.png"
@@ -171,10 +171,41 @@ export default function SignupPage() {
         </div>
       </div>
 
+      {/* ===== MOBILE HERO — Image header for mobile ===== */}
+      <div className="lg:hidden relative h-48 sm:h-56 overflow-hidden flex-shrink-0">
+        <Image
+          src="/images/auth-bedroom.png"
+          alt="Beautiful bedroom interior"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,22,18,0.95) 0%, rgba(26,22,18,0.4) 60%, rgba(26,22,18,0.2) 100%)' }} />
+        <div className="absolute top-4 left-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-white/90 hover:text-white transition-colors"
+            style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back
+          </Link>
+        </div>
+        <div className="absolute bottom-4 left-4 right-4 z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <Image src="/logo.svg" alt="Instod" width={28} height={28} className="rounded-lg" />
+            <span className="text-white font-bold text-base tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Instod</span>
+            <span className="text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-full text-white" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>BETA</span>
+          </div>
+          <h2 className="text-white text-lg font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Unlock Your Full Design Potential</h2>
+          <p className="text-white/60 text-xs leading-relaxed">Sign up free — no credit card required</p>
+        </div>
+      </div>
+
       {/* ===== RIGHT SIDE — Signup Form ===== */}
-      <div className="w-full lg:w-1/2 flex flex-col" style={{ background: '#F5F0E8' }}>
-        {/* Mobile back button */}
-        <div className="lg:hidden p-4">
+      <div className="w-full lg:w-1/2 flex flex-col flex-1" style={{ background: '#F5F0E8' }}>
+        {/* Desktop back button */}
+        <div className="hidden lg:block p-6">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm font-medium hover:underline"
@@ -188,44 +219,13 @@ export default function SignupPage() {
         {/* Form container */}
         <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
           <div className="w-full max-w-md">
-            {/* Mobile logo */}
-            <div className="lg:hidden flex items-center gap-2.5 mb-8">
-              <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
-              <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>Instod</span>
-              <span
-                className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
-                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
-              >
-                BETA
-              </span>
-            </div>
-
             {/* Header */}
             <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               Create an account
             </h2>
-            <p className="text-sm mb-4" style={{ color: '#5A4E42' }}>
+            <p className="text-sm mb-6" style={{ color: '#5A4E42' }}>
               Start designing your dream space for free
             </p>
-
-            {/* Mobile-only benefits */}
-            <div className="lg:hidden mb-5 p-4 rounded-xl" style={{ background: '#FAF8F4', border: '1px solid #E2DDD4' }}>
-              <div className="space-y-2">
-                {[
-                  '6 room types with 30+ furniture items',
-                  'Save & manage multiple projects',
-                  'All skins, presets & export tools',
-                  'Free during beta — no credit card',
-                ].map((benefit) => (
-                  <div key={benefit} className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,139,94,0.15)' }}>
-                      <Check className="w-2.5 h-2.5" style={{ color: '#6B8B5E' }} />
-                    </div>
-                    <span className="text-xs" style={{ color: '#5A4E42' }}>{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Error */}
             {errors.general && (

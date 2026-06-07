@@ -819,3 +819,32 @@ Stage Summary:
 - Door/Window UI buttons now have icons and consistent styling across desktop and mobile
 - Mobile panel now has Door and Windows controls (were missing)
 - Door and window positions update smoothly during dimension slider drag
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix login/signup page responsiveness, onboarding duplication, CoC loader, and auth theme differentiation
+
+Work Log:
+- Added mobile hero image section to login page with gradient overlay, branding, and back button
+- Added mobile hero image section to signup page with same pattern
+- Removed duplicate mobile logo sections from both login and signup form areas
+- Changed layout from `flex` to `flex flex-col lg:flex-row` for proper mobile stacking
+- Added mobile-specific benefits card for signup (removed old duplicate)
+- Fixed onboarding duplication: auth users now skip in-editor onboarding (setShowOnboarding(false) in session check)
+- Guest users still see onboarding once when entering editor (existing behavior preserved)
+- Auth users only see onboarding via /onboarding page after signup (already working)
+- CoC loader verified working: EditorLoader.tsx uses useSession() for teal/warm theme selection
+- Replaced ~50 hardcoded #C17F4E colors with dynamic accentColor variable across 30+ UI locations
+- Replaced #A86A3D with accentColorDark, #F5E8DC with accentColor + '15'
+- Replaced rgba(193,127,78,...) with accentColor + hex alpha
+- Converted className-based hardcoded colors to inline styles using accentColor
+- Auth users now see teal (#2A9D8F) accent throughout: sidebar, buttons, tabs, mobile nav
+- Guest users continue seeing warm (#C17F4E) accent
+- Build verified successful
+
+Stage Summary:
+- Login/signup pages now responsive with mobile hero image + desktop split layout
+- Onboarding only shows once: guests in editor, auth via /onboarding page after signup
+- CoC cinematic loader renders with teal (auth) or warm (guest) theme
+- Full teal theme applied for auth users across all editor UI elements
