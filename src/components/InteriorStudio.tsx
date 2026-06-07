@@ -998,7 +998,91 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     markSceneDirty();
   }, [removeByNames, markSceneDirty]);
 
-  /* ===== BUILD ROOM (full rebuild — only for dimension changes / reset) ===== */
+  /* ===== INCREMENTAL: Rebuild room geometry (walls, floor, ceiling, baseboards, grid) — calls sub-rebuilds ===== */
+  const rebuildRoomGeometry = useCallback(() => {
+    const roomGroup = roomGroupRef.current;
+    if (!roomGroup) return;
+
+    // Remove only structural meshes — ceiling lights, windows, door handled by their own rebuild functions
+    removeByNames(roomGroup, [
+      'floor', 'wall_solid_merged', 'wall_front', 'ceiling',
+      'baseboard_back', 'baseboard_left', 'grid',
+    ]);
+
+    const w = roomWRef.current, d = roomDRef.current, h = roomHRef.current;
+    const wc = wallColRef.current;
+    const ft = floorTypeRef.current, fc = floorColorRef.current;
+
+    // Floor
+    let floorTex: THREE.CanvasTexture;
+    let floorRoughness = 0.65;
+    switch (ft) {
+      case 'marble': floorTex = makeMarbleTexture(w, d, fc); floorRoughness = 0.2; break;
+      case 'concrete': floorTex = makeConcreteTexture(w, d, fc); floorRoughness = 0.85; break;
+      case 'carpet': floorTex = makeCarpetTexture(w, d, fc); floorRoughness = 0.95; break;
+      case 'tile': floorTex = makeTileTexture(w, d, fc); floorRoughness = 0.5; break;
+      default: floorTex = makeHardwoodTexture(w, d, fc);
+    }
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: floorTex, roughness: floorRoughness, metalness: 0 }));
+    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.name = 'floor'; roomGroup.add(floor);
+
+    // Merged solid walls
+    const wallMat = new THREE.MeshStandardMaterial({ color: wc, roughness: 0.9, metalness: 0 });
+    const wallGeos: THREE.BufferGeometry[] = [];
+    const bwGeo = new THREE.PlaneGeometry(w, h);
+    bwGeo.translate(0, h / 2, -d / 2);
+    wallGeos.push(bwGeo);
+    const lwGeo = new THREE.PlaneGeometry(d, h);
+    const lwMat4 = new THREE.Matrix4().makeRotationY(Math.PI / 2);
+    lwMat4.setPosition(-w / 2, h / 2, 0);
+    lwGeo.applyMatrix4(lwMat4);
+    wallGeos.push(lwGeo);
+    const rwGeo = new THREE.PlaneGeometry(d, h);
+    const rwMat4 = new THREE.Matrix4().makeRotationY(-Math.PI / 2);
+    rwMat4.setPosition(w / 2, h / 2, 0);
+    rwGeo.applyMatrix4(rwMat4);
+    wallGeos.push(rwGeo);
+    const mergedWallGeo = mergeGeometries(wallGeos, false);
+    if (mergedWallGeo) {
+      const mergedWalls = new THREE.Mesh(mergedWallGeo, wallMat);
+      mergedWalls.receiveShadow = true;
+      mergedWalls.name = 'wall_solid_merged';
+      roomGroup.add(mergedWalls);
+    }
+
+    // Front wall (transparent)
+    const fw = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ color: wc, roughness: 0.9, transparent: true, opacity: 0.15, side: THREE.DoubleSide }));
+    fw.position.set(0, h / 2, d / 2); fw.rotation.y = Math.PI; fw.name = 'wall_front'; roomGroup.add(fw);
+
+    // Ceiling
+    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: 0xFFFFF8, roughness: 1, side: THREE.DoubleSide }));
+    ceil.rotation.x = Math.PI / 2; ceil.position.y = h; ceil.name = 'ceiling'; roomGroup.add(ceil);
+
+    // Baseboards
+    const bbMat = new THREE.MeshStandardMaterial({ color: 0xF0E8D8, roughness: 0.7 }); const bbH = 0.08;
+    const bb1 = new THREE.Mesh(new THREE.BoxGeometry(w, bbH, 0.02), bbMat); bb1.position.set(0, bbH / 2, -d / 2 + 0.01); bb1.name = 'baseboard_back'; roomGroup.add(bb1);
+    const bb2 = new THREE.Mesh(new THREE.BoxGeometry(0.02, bbH, d), bbMat); bb2.position.set(-w / 2 + 0.01, bbH / 2, 0); bb2.name = 'baseboard_left'; roomGroup.add(bb2);
+
+    // Grid
+    const gridHelper = new THREE.GridHelper(Math.max(w, d), Math.max(w, d) * 2, 0xCCBBAA, 0xDDD4C8);
+    gridHelper.position.y = 0.002; gridHelper.name = 'grid';
+    (gridHelper.material as THREE.Material).opacity = 0.25; (gridHelper.material as THREE.Material).transparent = true;
+    roomGroup.add(gridHelper);
+
+    // Rebuild windows, door, and ceiling lights (positions depend on new dimensions)
+    rebuildWindowsOnly();
+    rebuildDoorOnly();
+    rebuildCeilingLightsOnly();
+
+    // Store built dimensions
+    roomGroup.userData.builtW = w;
+    roomGroup.userData.builtD = d;
+    roomGroup.userData.builtH = h;
+
+    markSceneDirty();
+  }, [removeByNames, markSceneDirty, rebuildWindowsOnly, rebuildDoorOnly, rebuildCeilingLightsOnly]);
+
+  /* ===== BUILD ROOM (full rebuild — only for initial load / reset / preset) ===== */
   const buildRoom = useCallback(() => {
     const roomGroup = roomGroupRef.current;
     const scene = sceneRef.current;
@@ -1472,14 +1556,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     markSceneDirty();
   }, [markSceneDirty]);
 
-  /* ===== DEBOUNCED BUILD ROOM ===== */
+  /* ===== DEBOUNCED BUILD ROOM (uses incremental rebuild for speed) ===== */
   const debouncedBuildRoom = useCallback(() => {
     if (buildRoomTimeoutRef.current) clearTimeout(buildRoomTimeoutRef.current);
     buildRoomTimeoutRef.current = setTimeout(() => {
-      buildRoom();
+      rebuildRoomGeometry();
       buildRoomTimeoutRef.current = null;
     }, 80);
-  }, [buildRoom]);
+  }, [rebuildRoomGeometry]);
 
   /* ===== UPDATE ROOM VISUAL PREVIEW (instant in-place wall scaling) ===== */
   const updateRoomVisualPreview = useCallback((newW: number, newD: number, newH: number) => {
@@ -3144,7 +3228,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                   <span className="text-[12px]" style={{ color: '#4A3E32' }}>m</span>
                 </div>
               </div>
-              <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} />
+              <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} />
             </div>
           ))}
           {/* Wall Color */}
@@ -3452,11 +3536,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div key={label as string} className="mb-2">
             <div className="flex justify-between mb-0.5 items-center"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>{label as string}</span>
               <div className="flex items-center gap-0.5">
-                <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); buildRoom(); markUnsaved(); } }} />
+                <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); rebuildRoomGeometry(); markUnsaved(); } }} />
                 <span className="text-[12px]" style={{ color: '#5A4E42' }}>m</span>
               </div>
             </div>
-            <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } buildRoom(); }} />
+            <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} />
           </div>
         ))}
 

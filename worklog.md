@@ -753,3 +753,40 @@ Stage Summary:
 - Undo/Redo keyboard shortcuts now gated behind auth for guests
 - Redo button added to Actions panel alongside Undo
 - Build passes clean
+
+---
+Task ID: eliminate-room-lag
+Agent: Main (Super Z)
+Task: Eliminate ALL lag when changing room width/length/height, wall color, floor color, adding doors — make changes dynamic and instant
+
+Work Log:
+- Identified root cause: `buildRoom()` is a monolithic function that destroys ALL room geometry (floor, walls, ceiling, baseboards, windows, door, ceiling lights, grid) and rebuilds from scratch for ANY change — taking 1-2 seconds
+- Previous session had created `rebuildFloorOnly()`, `rebuildDoorOnly()`, `rebuildWindowsOnly()`, `rebuildCeilingLightsOnly()` for incremental updates, but dimension sliders (width/length/height) still called the full `buildRoom()`
+- Created `rebuildRoomGeometry()` — a new incremental rebuild function that:
+  - Only removes and rebuilds structural meshes (floor, walls, ceiling, baseboards, grid)
+  - Delegates to `rebuildWindowsOnly()`, `rebuildDoorOnly()`, `rebuildCeilingLightsOnly()` for their respective elements
+  - Skips scene lighting updates (ambient, directional, hemisphere, fill) that `buildRoom()` does unnecessarily
+  - Skips scene background/fog updates
+  - Still stores `builtW/builtD/builtH` for the visual preview system
+- Updated `debouncedBuildRoom()` to use `rebuildRoomGeometry()` instead of `buildRoom()`
+- Replaced `buildRoom()` calls in dimension slider `onMouseUp`/`onTouchEnd` handlers with `rebuildRoomGeometry()`
+- Replaced `buildRoom()` in mobile dimension number input with `rebuildRoomGeometry()`
+- Kept `buildRoom()` only for cases that genuinely need full rebuild: initial load, room reset, preset load, cache restore, WebGL context restore, snapshot restore, room type change
+- Flow during dimension slider drag:
+  1. `updateRoomVisualPreview()` scales existing meshes instantly (0ms)
+  2. `debouncedBuildRoom()` schedules `rebuildRoomGeometry()` after 80ms pause
+  3. On mouse/touch end, `rebuildRoomGeometry()` creates precise geometry
+- Verified no "Updating room" overlay or loading state exists
+- Verified texture caching is in place for floor textures
+- Build passes clean
+
+Stage Summary:
+- Dimension changes (width/length/height) now apply instantly during drag with visual scaling
+- Precise geometry follows within 80ms or on slider release
+- No more 1-2 second freezes or loading overlays for any room change
+- Wall color: already instant (material.color.set())
+- Floor color/type: already instant (rebuildFloorOnly())
+- Door wall: already instant (rebuildDoorOnly())
+- Window count/wall: already instant (rebuildWindowsOnly())
+- Ceiling lights: already instant (rebuildCeilingLightsOnly())
+- Full `buildRoom()` only used for initial load, reset, presets, room type changes
