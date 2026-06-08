@@ -1167,3 +1167,16 @@ html {
 .skip-to-content:focus {
   left: 0;
 }
+
+/* Homepage responsive improvements */
+@media (max-width: 640px) {
+  .gallery-tabs-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .gallery-tabs-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

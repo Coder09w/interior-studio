@@ -181,9 +181,9 @@ function Navbar() {
           style={{ borderColor }}
         >
           <div className="px-4 py-4 space-y-3">
-            <a href="#features" className="block text-sm font-medium py-2" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Features</a>
-            <a href="#gallery" className="block text-sm font-medium py-2" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Gallery</a>
-            <Link href="/pricing" className="block text-sm font-medium py-2" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Pricing</Link>
+            <a href="#features" className="block text-sm font-medium py-3 min-h-[44px] flex items-center" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Features</a>
+            <a href="#gallery" className="block text-sm font-medium py-3 min-h-[44px] flex items-center" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Gallery</a>
+            <Link href="/pricing" className="block text-sm font-medium py-3 min-h-[44px] flex items-center" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Pricing</Link>
             <div className="pt-2 flex flex-col gap-2">
               {session ? (
                 <Link href="/dashboard" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
@@ -241,9 +241,9 @@ function HeroSection() {
       />
 
       <motion.div style={{ y: y1, opacity }} className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left: text */}
-          <div className="text-center lg:text-left">
+        <div className="flex flex-col items-center text-center">
+          {/* Centered text content */}
+          <div className="text-center max-w-3xl mx-auto">
             <RevealOnScroll delay={0.1}>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
                 <Sparkles className="w-4 h-4" style={{ color: '#A8A8A8' }} />
@@ -253,7 +253,7 @@ function HeroSection() {
 
             <RevealOnScroll delay={0.2}>
               <h1
-                className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold leading-tight tracking-tight"
                 style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
               >
                 Design Your Room{' '}
@@ -265,13 +265,13 @@ function HeroSection() {
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.3}>
-              <p className="mt-5 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed" style={{ color: '#A8A8A8' }}>
+              <p className="mt-5 text-base sm:text-lg max-w-xl mx-auto leading-relaxed" style={{ color: '#A8A8A8' }}>
                 Create realistic room layouts, experiment with furniture, materials, colors, and lighting. Preview how your space will look before spending money.
               </p>
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.4}>
-              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center">
                 <Link
                   href="/editor"
                   prefetch={false}
@@ -294,7 +294,7 @@ function HeroSection() {
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.5}>
-              <div className="mt-10 flex items-center gap-4 justify-center lg:justify-start">
+              <div className="mt-10 flex items-center gap-4 justify-center">
                 <div className="flex -space-x-2">
                   {['bg-[#7A6E62]', 'bg-[#6B7B6B]', 'bg-[#6B8E6B]', 'bg-[#7B8FA1]'].map((bg, i) => (
                     <div key={i} className={`w-8 h-8 rounded-full border-2 border-[#0F0F0F] ${bg} flex items-center justify-center`} aria-hidden="true">
@@ -309,10 +309,10 @@ function HeroSection() {
             </RevealOnScroll>
           </div>
 
-          {/* Right: Image Carousel */}
-          <RevealOnScroll delay={0.3} direction="right">
-            <div className="relative rounded-2xl overflow-hidden" style={{ border: '2px solid rgba(255,255,255,0.08)' }}>
-              <div className="relative aspect-[4/3]">
+          {/* Image Carousel — below the text, full-width showcase */}
+          <RevealOnScroll delay={0.3} direction="up">
+            <div className="relative rounded-2xl overflow-hidden mt-12 lg:mt-16 max-w-4xl mx-auto w-full" style={{ border: '2px solid rgba(255,255,255,0.08)' }}>
+              <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentSlide}
@@ -348,7 +348,7 @@ function HeroSection() {
                   <button
                     key={i}
                     onClick={() => setCurrentSlide(i)}
-                    className="transition-all duration-300 rounded-full"
+                    className="transition-all duration-300 rounded-full min-w-[8px] min-h-[20px]"
                     style={{
                       width: i === currentSlide ? '24px' : '8px',
                       height: '8px',
@@ -576,12 +576,12 @@ function GallerySection() {
 
         <RevealOnScroll delay={0.1}>
           {/* Tab bar */}
-          <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
+          <div className="gallery-tabs-scroll flex items-center justify-start sm:justify-center gap-2 mb-10 flex-nowrap sm:flex-wrap px-1 sm:px-0 -mx-4 sm:mx-0 px-4 sm:px-0">
             {galleryCategories.map((cat, i) => (
               <button
                 key={cat.type}
                 onClick={() => setActiveTab(i)}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0"
                 style={{
                   background: i === activeTab ? 'linear-gradient(135deg, #C17F4E, #A86A3D)' : 'rgba(255,255,255,0.06)',
                   color: i === activeTab ? '#FFFFFF' : '#A8A8A8',
@@ -604,7 +604,7 @@ function GallerySection() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
-                className="relative aspect-[16/9]"
+                className="relative aspect-[4/3] sm:aspect-[16/9]"
               >
                 <img
                   src={galleryCategories[activeTab].image}
@@ -737,7 +737,8 @@ function ValueComparisonSection() {
         </RevealOnScroll>
 
         <RevealOnScroll delay={0.2}>
-          <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1.5px solid #E8E2DA', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          {/* Desktop table layout */}
+          <div className="hidden sm:block max-w-4xl mx-auto rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1.5px solid #E8E2DA', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
             {/* Header row */}
             <div className="grid grid-cols-3 gap-4 px-6 py-4" style={{ background: '#FAF6F0', borderBottom: '1.5px solid #E8E2DA' }}>
               <div className="text-sm font-bold" style={{ color: '#5A4E42' }}>Feature</div>
@@ -762,6 +763,31 @@ function ValueComparisonSection() {
                 <div className="flex items-center justify-center gap-2">
                   <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#6B8B5E' }} />
                   <span className="text-sm text-center font-medium" style={{ color: '#2D2D2D' }}>{row.instod}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile card layout */}
+          <div className="sm:hidden max-w-4xl mx-auto space-y-3">
+            {comparisons.map((row) => (
+              <div
+                key={row.category}
+                className="rounded-xl p-4"
+                style={{ background: '#FFFFFF', border: '1.5px solid #E8E2DA', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}
+              >
+                <div className="text-sm font-bold mb-3" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
+                  {row.category}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#B8433A' }} />
+                    <span className="text-sm" style={{ color: '#7A6E62' }}>{row.traditional}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#6B8B5E' }} />
+                    <span className="text-sm font-medium" style={{ color: '#2D2D2D' }}>{row.instod}</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -800,7 +826,7 @@ function EarlyAccessSection() {
               </p>
 
               <div className="max-w-md mx-auto mb-10">
-                <div className="grid sm:grid-cols-2 gap-3 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
                   {betaBenefits.map((benefit) => (
                     <div key={benefit} className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,139,94,0.15)' }}>
