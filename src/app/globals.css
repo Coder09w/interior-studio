@@ -478,6 +478,26 @@
   background: rgba(255,255,255,0.1);
 }
 
+/* ═══ Teal theme for authenticated users ═══ */
+[data-theme="teal"] {
+  --int-accent:          #2A9D8F;   /* teal primary */
+  --int-accent-hover:    #1F7A6E;   /* teal hover — 8% darker */
+  --int-accent-light:    #DCF5F0;   /* teal active bg fill */
+  --int-accent-bg:       rgba(42,157,143,0.08); /* teal badge/tag backgrounds */
+  --int-accent-border:   rgba(42,157,143,0.15); /* teal accent borders */
+  --int-save:            #2A9D8F;
+  --int-save-hover:      #1F7A6E;
+}
+[data-sidebar-theme="dark"][data-theme="teal"] .int-cat-tab-active {
+  background: #2A9D8F;
+  color: #fff;
+}
+[data-sidebar-theme="dark"][data-theme="teal"] .int-mat-pill-active {
+  border-color: #2A9D8F;
+  background: #DCF5F0;
+  color: #2A9D8F;
+}
+
 input[type="range"].int-range {
   -webkit-appearance: none;
   width: 100%;

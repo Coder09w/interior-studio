@@ -21,6 +21,26 @@ const GUEST_MAX_ROOMS = 6;
 const GUEST_MAX_ITEMS = 30;
 const GUEST_COLORS_PER_TYPE = 12;
 
+// Room type → allowed furniture categories
+const ROOM_TYPE_CATEGORIES: Record<string, CategoryId[]> = {
+  living:   ['seating', 'tables', 'lighting', 'decor'],
+  bedroom:  ['bedroom', 'lighting', 'decor', 'tables'],
+  kitchen:  ['kitchen', 'tables', 'lighting', 'decor'],
+  bathroom: ['bathroom', 'lighting', 'decor'],
+  office:   ['office', 'lighting', 'decor', 'tables'],
+  dining:   ['kitchen', 'tables', 'lighting', 'decor'],
+};
+
+// Room type → allowed furniture function names (for contextual restriction)
+const ROOM_TYPE_FURNITURE: Record<string, Set<string>> = {
+  living:   new Set(['createSofa', 'createLoveSeat', 'createArmchair', 'createOttoman', 'createCoffeeTable', 'createSideTable', 'createConsole', 'createCredenza', 'createFloorLamp', 'createTableLamp', 'createPendant', 'createBookshelf', 'createPlant', 'createRug', 'createTVStand', 'createWallArt', 'createFloorMirror']),
+  bedroom:  new Set(['createBed', 'createNightstand', 'createWardrobe', 'createDresser', 'createVanityTable', 'createArmchair', 'createOttoman', 'createSideTable', 'createFloorLamp', 'createTableLamp', 'createRug', 'createPlant', 'createWallArt', 'createFloorMirror', 'createBookshelf']),
+  kitchen:  new Set(['createKitchenIsland', 'createBarStool', 'createDiningTable', 'createDiningChair', 'createKitchenCounter', 'createKitchenCart', 'createPendant', 'createPlant', 'createRug']),
+  bathroom: new Set(['createBathtub', 'createToilet', 'createPedestalSink', 'createShower', 'createFloorLamp', 'createTableLamp', 'createPlant', 'createRug', 'createWallArt', 'createFloorMirror']),
+  office:   new Set(['createDesk', 'createOfficeChair', 'createFilingCabinet', 'createMonitorStand', 'createBookshelf', 'createFloorLamp', 'createTableLamp', 'createPlant', 'createRug', 'createWallArt']),
+  dining:   new Set(['createDiningTable', 'createDiningChair', 'createPendant', 'createBookshelf', 'createRug', 'createPlant', 'createFloorLamp', 'createWallArt']),
+};
+
 /* ===== TYPES ===== */
 interface FurnitureData {
   fn: string;
@@ -219,7 +239,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   // State
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarDark, setSidebarDark] = useState(false); // dark editor sidebar toggle
-  const [sidebarWidth, setSidebarWidth] = useState(320); // resizable sidebar width
+  const [sidebarWidth, setSidebarWidth] = useState(280); // resizable sidebar width
   const sidebarResizeRef = useRef<{ startX: number; startW: number } | null>(null);
   const [currentCat, setCurrentCat] = useState<CategoryId>('seating');
   const [currentMatType, setCurrentMatType] = useState<MatType>('fabric');
@@ -303,7 +323,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   // Auto-collapse guest banner after 5 seconds to reduce visual clutter
   useEffect(() => {
     if (!isGuest) return;
-    const timer = setTimeout(() => setGuestBannerCollapsed(true), 5000);
+    const timer = setTimeout(() => setGuestBannerCollapsed(true), 3000);
     return () => clearTimeout(timer);
   }, [isGuest]);
 
@@ -316,6 +336,48 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       setShowOnboarding(false);
     }
   }, [isAuthenticated]);
+
+  // Sync theme to CSS variables and data attribute
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const theme = isGuest ? 'warm' : 'teal';
+    document.documentElement.setAttribute('data-theme', theme);
+    // Also update CSS custom properties for components that read them
+    const root = document.documentElement.style;
+    if (isGuest) {
+      root.setProperty('--int-accent', '#C17F4E');
+      root.setProperty('--int-accent-hover', '#A86A3D');
+      root.setProperty('--int-accent-light', '#F5E8DC');
+      root.setProperty('--int-accent-bg', 'rgba(193,127,78,0.08)');
+      root.setProperty('--int-accent-border', 'rgba(193,127,78,0.15)');
+    } else {
+      root.setProperty('--int-accent', '#2A9D8F');
+      root.setProperty('--int-accent-hover', '#1F7A6E');
+      root.setProperty('--int-accent-light', '#DCF5F0');
+      root.setProperty('--int-accent-bg', 'rgba(42,157,143,0.08)');
+      root.setProperty('--int-accent-border', 'rgba(42,157,143,0.15)');
+    }
+    // Persist theme preference
+    try { localStorage.setItem('instod-theme', theme); } catch {}
+  }, [isGuest]);
+
+  // Initialize theme from localStorage on mount (prevents FOUC)
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    try {
+      const saved = localStorage.getItem('instod-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+    } catch {}
+  }, []);
+
+  // Cleanup: remove data-theme when component unmounts
+  useEffect(() => {
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (initialRoomType && ['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'].includes(initialRoomType)) {
@@ -414,6 +476,33 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     setTimeout(() => setToastVisible(false), 2200);
   }, []);
 
+  /* ===== ROOM BOUNDARY ENFORCEMENT ===== */
+  const clampToRoomBounds = useCallback((item: THREE.Group, targetX?: number, targetZ?: number): { x: number; z: number } => {
+    // Compute item's bounding box
+    const bbox = new THREE.Box3().setFromObject(item);
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+    const halfFurnW = size.x / 2;
+    const halfFurnD = size.z / 2;
+
+    // If furniture is larger than room (unlikely), clamp to center
+    const hw = Math.max(0, roomWRef.current / 2 - halfFurnW - 0.05); // 0.05m wall margin
+    const hd = Math.max(0, roomDRef.current / 2 - halfFurnD - 0.05);
+
+    const x = Math.max(-hw, Math.min(hw, targetX ?? item.position.x));
+    const z = Math.max(-hd, Math.min(hd, targetZ ?? item.position.z));
+
+    // Floor-plane projection: always set Y to 0 for floor-placed furniture
+    // Skip for ceiling-mounted lights (pendant, chandelier, etc.)
+    const fnName = item.userData.fn || item.name || '';
+    const isCeilingLight = fnName === 'createPendant';
+    if (!isCeilingLight) {
+      item.position.y = 0;
+    }
+
+    return { x, z };
+  }, []);
+
   /* ===== CEILING LIGHT PRESETS ===== */
   const ceilingLightPresets = [
     { id: 'recessed', label: 'Recessed', icon: 'fa-circle', desc: 'Standard flush ceiling spots' },
@@ -462,12 +551,15 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       item.userData.fn = d.fn;
       item.userData.isFurniture = true;
       item.name = d.fn;
+      // Boundary enforcement: clamp to room bounds after load
+      const clamped = clampToRoomBounds(item, d.position.x, d.position.z);
+      item.position.set(clamped.x, 0, clamped.z);
       sceneRef.current?.add(item);
       placedItemsRef.current.push(item);
     });
     setItemCount(placedItemsRef.current.length);
     markSceneDirty();
-  }, [markSceneDirty]);
+  }, [markSceneDirty, clampToRoomBounds]);
 
   /* ===== UNDO / REDO (Phase 3.3: Delta-based) ===== */
   // Instead of storing full FurnitureData[] snapshots (which duplicates ALL items
@@ -2037,6 +2129,9 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     if (snapToGridRef.current) { px = Math.round(px * 2) / 2; pz = Math.round(pz * 2) / 2; }
     item.position.set(px, 0, pz);
     item.userData.fn = fnName;
+    // Boundary enforcement: clamp to room bounds
+    const clamped = clampToRoomBounds(item, px, pz);
+    item.position.set(clamped.x, 0, clamped.z);
     sceneRef.current?.add(item); placedItemsRef.current.push(item);
     meshCacheRef.current = []; // Invalidate mesh cache
     selectItem(item); setItemCount(placedItemsRef.current.length);
@@ -2044,7 +2139,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     markSceneDirty();
     showToast(`Added ${item.userData.name}`);
     return item;
-  }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, isGuest]);
+  }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, isGuest, clampToRoomBounds]);
 
   const deleteSelected = useCallback(() => {
     const selected = selectedObjRef.current; if (!selected) return;
@@ -2065,11 +2160,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const item = fn(d.matColor, d.matType, roomHRef.current);
     item.position.copy(selected.position).add(new THREE.Vector3(0.5, 0, 0.5));
     item.rotation.y = selected.rotation.y; item.userData.fn = d.fn;
+    // Boundary enforcement: clamp to room bounds
+    const clamped = clampToRoomBounds(item, item.position.x, item.position.z);
+    item.position.set(clamped.x, 0, clamped.z);
     sceneRef.current?.add(item); placedItemsRef.current.push(item);
     meshCacheRef.current = []; // Invalidate mesh cache
     selectItem(item); setItemCount(placedItemsRef.current.length);
     markUnsaved(); markSceneDirty(); showToast(`Duplicated ${d.name}`);
-  }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty]);
+  }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, clampToRoomBounds]);
 
   const applyMaterial = useCallback((color: string, type: MatType) => {
     const selected = selectedObjRef.current; if (!selected) { showToast('Select an item first'); return; }
@@ -3189,7 +3287,13 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Category tabs */}
           <div className="flex gap-1 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
-            {categories.filter(cat => !isGuest || GUEST_ALLOWED_CATEGORIES.has(cat.id)).map(cat => (
+            {categories.filter(cat => {
+              if (isGuest && !GUEST_ALLOWED_CATEGORIES.has(cat.id)) return false;
+              const currentRoom = rooms.find(r => r.id === currentRoomId);
+              const roomType = currentRoom?.roomType || 'living';
+              const allowed = ROOM_TYPE_CATEGORIES[roomType];
+              return !allowed || allowed.includes(cat.id);
+            }).map(cat => (
               <button key={cat.id} onClick={() => setCurrentCat(cat.id)}
                 className={`cursor-pointer transition-all whitespace-nowrap ${currentCat === cat.id ? 'int-cat-tab-active' : 'int-cat-tab'}`}>
                 <i className={`fas ${cat.icon} mr-0.5`} />{cat.label}
@@ -3592,12 +3696,23 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       {/* Furniture Library */}
       <div className="p-5">
         <p className="int-section-header">Furniture Library</p>
+        <div className="text-[10px] font-medium mb-1.5 flex items-center gap-1.5" style={{ color: accentColor }}>
+          <i className="fas fa-info-circle text-[8px]" />
+          Showing {rooms.find(r => r.id === currentRoomId)?.roomType || 'living'} items
+        </div>
         <div className="relative mb-2">
           <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[13px]" style={{ color: '#7A6E62' }} />
           <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search furniture..." className="int-search-input" />
         </div>
         <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
-          {categories.map(cat => (
+          {categories.filter(cat => {
+            // Get current room type
+            const currentRoom = rooms.find(r => r.id === currentRoomId);
+            const roomType = currentRoom?.roomType || 'living';
+            const allowed = ROOM_TYPE_CATEGORIES[roomType];
+            // Always show all categories if no mapping exists for this room type
+            return !allowed || allowed.includes(cat.id);
+          }).map(cat => (
             <button key={cat.id} onClick={() => setCurrentCat(cat.id)} className={`int-cat-tab ${currentCat === cat.id ? 'int-cat-tab-active' : ''}`}>
               <i className={`fas ${cat.icon} mr-0.5`} />{cat.label}
             </button>
@@ -3668,7 +3783,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
             {wallColorOptions.map(wc => (
               <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
-                style={{ background: wc.color, borderColor: wallCol === wc.color ? accentColor : 'transparent' }} title={wc.label} />
+                style={{ background: wc.color, borderColor: wallCol === wc.color ? accentColor : 'transparent' }} aria-label={wc.label} title={wc.label} />
             ))}
             <div className="relative">
               <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
@@ -3685,7 +3800,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div className="flex gap-1.5 mt-1.5">
             {floorTypeOptions.map(ft => (
               <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; rebuildFloorOnly(); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
-                style={{ background: ft.color, borderColor: floorType === ft.id ? accentColor : 'transparent' }} title={ft.label} />
+                style={{ background: ft.color, borderColor: floorType === ft.id ? accentColor : 'transparent' }} aria-label={ft.label} title={ft.label} />
             ))}
           </div>
         </div>
@@ -3695,7 +3810,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
             {floorColorOptions.map(fc => (
               <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
-                style={{ background: fc.color, borderColor: floorColor === fc.color ? accentColor : 'transparent' }} title={fc.label} />
+                style={{ background: fc.color, borderColor: floorColor === fc.color ? accentColor : 'transparent' }} aria-label={fc.label} title={fc.label} />
             ))}
             <div className="relative">
               <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
@@ -4170,7 +4285,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           style={{
             background: '#5A4E42',
             color: '#fff',
-            height: 44,
+            height: 38,
             fontFamily: "'Outfit', sans-serif",
             boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
             transition: 'all 0.3s ease',
@@ -4379,8 +4494,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
                 </button>
               );
             })}
-            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9' : 'w-6 h-6'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
-            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9' : 'w-6 h-6'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
           </div>
 
           {/* Mobile right actions — save button (always visible) + sign up pill */}
@@ -4400,7 +4515,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           {/* Desktop right actions */}
           {!isMobile && (
             <div className="flex items-center gap-1">
-              <button onClick={() => window.location.href = '/dashboard'} className="h-8 px-2.5 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: 'transparent' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /><span className="text-[10px] font-semibold">Dashboard</span></button>
+              <button onClick={() => window.location.href = '/dashboard'} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[9px]" /></button>
               <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[9px]" /></button>
               <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[9px]" /></button>
               <button onClick={shareRoom} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[9px]" /></button>
@@ -4414,7 +4529,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
-          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-30' : 'absolute top-14 left-1/2 -translate-x-1/2 z-30 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
             {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
@@ -4589,7 +4704,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             <button onClick={() => rotateSelected('right')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
             <button onClick={duplicateSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Duplicate" title="Duplicate"><i className="fas fa-clone" /></button>
             <button onClick={deleteSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Delete" title="Delete"><i className="fas fa-trash-alt" /></button>
-            <button onClick={deselectAll} className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 11, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
+            <button onClick={deselectAll} className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 11, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
           </div>
         )}
 
