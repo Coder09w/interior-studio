@@ -275,8 +275,8 @@
 
 /* ===== COLOR SWATCHES — bigger + accessible ===== */
 .int-color-swatch {
-  width: 40px;
-  height: 40px;
+  width: 44px;   /* ── FIX #5: increased from 40px for better touch targets ── */
+  height: 44px;  /* ── FIX #5: increased from 40px for better touch targets ── */
   border-radius: 10px;
   border: 2.5px solid transparent;
   cursor: pointer;
@@ -555,13 +555,13 @@ input[type="range"].int-range::-moz-range-thumb {
     height: 6px;
   }
   input[type="range"].int-range::-webkit-slider-thumb {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-width: 3px;
   }
   input[type="range"].int-range::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-width: 3px;
   }
   /* Prevent iOS zoom on input focus */
@@ -576,21 +576,21 @@ input[type="range"].int-range::-moz-range-thumb {
   button, a, [role="tab"], [role="button"] {
     touch-action: manipulation;
   }
-  /* Minimum touch target size for interactive elements in the editor */
+  /* ── FIX #5: Minimum touch target sizing for mobile ── */
   .int-furniture-card {
     min-height: 80px;
   }
   .int-color-swatch {
-    width: 40px;
-    height: 40px;
+    width: 44px;   /* ── FIX #5: 44px Apple HIG minimum touch target ── */
+    height: 44px;
   }
   .int-cat-tab {
     padding: 10px 14px;
-    min-height: 40px;
+    min-height: 44px;  /* ── FIX #5: 44px minimum ── */
   }
   .int-mat-pill {
     padding: 10px 16px;
-    min-height: 40px;
+    min-height: 44px;  /* ── FIX #5: 44px minimum ── */
   }
 }
 
@@ -673,7 +673,9 @@ aside, .absolute, main {
   animation: float2 10s ease-in-out 2s infinite;
 }
 
-/* ===== COC-STYLE CINEMATIC LOADER ===== */
+/* ═══════════════════════════════════════════════════════════════
+   COC-STYLE CINEMATIC LOADER — Premium easing
+   ═══════════════════════════════════════════════════════════════ */
 
 /* ── Background & atmosphere ── */
 .coc-loader {
@@ -681,13 +683,13 @@ aside, .absolute, main {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 24px; gap: 0;
-  transition: opacity .6s ease-out;
+  transition: opacity .45s cubic-bezier(.4,0,.2,1); /* ── FIX #4: smoother ease-out (was .6s ease-out) ── */
 }
 .coc-loader.fade-out {
-  animation: cocLoaderFadeOut .6s ease forwards;
+  animation: cocLoaderFadeOut .45s cubic-bezier(.4,0,.2,1) forwards; /* ── FIX #4: premium ease ── */
 }
 @keyframes cocLoaderFadeOut {
-  to { opacity: 0; pointer-events: none; }
+  to { opacity: 0; pointer-events: none; transform: scale(1.02); } /* ── FIX #4: subtle scale-up on exit for premium feel ── */
 }
 
 .coc-bg {

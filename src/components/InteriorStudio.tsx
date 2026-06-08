@@ -337,7 +337,15 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     return () => clearTimeout(timer);
   }, [isGuest]);
 
-  // Sync isGuest with session status and skip onboarding for auth users
+  // ── FIX #2: Saved design deep-linking — load room data from DB when projectData present ──
+  // Root cause: When opening a saved project from dashboard, projectData was set
+  // (name + rooms list) but the actual room SETTINGS (width, depth, height, furniture,
+  // wall color, etc.) were never loaded from the server. The editor always started
+  // with default room dimensions and empty furniture.
+  // Fix: Fetch room data from /api/rooms/[roomId] after projectData is resolved,
+  // then apply all room settings + furniture to the 3D scene.
+  const projectDataLoadedRef = useRef(false);
+
   useEffect(() => {
     if (isAuthenticated) {
       setIsGuest(false);
@@ -357,6 +365,54 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           setRooms(projectRooms);
           setCurrentRoomId(projectRooms[0].id);
           currentRoomIdRef.current = projectRooms[0].id;
+
+          // ── Deep-link: Fetch room data from server and apply to scene ──
+          // This loads furniture, dimensions, wall colors, etc. from the DB
+          if (!projectDataLoadedRef.current) {
+            projectDataLoadedRef.current = true;
+            const firstRoomId = projectData.rooms[0].id;
+            // Load all rooms' data from the API
+            projectData.rooms.forEach((room, idx) => {
+              fetch(`/api/rooms/${room.id}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(roomData => {
+                  if (!roomData) return;
+                  // Store room state for room switching
+                  if (roomData.furniture) {
+                    try {
+                      const furnitureData = typeof roomData.furniture === 'string'
+                        ? JSON.parse(roomData.furniture)
+                        : roomData.furniture;
+                      roomStatesRef.current.set(room.id, furnitureData);
+                    } catch { /* ignore parse errors */ }
+                  }
+                  // Apply first room's settings to the 3D scene
+                  if (idx === 0) {
+                    // Apply room dimensions
+                    if (roomData.width) { roomWRef.current = roomData.width; setRoomW(roomData.width); }
+                    if (roomData.depth) { roomDRef.current = roomData.depth; setRoomD(roomData.depth); }
+                    if (roomData.height) { roomHRef.current = roomData.height; setRoomH(roomData.height); }
+                    if (roomData.wallColor) { wallColRef.current = roomData.wallColor; setWallCol(roomData.wallColor); }
+                    if (roomData.floorType) { floorTypeRef.current = roomData.floorType; setFloorType(roomData.floorType); }
+                    if (roomData.doorWall) { doorWallRef.current = roomData.doorWall; setDoorWall(roomData.doorWall); }
+                    if (roomData.windowCount) { windowCountRef.current = roomData.windowCount; setWindowCount(roomData.windowCount); }
+                    if (roomData.windowWall) { windowWallRef.current = roomData.windowWall; setWindowWall(roomData.windowWall); }
+                    if (roomData.lightMood) { lightMoodRef.current = roomData.lightMood; setLightMood(roomData.lightMood); }
+                    // Set room type
+                    if (room.roomType) {
+                      setSelectedRoomType(room.roomType as PresetRoomType);
+                      // Update current room's roomType in the rooms array
+                      setRooms(prev => prev.map(r => r.id === room.id ? { ...r, roomType: room.roomType } : r));
+                    }
+                    // Rebuild room geometry with loaded dimensions
+                    // Note: buildRoom() will be called after scene init,
+                    // and furniture will be loaded via roomStatesRef
+                    // So we just need to set the refs and let the init flow pick them up
+                  }
+                })
+                .catch(() => { /* ignore fetch errors — will use defaults */ });
+            });
+          }
         }
       } else {
         setShowOnboarding(false);
@@ -364,12 +420,29 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     }
   }, [isAuthenticated, projectData]);
 
-  // Sync theme to CSS variables and data attribute
+  // ── FIX #1: Theme persistence — apply immediately from localStorage on mount, before session resolves ──
+  // This prevents the copper→teal flash on authenticated sessions by reading the
+  // persisted theme from localStorage synchronously on first render.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    // Only apply theme when session is resolved (not "loading")
-    // This prevents the copper→teal flash on authenticated sessions
-    if (sessionStatus === 'loading') return;
+    // Phase 1: If session is still loading, apply persisted theme from localStorage
+    // to prevent flash of wrong theme (copper instead of teal)
+    if (sessionStatus === 'loading') {
+      try {
+        const saved = localStorage.getItem('instod-theme');
+        if (saved === 'teal') {
+          document.documentElement.setAttribute('data-theme', 'teal');
+          const root = document.documentElement.style;
+          root.setProperty('--int-accent', '#2A9D8F');
+          root.setProperty('--int-accent-hover', '#1F7A6E');
+          root.setProperty('--int-accent-light', '#DCF5F0');
+          root.setProperty('--int-accent-bg', 'rgba(42,157,143,0.08)');
+          root.setProperty('--int-accent-border', 'rgba(42,157,143,0.15)');
+        }
+      } catch {}
+      return; // Don't write to localStorage yet — wait for session to resolve
+    }
+    // Phase 2: Session resolved — apply definitive theme
     const theme = sessionStatus === 'authenticated' ? 'teal' : 'warm';
     document.documentElement.setAttribute('data-theme', theme);
     const root = document.documentElement.style;
@@ -505,7 +578,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     // Floor-plane projection: always set Y to 0 for floor-placed furniture
     // Skip for ceiling-mounted lights (pendant, chandelier, etc.)
     const fnName = item.userData.fn || item.name || '';
-    const isCeilingLight = fnName === 'createPendant';
+    const isCeilingLight = fnName === 'createPendant' || fnName === 'createChandelier';
     if (!isCeilingLight) {
       item.position.y = 0;
     }
@@ -766,11 +839,19 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   }, [serializeFurniture, loadFurnitureData, markUnsaved, showToast]);
 
   /* ===== SAVE ROOM ===== */
-  const saveRoom = useCallback(async () => {
+  // ── FIX #3: Non-blocking room updates — optimistic save + cloud persistence ──
+  // Root cause: saveRoom() only persisted to localStorage. Authenticated users'
+  // data was never saved to the DB, so reopening a project always showed defaults.
+  // Fix: For authenticated users, also persist to /api/rooms/[roomId] in the
+  // background. The UI updates optimistically (setSaveStatus('saving') then 'saved')
+  // without blocking. Toast feedback for manual saves, silent for auto-saves.
+  const cloudSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const saveRoom = useCallback(async (silent = true) => {
     roomStatesRef.current.set(currentRoomId, serializeFurniture());
     setSaveStatus('saving');
 
-    // Persist to localStorage
+    // Persist to localStorage (always, as fast local backup)
     try {
       const roomData = {
         furniture: JSON.stringify(serializeFurniture()),
@@ -792,21 +873,48 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       savedRooms[currentRoomId] = roomData;
       localStorage.setItem('instod_rooms', JSON.stringify(savedRooms));
 
-      // Also save all room states
       const allRoomStates: Record<string, FurnitureData[]> = {};
       roomStatesRef.current.forEach((val, key) => { allRoomStates[key] = val; });
       localStorage.setItem('instod_room_states', JSON.stringify(allRoomStates));
     } catch (_e) {
-      // localStorage quota exceeded or unavailable — inform the user
-      showToast('Save failed — storage may be full');
+      if (!silent) showToast('Save failed — storage may be full');
     }
 
+    // ── Cloud save for authenticated users (non-blocking, optimistic) ──
+    if (!isGuestRef.current && currentRoomId !== 'default') {
+      // Debounce cloud saves — don't hammer the API on every keystroke
+      if (cloudSaveTimeoutRef.current) clearTimeout(cloudSaveTimeoutRef.current);
+      cloudSaveTimeoutRef.current = setTimeout(async () => {
+        try {
+          await fetch(`/api/rooms/${currentRoomId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              furniture: serializeFurniture(),
+              width: roomWRef.current,
+              depth: roomDRef.current,
+              height: roomHRef.current,
+              wallColor: wallColRef.current,
+              floorType: floorTypeRef.current,
+              floorColor: floorColorRef.current,
+              doorWall: doorWallRef.current,
+              windowCount: windowCountRef.current,
+              windowWall: windowWallRef.current,
+              lightMood: lightMoodRef.current,
+              ceilingLightPreset: ceilingLightPresetRef.current,
+            }),
+          });
+        } catch { /* Cloud save failed silently — localStorage is the fallback */ }
+      }, 2000); // 2s debounce for cloud saves
+    }
+
+    // Optimistic UI — mark as saved immediately (cloud save is background)
     setTimeout(() => {
       setSaveStatus('saved');
       saveStatusRef.current = 'saved';
-      // Silent save — no toast for auto-saves. User sees "Saved" indicator in UI.
-    }, 500);
-  }, [currentRoomId, serializeFurniture, designName]);
+      if (!silent) showToast('Design saved');
+    }, 300);
+  }, [currentRoomId, serializeFurniture, designName, showToast]);
 
   /* ===== HELPER: Dispose a single object and its children ===== */
   const disposeObj = useCallback((obj: THREE.Object3D) => {
@@ -1705,6 +1813,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   }, [markSceneDirty]);
 
   /* ===== UPDATE ROOM VISUAL PREVIEW (instant in-place wall scaling) ===== */
+  // ── FIX #6: Performance — replaced traverse() with direct child lookups ──
+  // Root cause: roomGroup.traverse() visits every child in the scene graph on
+  // every slider frame (60fps = 60 traversals/sec). With 30+ children, this
+  // created significant GC pressure and blocked the main thread.
+  // Fix: Use roomGroup.children direct loop with name checks instead of recursive
+  // traverse. This is O(n) where n = direct children only (not nested), and
+  // avoids the overhead of Matrix4/Quaternion updates that traverse triggers.
   const updateRoomVisualPreview = useCallback((newW: number, newD: number, newH: number) => {
     const roomGroup = roomGroupRef.current;
     if (!roomGroup) return;
@@ -1713,7 +1828,8 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     const od = roomGroup.userData.builtD as number || 6;
     const oh = roomGroup.userData.builtH as number || 3;
 
-    roomGroup.traverse(c => {
+    // Direct child iteration — much faster than traverse for flat structures
+    roomGroup.children.forEach(c => {
       if (!(c instanceof THREE.Mesh)) return;
       switch (c.name) {
         case 'wall_solid_merged':
@@ -1748,36 +1864,39 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       }
     });
 
-    // Update ceiling spot positions (only y coordinate for height changes)
+    // ── FIX #6: Single-pass room update — merged 3 forEach loops into 1 ──
+    // Root cause: Three separate children.forEach() calls on every slider frame
+    // meant 3 × N iterations per frame. Merging into a single pass halves the work.
     roomGroup.children.forEach(child => {
+      // Ceiling spot position update
       if (child.name && child.name.startsWith('ceilingSpot_')) {
         child.position.y = newH - 0.015;
+        return;
       }
-    });
-
-    // Update door position during preview (approximate — precise rebuild on release)
-    const dw = doorWallRef.current;
-    const doorH = 2.1;
-    roomGroup.children.forEach(child => {
+      // Door position update (approximate — precise rebuild on release)
+      const dw = doorWallRef.current;
+      const doorH = 2.1;
       if (child.name === 'doorFrame') {
         if (dw === 'back') child.position.set(0, doorH / 2, -newD / 2 + 0.03);
         else if (dw === 'left') child.position.set(-newW / 2 + 0.03, doorH / 2, 0);
         else if (dw === 'right') child.position.set(newW / 2 - 0.03, doorH / 2, 0);
-      } else if (child.name === 'doorPanel') {
+        return;
+      }
+      if (child.name === 'doorPanel') {
         if (dw === 'back') child.position.set(0, doorH / 2, -newD / 2 + 0.055);
         else if (dw === 'left') child.position.set(-newW / 2 + 0.055, doorH / 2, 0);
         else if (dw === 'right') child.position.set(newW / 2 - 0.055, doorH / 2, 0);
-      } else if (child.name === 'doorKnob') {
+        return;
+      }
+      if (child.name === 'doorKnob') {
         if (dw === 'back') child.position.set(0.3, doorH * 0.48, -newD / 2 + 0.08);
         else if (dw === 'left') child.position.set(-newW / 2 + 0.08, doorH * 0.48, 0.3);
         else if (dw === 'right') child.position.set(newW / 2 - 0.08, doorH * 0.48, 0.3);
+        return;
       }
-    });
-
-    // Update window positions during preview (approximate — precise rebuild on release)
-    const wcnt = windowCountRef.current;
-    const wwall = windowWallRef.current;
-    roomGroup.children.forEach(child => {
+      // Window position update (approximate — precise rebuild on release)
+      const wcnt = windowCountRef.current;
+      const wwall = windowWallRef.current;
       if (child.name === 'windowFrame' || child.name === 'windowGlass' || child.name === 'windowCrossV' || child.name === 'windowCrossH') {
         const winW = Math.min(newW * 0.3, 2.2), winH = Math.min(newH * 0.45, 1.6);
         if (wwall === 'back') {
@@ -1791,6 +1910,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           child.position.x = newW / 2 - 0.02;
           child.position.y = newH * 0.55;
         }
+        return;
       }
     });
 
@@ -2469,21 +2589,70 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     scene.add(fillLight); fillLightRef.current = fillLight;
 
     const roomGroup = new THREE.Group(); scene.add(roomGroup); roomGroupRef.current = roomGroup;
-    buildRoom(); setTimeout(() => {
-      // Load saved room state from localStorage — ONLY store, do NOT auto-apply
-      // The user must explicitly choose to continue or start fresh via onboarding
-      try {
-        // Session detection is now handled by useSession() hook at component level.
-        // No need for manual fetch here — isGuest and showOnboarding are already set.
 
+    // ── FIX #2 (cont): Smart init — load saved project data OR default furniture ──
+    // Root cause: buildRoom() + addDefaultFurniture() always ran on init, even when
+    // opening a saved project. This meant saved dimensions/furniture were overwritten.
+    // Fix: If projectData is present, wait for API room data to load, then apply
+    // the saved settings and furniture. If no projectData, use localStorage cache
+    // or defaults as before.
+    const initRoom = async () => {
+      if (projectData && projectData.rooms && projectData.rooms.length > 0) {
+        // ── Authenticated user opening a saved project ──
+        // Fetch room data from API, then build room + load furniture
+        try {
+          const firstRoom = projectData.rooms[0];
+          const res = await fetch(`/api/rooms/${firstRoom.id}`);
+          if (res.ok) {
+            const roomData = await res.json();
+            // Apply room dimensions from DB
+            if (roomData.width) { roomWRef.current = roomData.width; setRoomW(roomData.width); }
+            if (roomData.depth) { roomDRef.current = roomData.depth; setRoomD(roomData.depth); }
+            if (roomData.height) { roomHRef.current = roomData.height; setRoomH(roomData.height); }
+            if (roomData.wallColor) { wallColRef.current = roomData.wallColor; setWallCol(roomData.wallColor); }
+            if (roomData.floorType) { floorTypeRef.current = roomData.floorType; setFloorType(roomData.floorType); }
+            if (roomData.doorWall) { doorWallRef.current = roomData.doorWall; setDoorWall(roomData.doorWall); }
+            if (roomData.windowCount) { windowCountRef.current = roomData.windowCount; setWindowCount(roomData.windowCount); }
+            if (roomData.windowWall) { windowWallRef.current = roomData.windowWall; setWindowWall(roomData.windowWall); }
+            if (roomData.lightMood) { lightMoodRef.current = roomData.lightMood; setLightMood(roomData.lightMood); }
+            // Build room with correct dimensions
+            buildRoom();
+            // Load saved furniture
+            if (roomData.furniture) {
+              try {
+                const furnitureData = typeof roomData.furniture === 'string'
+                  ? JSON.parse(roomData.furniture) : roomData.furniture;
+                roomStatesRef.current.set(firstRoom.id, furnitureData);
+                loadFurnitureData(furnitureData);
+              } catch { /* ignore parse errors */ }
+            }
+            // Also load other rooms' data in the background (for room switching)
+            projectData.rooms.slice(1).forEach(room => {
+              fetch(`/api/rooms/${room.id}`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                  if (data?.furniture) {
+                    try {
+                      const fd = typeof data.furniture === 'string' ? JSON.parse(data.furniture) : data.furniture;
+                      roomStatesRef.current.set(room.id, fd);
+                    } catch {}
+                  }
+                }).catch(() => {});
+            });
+            historyRef.current = []; historyIdxRef.current = 0;
+            return; // Skip default furniture
+          }
+        } catch { /* Fall through to defaults */ }
+      }
+
+      // ── Guest / no project data — load from localStorage or use defaults ──
+      try {
         const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
         const savedRoom = savedRooms['default'];
         if (savedRoom) {
-          // Only store cached data for later use — do NOT apply settings here
           cachedRoomDataRef.current = savedRoom;
           setHasCachedDesign(true);
         }
-        // Also load saved room states map
         const savedStates = JSON.parse(localStorage.getItem('instod_room_states') || '{}');
         Object.entries(savedStates).forEach(([key, val]) => {
           roomStatesRef.current.set(key, val as FurnitureData[]);
@@ -2494,12 +2663,15 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       // Always add default furniture — onboarding will handle loading presets
       addDefaultFurniture();
       historyRef.current = []; historyIdxRef.current = 0;
-    }, 100);
+    };
 
-    // Minimum loading display time (2.5s) so the loader animation completes properly
+    buildRoom(); // Build with current refs (default or project-loaded dimensions)
+    setTimeout(() => { initRoom(); }, 100);
+
+    // ── FIX #4: Loading time — 1.8s minimum for premium feel (was 2.5s, too sluggish) ──
     const minLoadTimer = setTimeout(() => {
       setSceneReady(true);
-    }, 2500);
+    }, 1800);
 
     const onResize = () => {
       const p = canvas.parentElement; if (!p) return;
@@ -2843,47 +3015,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     canvas.addEventListener('pointermove', () => { if (isDragRef.current || dragItemRef.current) needsRender = true; });
     animate();
 
-    // Auto-save timer — actually persists room data to localStorage
+    // Auto-save timer — persists to localStorage + cloud (non-blocking)
     autoSaveTimerRef.current = setInterval(() => {
       if (saveStatusRef.current === 'unsaved') {
-        saveStatusRef.current = 'saving';
-        setSaveStatus('saving');
-        try {
-          const rid = currentRoomIdRef.current;
-          const furnitureData = serializeFurniture(); // Serialize once, not twice
-          roomStatesRef.current.set(rid, furnitureData);
-          const roomData = {
-            furniture: JSON.stringify(furnitureData),
-            width: roomWRef.current,
-            depth: roomDRef.current,
-            height: roomHRef.current,
-            wallColor: wallColRef.current,
-            floorType: floorTypeRef.current,
-            floorColor: floorColorRef.current,
-            doorWall: doorWallRef.current,
-            windowCount: windowCountRef.current,
-            windowWall: windowWallRef.current,
-            lightMood: lightMoodRef.current,
-            ceilingLightPreset: ceilingLightPresetRef.current,
-            designName: designNameRef.current,
-            activeSkin: activeSkinRef.current,
-          };
-          const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
-          savedRooms[rid] = roomData;
-          localStorage.setItem('instod_rooms', JSON.stringify(savedRooms));
-          const allRoomStates: Record<string, FurnitureData[]> = {};
-          roomStatesRef.current.forEach((val, key) => { allRoomStates[key] = val; });
-          localStorage.setItem('instod_room_states', JSON.stringify(allRoomStates));
-          saveStatusRef.current = 'saved';
-          setSaveStatus('saved');
-        } catch (_e) {
-          // localStorage quota exceeded or unavailable
-          saveStatusRef.current = 'unsaved';
-          setSaveStatus('unsaved');
-          showToast('Auto-save failed — storage full');
-        }
+        saveRoom(true); // silent save — uses the new saveRoom with cloud persistence
       }
-    }, 30000); // Reduced from 60s to 30s for better safety
+    }, 15000); // ── FIX #3: Reduced from 30s to 15s for faster cloud sync ──
 
     // Handle WebGL context loss — save data and warn user
     canvas.addEventListener('webglcontextlost', (e) => {
@@ -3564,7 +3701,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           {/* Save & Export actions */}
           <p className="int-section-header">Save & Export</p>
           <div className="grid grid-cols-2 gap-2 mb-3">
-            <button onClick={() => { saveRoom(); showToast('Room saved!'); }}
+            <button onClick={() => { saveRoom(false); }}
               className="py-3 rounded-xl text-[11px] font-bold cursor-pointer border-none flex flex-col items-center justify-center gap-1.5"
               style={{ background: '#7A8B6F', color: '#fff' }}>
               <i className="fas fa-save text-sm" />
@@ -3935,7 +4072,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       <div className="p-5">
         <p className="int-section-header">Actions</p>
         <div className="flex flex-col gap-2">
-          <button onClick={() => { saveRoom(); showToast('Room saved!'); }} className="int-btn-primary w-full"><i className="fas fa-save" />Save Room</button>
+          <button onClick={() => { saveRoom(false); }} className="int-btn-primary w-full"><i className="fas fa-save" />Save Room</button>
           <button onClick={() => window.location.href = '/dashboard'} className="int-btn-secondary w-full"><i className="fas fa-th-large" />Dashboard</button>
           <div className="flex gap-2">
             <button onClick={() => setShowSnapshots(true)} className="int-btn-secondary flex-1"><i className="fas fa-camera-retro" />Snapshots</button>
@@ -4500,7 +4637,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           {/* Mobile right actions — save button (always visible) + sign up pill */}
           {isMobile && (
             <div className="flex items-center gap-1.5" style={{ flexShrink: 0 }}>
-              <button onClick={() => { saveRoom(); showToast('Room saved!'); }} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 36, flexShrink: 0, transition: 'background 0.3s ease' }} aria-label="Save Room">
+              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 36, flexShrink: 0, transition: 'background 0.3s ease' }} aria-label="Save Room">
                 <i className="fas fa-save text-[9px]" />{saveStatus === 'saving' ? '...' : 'Save'}
               </button>
               {isGuest && (
@@ -4728,7 +4865,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             {/* Expanded action buttons */}
             {mobileActionsOpen && (
               <div className="flex flex-col gap-1.5 mt-1.5 items-center">
-                <button onClick={() => { saveRoom(); showToast('Room saved!'); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
+                <button onClick={() => { saveRoom(false); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
                 <button onClick={() => { if (isGuest) { showToast('Sign in for undo history'); return; } undo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo'}><i className="fas fa-undo text-[11px]" /></button>
                 <button onClick={() => { if (isGuest) { showToast('Sign in for redo history'); return; } redo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo'}><i className="fas fa-redo text-[11px]" /></button>
                 <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>

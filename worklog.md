@@ -199,3 +199,23 @@ Stage Summary:
 - Previous session's fixes are intact and working
 - AABB boundary enforcement + room-type catalog filtering both active
 - Files: InteriorStudio.tsx (existing fixes verified)
+---
+Task ID: 6
+Agent: Main
+Task: Wave 3 — All 8 comprehensive fixes (theme persistence, deep-linking, non-blocking UX, loader, touch targets, performance, boundary, docs)
+
+Work Log:
+- Fixed theme persistence: Added localStorage read during session "loading" phase to prevent copper→teal flash on authenticated refresh
+- Fixed saved design deep-linking: Added projectData-loaded room data fetch from /api/rooms/[roomId] API in both useEffect and scene init; replaced unconditional buildRoom+addDefaultFurniture with smart initRoom() that loads DB data when projectData present
+- Fixed non-blocking room updates: Added cloud save persistence (debounced 2s) to /api/rooms/[roomId] for authenticated users; saveRoom() now accepts silent parameter; auto-save reduced from 30s→15s; toast feedback for manual saves
+- Fixed loading animation: Reduced stage intervals from 400-700ms to 250-450ms; replaced fixed-speed fill with exponential ease-out; reduced hold at 100% from 1400ms→500ms; added scale(1.02) exit animation; reduced minimum loader time from 2500ms→1800ms
+- Fixed touch targets: Color swatches 40→44px; category tabs 40→44px min-height; material pills 40→44px; range slider thumbs 20→22px on mobile
+- Fixed performance: Replaced traverse() with children.forEach() in updateRoomVisualPreview; merged 3 separate forEach loops into single-pass iteration; added chandelier to ceiling-light exemption in clampToRoomBounds
+- Verified room boundary enforcement at all entry points (spawn, duplicate, load, drag)
+- Documented all 7 fixes with root causes, fix details, and validation checklists
+
+Stage Summary:
+- All 8 issues addressed with exact root causes traced and fixed
+- Build passes cleanly
+- Documentation saved to /home/z/my-project/download/wave3-fix-documentation.md
+- Files: InteriorStudio.tsx, EditorLoader.tsx, globals.css

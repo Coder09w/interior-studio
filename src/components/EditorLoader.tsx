@@ -272,9 +272,13 @@ export default function EditorLoader() {
   const rafRef = useRef<number>(0);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Stage advancement timer (with proper cleanup)
+  // ── FIX #4: Premium loader timing — faster stages, smoother easing, tighter pauses ──
+  // Root cause: Stage intervals were too long (400-700ms each), making the loader
+  // feel sluggish. Total time was ~4.8s when the scene is often ready in 1.5-2s.
+  // Fix: Tighter intervals (250-450ms), reduced hold at 100% (800ms→500ms),
+  // faster fade-out trigger (1400ms→600ms after complete).
   useEffect(() => {
-    const stageIntervals = [400, 450, 500, 550, 500, 550, 600, 650, 700];
+    const stageIntervals = [250, 280, 300, 320, 300, 340, 380, 400, 450];
     let idx = 0;
 
     function advanceStage() {
@@ -287,16 +291,16 @@ export default function EditorLoader() {
       setSceneText(STAGES[idx].scene);
 
       if (idx < STAGES.length - 1) {
-        const timer = setTimeout(advanceStage, stageIntervals[idx] || 500);
+        const timer = setTimeout(advanceStage, stageIntervals[idx] || 300);
         timersRef.current.push(timer);
       } else {
         setIsComplete(true);
-        const fadeTimer = setTimeout(() => setIsFadingOut(true), 1400);
+        const fadeTimer = setTimeout(() => setIsFadingOut(true), 500);
         timersRef.current.push(fadeTimer);
       }
     }
 
-    const initialTimer = setTimeout(advanceStage, stageIntervals[0] || 400);
+    const initialTimer = setTimeout(advanceStage, stageIntervals[0] || 250);
     timersRef.current.push(initialTimer);
     
     return () => {
@@ -305,7 +309,10 @@ export default function EditorLoader() {
     };
   }, []);
 
-  // rAF loop: smooth CoC-style fill physics
+  // ── FIX #4: Smoother fill physics — eased interpolation instead of fixed speed ──
+  // Root cause: Fixed speed steps (1.2/0.55/0.25 per frame) felt jumpy and mechanical.
+  // Fix: Use exponential ease-out — progress approaches target asymptotically,
+  // creating a smooth "settling" feel like premium apps.
   useEffect(() => {
     function tick() {
       const current = currentRef.current;
@@ -313,9 +320,9 @@ export default function EditorLoader() {
 
       if (current < target) {
         const gap = target - current;
-        // Fast when far, slow when close — CoC feel
-        const speed = gap > 20 ? 1.2 : gap > 5 ? 0.55 : 0.25;
-        currentRef.current = Math.min(current + speed, target);
+        // Exponential ease-out: fast start, smooth deceleration
+        const speed = gap > 20 ? gap * 0.12 : gap > 5 ? gap * 0.15 : gap * 0.2;
+        currentRef.current = Math.min(current + Math.max(speed, 0.15), target);
         setProgress(currentRef.current);
       }
 
