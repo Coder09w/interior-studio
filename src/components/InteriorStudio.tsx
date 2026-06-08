@@ -295,6 +295,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomType, setNewRoomType] = useState('bedroom');
   const [isMobile, setIsMobile] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const [mobilePanel, setMobilePanel] = useState<'furniture' | 'room' | 'material' | 'skin' | 'skeleton' | 'presets' | null>(null);
   const [roomManagerOpen, setRoomManagerOpen] = useState(false);
   const [editingRoomName, setEditingRoomName] = useState<string | null>(null);
@@ -2715,6 +2716,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       renderer.setSize(p.clientWidth, p.clientHeight);
       camera.aspect = p.clientWidth / p.clientHeight;
       camera.updateProjectionMatrix();
+      setViewportWidth(window.innerWidth);
     };
     onResize(); window.addEventListener('resize', onResize);
     // Use ResizeObserver for container-aware resizing (prevents flicker on panel toggle)
@@ -3180,6 +3182,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       const delta = ev.clientX - sidebarResizeRef.current.startX;
       const newW = Math.max(260, Math.min(520, sidebarResizeRef.current.startW + delta));
       setSidebarWidth(newW);
+      setViewportWidth(window.innerWidth); // keep compact mode calculation fresh during drag
     };
     const onUp = () => {
       sidebarResizeRef.current = null;
@@ -4855,39 +4858,65 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* View controls - Desktop — BUG #5 FIX: Right-side quick action panel with improved z-index and discoverability */}
-        {!isMobile && (
-          <div className="absolute right-3 z-30 flex flex-col gap-2" style={{ top: '50%', transform: 'translateY(-50%)' }}>
-            {[
-              { id: 'top', icon: 'fa-border-all', label: 'Top', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
-              { id: 'front', icon: 'fa-square', label: 'Front', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
-              { id: 'persp', icon: 'fa-cube', label: '3D', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
-            ].map(v => (
-              <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} title={`${v.label} view`} className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 12, fontWeight: 600, minWidth: 72, transition: 'background 0.2s ease, border-color 0.2s ease, transform 0.15s ease' }}>
-                <i className={`fas ${v.icon}`} style={{ fontSize: 14, color: accentColor }} />
-                <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>{v.label}</span>
+        {/* View controls - Desktop — Right-side quick action panel: dynamically adapts to sidebar width */}
+        {!isMobile && (() => {
+          // Compute available width for the main content area (reactive to both sidebar drag and window resize)
+          const availableWidth = viewportWidth - (sidebarOpen ? sidebarWidth : 0);
+          const compact = availableWidth < 560;
+          const btnBg = lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)';
+          const btnBorder = lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4';
+          const btnColor = lightMood === 'night' ? '#C8C0B0' : '#4A3E32';
+          const btnStyle = (extra?: { bg?: string; border?: string; color?: string }) => ({
+            background: extra?.bg ?? btnBg,
+            backdropFilter: 'blur(12px)',
+            borderColor: extra?.border ?? btnBorder,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+            color: extra?.color ?? btnColor,
+            fontSize: compact ? 0 : 12,
+            fontWeight: 600 as const,
+            minWidth: compact ? 40 : 72,
+            width: compact ? 40 : 'auto',
+            height: compact ? 40 : 'auto',
+            padding: compact ? 0 : undefined,
+            transition: 'background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, width 0.25s ease, min-width 0.25s ease, height 0.25s ease, padding 0.25s ease, font-size 0.25s ease',
+            display: 'flex' as const,
+            alignItems: 'center' as const,
+            justifyContent: 'center' as const,
+            gap: compact ? 0 : 8,
+          });
+
+          return (
+            <div className="absolute z-30 flex flex-col" style={{ right: compact ? 6 : 12, top: '50%', transform: 'translateY(-50%)', gap: compact ? 4 : 8, transition: 'right 0.25s ease, gap 0.25s ease' }}>
+              {[
+                { id: 'top', icon: 'fa-border-all', label: 'Top', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
+                { id: 'front', icon: 'fa-square', label: 'Front', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+                { id: 'persp', icon: 'fa-cube', label: '3D', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+              ].map(v => (
+                <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} title={`${v.label} view`} className="rounded-xl cursor-pointer border" style={btnStyle()}>
+                  <i className={`fas ${v.icon}`} style={{ fontSize: compact ? 15 : 14, color: accentColor, transition: 'font-size 0.25s ease' }} />
+                  {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>{v.label}</span>}
+                </button>
+              ))}
+              <button onClick={() => { autoRotateRef.current = !autoRotateRef.current; setAutoRotActive(autoRotateRef.current); if (controlsRef.current) { controlsRef.current.autoRotate = autoRotateRef.current; controlsRef.current.autoRotateSpeed = 1.5; } }}
+                aria-label={autoRotActive ? 'Stop auto-rotate' : 'Start auto-rotate'} title="Auto-rotate" className="rounded-xl cursor-pointer border" style={btnStyle({ bg: autoRotActive ? accentColor + '1F' : btnBg, border: autoRotActive ? accentColor : btnBorder, color: autoRotActive ? accentColor : btnColor })}>
+                <i className="fas fa-sync-alt" style={{ fontSize: compact ? 15 : 14, color: autoRotActive ? accentColor : undefined, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Spin</span>}
               </button>
-            ))}
-            <button onClick={() => { autoRotateRef.current = !autoRotateRef.current; setAutoRotActive(autoRotateRef.current); if (controlsRef.current) { controlsRef.current.autoRotate = autoRotateRef.current; controlsRef.current.autoRotateSpeed = 1.5; } }}
-              aria-label={autoRotActive ? 'Stop auto-rotate' : 'Start auto-rotate'} title="Auto-rotate" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: autoRotActive ? accentColor + '1F' : (lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)'), backdropFilter: 'blur(12px)', borderColor: autoRotActive ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: autoRotActive ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32'), fontSize: 12, fontWeight: 600, minWidth: 72, transition: 'background 0.2s ease, border-color 0.2s ease' }}>
-              <i className="fas fa-sync-alt" style={{ fontSize: 14, color: autoRotActive ? accentColor : undefined }} />
-              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Spin</span>
-            </button>
-            <button onClick={resetRoom} title="Reset Room" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: '#c0392b', fontSize: 12, fontWeight: 600, minWidth: 72, transition: 'background 0.2s ease, border-color 0.2s ease' }}>
-              <i className="fas fa-undo-alt" style={{ fontSize: 14 }} />
-              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Reset</span>
-            </button>
-            {/* Screenshot & Share in quick actions */}
-            <button onClick={takeScreenshot} title="Screenshot" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 12, fontWeight: 600, minWidth: 72 }}>
-              <i className="fas fa-camera" style={{ fontSize: 14, color: accentColor }} />
-              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Capture</span>
-            </button>
-            <button onClick={shareRoom} title="Share room" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 12, fontWeight: 600, minWidth: 72 }}>
-              <i className="fas fa-share-alt" style={{ fontSize: 14, color: accentColor }} />
-              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Share</span>
-            </button>
-          </div>
-        )}
+              <button onClick={resetRoom} title="Reset Room" className="rounded-xl cursor-pointer border" style={btnStyle({ color: '#c0392b' })}>
+                <i className="fas fa-undo-alt" style={{ fontSize: compact ? 15 : 14, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Reset</span>}
+              </button>
+              <button onClick={takeScreenshot} title="Screenshot" className="rounded-xl cursor-pointer border" style={btnStyle()}>
+                <i className="fas fa-camera" style={{ fontSize: compact ? 15 : 14, color: accentColor, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Capture</span>}
+              </button>
+              <button onClick={shareRoom} title="Share room" className="rounded-xl cursor-pointer border" style={btnStyle()}>
+                <i className="fas fa-share-alt" style={{ fontSize: compact ? 15 : 14, color: accentColor, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Share</span>}
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Selected item panel — slim compact bar on mobile, floating card on desktop */}
         {itemPanelVisible && !mobilePanel && !isMobile && (
