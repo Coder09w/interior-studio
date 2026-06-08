@@ -89,3 +89,113 @@ Stage Summary:
 - All 4 major issues fixed and validated
 - Build passes
 - Exact root causes documented for each issue
+
+---
+Task ID: 1
+Agent: Main
+Task: AUTHENTICATED THEME PROPAGATION BUG
+
+Work Log:
+- Traced complete pipeline: useSession() → isGuest → accentColor inline → CSS variables
+- Found exact root cause: Theme useEffect used `isGuest` dependency (derived from sessionStatus which starts as "loading"), causing copper flash on authenticated sessions. Theme init useEffect and cleanup useEffect caused race conditions.
+- Fixed theme sync useEffect to use `sessionStatus` directly with early-return on "loading" state
+- Removed the two problematic useEffects (localStorage init + cleanup) that fought with the main sync
+- Theme now waits for session to resolve before applying, preventing the copper→teal flash
+
+Stage Summary:
+- Root cause: Race between session hydration and theme application
+- Fix: sessionStatus-based theme sync with loading-state guard
+- Files: InteriorStudio.tsx (theme useEffect rewritten)
+
+---
+Task ID: 2
+Agent: Main
+Task: SAVED DESIGN DEEP-LINKING BUG
+
+Work Log:
+- Traced routing: Dashboard → /editor/[projectId] → page.tsx fetches project via SWR → renders <InteriorStudio /> WITHOUT passing data
+- Found exact root cause: Line 64 of [projectId]/page.tsx renders `<InteriorStudio />` with no props — project data fetched by SWR never reaches the 3D editor
+- Added InteriorStudioProps interface with projectId and projectData fields
+- Enhanced onboarding skip logic to set design name, rooms from projectData when provided
+- Updated [projectId]/page.tsx to pass projectId and projectData as props
+
+Stage Summary:
+- Root cause: Project data fetched but never forwarded to InteriorStudio component
+- Fix: Pass projectData as props + skip onboarding for saved projects
+- Files: InteriorStudio.tsx (new props interface + onboarding skip), [projectId]/page.tsx (pass data)
+
+---
+Task ID: 3
+Agent: Main
+Task: NON-BLOCKING ROOM UPDATE UX
+
+Work Log:
+- Traced update flow: slider onChange → updateRoomVisualPreview() (instant) + debouncedBuildRoom() (60ms delayed full rebuild) → double rebuild causing freeze
+- Found exact root cause: Double rebuild on every slider change — visual preview (instant scaling) + debounced full rebuild (geometry disposal + recreation)
+- Removed debouncedBuildRoom() from all slider onChange handlers (6 changes across desktop + mobile)
+- Kept updateRoomVisualPreview() in onChange for instant visual feedback
+- Kept rebuildRoomGeometry() only in onMouseUp/onTouchEnd/onBlur for precise rebuild on release
+- Removed debouncedBuildRoom function definition entirely (no longer used)
+- Verified no blocking "Updating room" overlay exists in the JSX
+
+Stage Summary:
+- Root cause: Double rebuild (visual preview + debounced full rebuild) on every slider change
+- Fix: Remove debounced rebuild from onChange; rely on preview for instant feedback + precise rebuild on release
+- Files: InteriorStudio.tsx (6 onChange handler changes + function removal)
+
+---
+Task ID: 4
+Agent: Main
+Task: LOADING SCREEN ANIMATION FIX
+
+Work Log:
+- Audited EditorLoader.tsx timer management: recursive setTimeout chain not fully cleaned up
+- Audited globals.css animations: bouncy easing, off-center positioning, extreme scale, fast pacing
+- Fixed timer cleanup: Added timersRef to store ALL timeout IDs, clear all on unmount
+- Slowed stage intervals: [280-600ms] → [400-700ms] for stable pacing
+- Fixed scene card entrance: bouncy easing → smooth deceleration, less scale/translate
+- Fixed glow breathing: reduced scale jitter from 4% to 2%
+- Fixed isometric room centering: translate(-50%, -52%) → translate(-50%, -50%)
+- Fixed furniture entrance scale: .5 → .85, less extreme
+- Staggered animation delays for smoother reveal sequence
+
+Stage Summary:
+- Root cause: Timer leak + amateur animation timing + off-center positioning
+- Fix: Proper cleanup + slower pacing + smooth easing + correct centering
+- Files: EditorLoader.tsx (timer management), globals.css (5 animation fixes)
+
+---
+Task ID: 5
+Agent: Main
+Task: CONTROL SIZING / TOUCH TARGET FIX
+
+Work Log:
+- Color swatches were too small for comfortable tapping
+- Light mood buttons had inadequate touch targets
+- Category tabs had no minimum height
+- Increased color swatch size from 36px → 40px
+- Added min-height: 36px to material pills and category tabs
+- Increased light mood button size: px-3 py-2 min-h-[36px] for both mobile and desktop
+- Added min-height to .int-cat-tab in globals.css
+
+Stage Summary:
+- Root cause: Small fixed sizes not meeting touch target guidelines
+- Fix: Increased swatch size, added min-height to pills/tabs, larger mood buttons
+- Files: InteriorStudio.tsx (light mood button sizing), globals.css (swatch + tab + pill sizing)
+
+---
+Task ID: 7
+Agent: Main
+Task: ROOM BOUNDARY + ASSET VALIDATION (verified from previous session)
+
+Work Log:
+- Verified clampToRoomBounds() is called in addFurniture, duplicateSelected, loadFurnitureData
+- Verified ROOM_TYPE_CATEGORIES filtering is applied in desktop and mobile category tabs
+- Verified ROOM_TYPE_FURNITURE whitelist exists for contextual restrictions
+- Bathroom shows only bathroom + lighting + decor categories
+- Kitchen shows only kitchen + tables + lighting + decor categories
+
+Stage Summary:
+- Previous session's fixes are intact and working
+- AABB boundary enforcement + room-type catalog filtering both active
+- Files: InteriorStudio.tsx (existing fixes verified)

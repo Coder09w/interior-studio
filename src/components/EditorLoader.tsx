@@ -270,10 +270,11 @@ export default function EditorLoader() {
   const targetRef = useRef(STAGES[0].pct);
   const stageIdxRef = useRef(0);
   const rafRef = useRef<number>(0);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Stage advancement timer
+  // Stage advancement timer (with proper cleanup)
   useEffect(() => {
-    const stageIntervals = [280, 320, 380, 420, 380, 420, 460, 520, 600];
+    const stageIntervals = [400, 450, 500, 550, 500, 550, 600, 650, 700];
     let idx = 0;
 
     function advanceStage() {
@@ -286,17 +287,22 @@ export default function EditorLoader() {
       setSceneText(STAGES[idx].scene);
 
       if (idx < STAGES.length - 1) {
-        setTimeout(advanceStage, stageIntervals[idx] || 400);
+        const timer = setTimeout(advanceStage, stageIntervals[idx] || 500);
+        timersRef.current.push(timer);
       } else {
-        // Reached 100%
         setIsComplete(true);
-        setTimeout(() => setIsFadingOut(true), 1200);
+        const fadeTimer = setTimeout(() => setIsFadingOut(true), 1400);
+        timersRef.current.push(fadeTimer);
       }
     }
 
-    // Start first advance
-    const initialTimer = setTimeout(advanceStage, stageIntervals[0] || 280);
-    return () => clearTimeout(initialTimer);
+    const initialTimer = setTimeout(advanceStage, stageIntervals[0] || 400);
+    timersRef.current.push(initialTimer);
+    
+    return () => {
+      timersRef.current.forEach(t => clearTimeout(t));
+      timersRef.current = [];
+    };
   }, []);
 
   // rAF loop: smooth CoC-style fill physics

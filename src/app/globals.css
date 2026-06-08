@@ -253,6 +253,7 @@
 /* ===== CATEGORY TABS — glass pills ===== */
 .int-cat-tab {
   padding: 8px 14px;
+  min-height: 36px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
@@ -274,8 +275,8 @@
 
 /* ===== COLOR SWATCHES — bigger + accessible ===== */
 .int-color-swatch {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   border: 2.5px solid transparent;
   cursor: pointer;
@@ -292,6 +293,7 @@
 /* ===== MATERIAL PILLS ===== */
 .int-mat-pill {
   padding: 8px 16px;
+  min-height: 36px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -707,12 +709,12 @@ aside, .absolute, main {
 .coc-scene-wrap {
   position: relative;
   width: 300px; height: 220px;
-  margin-bottom: 32px;
-  animation: cocSceneIn 1s cubic-bezier(.34,1.56,.64,1) forwards;
+  margin-bottom: 28px;
+  animation: cocSceneIn 0.8s cubic-bezier(.22,1,.36,1) forwards;
   opacity: 0;
 }
 @keyframes cocSceneIn {
-  from { opacity: 0; transform: translateY(20px) scale(.94); }
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
@@ -722,8 +724,8 @@ aside, .absolute, main {
   animation: cocGlowBreath 3s ease-in-out infinite;
 }
 @keyframes cocGlowBreath {
-  0%,100% { opacity: .6; transform: scale(1); }
-  50%      { opacity: 1;  transform: scale(1.04); }
+  0%,100% { opacity: .7; transform: scale(1); }
+  50%      { opacity: 1;  transform: scale(1.02); }
 }
 
 .coc-scene-card {
@@ -751,7 +753,7 @@ aside, .absolute, main {
 .coc-iso {
   position: absolute;
   top: 50%; left: 50%;
-  transform: translate(-50%, -52%) rotateX(45deg) rotateZ(-30deg);
+  transform: translate(-50%, -50%) rotateX(45deg) rotateZ(-30deg);
   transform-style: preserve-3d;
   width: 120px; height: 120px;
 }
@@ -764,7 +766,7 @@ aside, .absolute, main {
   transform: translateZ(0px);
   opacity: 0;
   animation: cocFadeUp .5s ease forwards;
-  animation-delay: .3s;
+  animation-delay: .4s;
 }
 .coc-iso-floor::after {
   content: '';
@@ -784,7 +786,7 @@ aside, .absolute, main {
   transform-origin: bottom center;
   opacity: 0;
   animation: cocFadeUp .5s ease forwards;
-  animation-delay: .55s;
+  animation-delay: .65s;
 }
 
 .coc-iso-window {
@@ -810,7 +812,7 @@ aside, .absolute, main {
   transform-origin: top left;
   opacity: 0;
   animation: cocFadeUp .5s ease forwards;
-  animation-delay: .75s;
+  animation-delay: .85s;
 }
 
 .coc-iso-rug {
@@ -848,7 +850,7 @@ aside, .absolute, main {
   to   { opacity: 1; transform: translateZ(0); }
 }
 @keyframes cocFurnitureIn {
-  from { opacity: 0; transform: translateZ(20px) scale(.5); }
+  from { opacity: 0; transform: translateZ(12px) scale(.85); }
   to   { opacity: 1; transform: translateZ(4px) scale(1); }
 }
 

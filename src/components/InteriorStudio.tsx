@@ -200,7 +200,17 @@ const floorColorOptions = [
 ];
 
 /* ===== MAIN COMPONENT ===== */
-export default function InteriorStudio({ initialRoomType }: { initialRoomType?: string }) {
+interface InteriorStudioProps {
+  initialRoomType?: string;
+  projectId?: string;
+  projectData?: {
+    id: string;
+    name: string;
+    rooms: Array<{ id: string; name: string; roomType: string }>;
+  };
+}
+
+export default function InteriorStudio({ initialRoomType, projectId: _projectId, projectData }: InteriorStudioProps) {
   // ── Session detection (early, synchronous via hook) ──
   const { status: sessionStatus } = useSession();
   const isAuthenticated = sessionStatus === 'authenticated';
@@ -332,52 +342,52 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     if (isAuthenticated) {
       setIsGuest(false);
       isGuestRef.current = false;
-      // Auth users skip in-editor onboarding — they went through /onboarding after signup
-      setShowOnboarding(false);
+      // Skip onboarding for auth'd users AND when opening a saved project
+      if (projectData) {
+        setShowOnboarding(false);
+        setDesignName(projectData.name || 'My Design');
+        designNameRef.current = projectData.name || 'My Design';
+        // Set up rooms from project data
+        if (projectData.rooms && projectData.rooms.length > 0) {
+          const projectRooms: RoomInfo[] = projectData.rooms.map(r => ({
+            id: r.id,
+            name: r.name,
+            roomType: r.roomType,
+          }));
+          setRooms(projectRooms);
+          setCurrentRoomId(projectRooms[0].id);
+          currentRoomIdRef.current = projectRooms[0].id;
+        }
+      } else {
+        setShowOnboarding(false);
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, projectData]);
 
   // Sync theme to CSS variables and data attribute
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const theme = isGuest ? 'warm' : 'teal';
+    // Only apply theme when session is resolved (not "loading")
+    // This prevents the copper→teal flash on authenticated sessions
+    if (sessionStatus === 'loading') return;
+    const theme = sessionStatus === 'authenticated' ? 'teal' : 'warm';
     document.documentElement.setAttribute('data-theme', theme);
-    // Also update CSS custom properties for components that read them
     const root = document.documentElement.style;
-    if (isGuest) {
-      root.setProperty('--int-accent', '#C17F4E');
-      root.setProperty('--int-accent-hover', '#A86A3D');
-      root.setProperty('--int-accent-light', '#F5E8DC');
-      root.setProperty('--int-accent-bg', 'rgba(193,127,78,0.08)');
-      root.setProperty('--int-accent-border', 'rgba(193,127,78,0.15)');
-    } else {
+    if (sessionStatus === 'authenticated') {
       root.setProperty('--int-accent', '#2A9D8F');
       root.setProperty('--int-accent-hover', '#1F7A6E');
       root.setProperty('--int-accent-light', '#DCF5F0');
       root.setProperty('--int-accent-bg', 'rgba(42,157,143,0.08)');
       root.setProperty('--int-accent-border', 'rgba(42,157,143,0.15)');
+    } else {
+      root.setProperty('--int-accent', '#C17F4E');
+      root.setProperty('--int-accent-hover', '#A86A3D');
+      root.setProperty('--int-accent-light', '#F5E8DC');
+      root.setProperty('--int-accent-bg', 'rgba(193,127,78,0.08)');
+      root.setProperty('--int-accent-border', 'rgba(193,127,78,0.15)');
     }
-    // Persist theme preference
     try { localStorage.setItem('instod-theme', theme); } catch {}
-  }, [isGuest]);
-
-  // Initialize theme from localStorage on mount (prevents FOUC)
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    try {
-      const saved = localStorage.getItem('instod-theme');
-      if (saved) document.documentElement.setAttribute('data-theme', saved);
-    } catch {}
-  }, []);
-
-  // Cleanup: remove data-theme when component unmounts
-  useEffect(() => {
-    return () => {
-      if (typeof document !== 'undefined') {
-        document.documentElement.removeAttribute('data-theme');
-      }
-    };
-  }, []);
+  }, [sessionStatus]);
 
   useEffect(() => {
     if (initialRoomType && ['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'].includes(initialRoomType)) {
@@ -1693,17 +1703,6 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
     markSceneDirty();
   }, [markSceneDirty]);
-
-  /* ===== DEBOUNCED BUILD ROOM (uses incremental rebuild for speed) ===== */
-  const debouncedBuildRoom = useCallback(() => {
-    if (buildRoomTimeoutRef.current) clearTimeout(buildRoomTimeoutRef.current);
-    buildRoomTimeoutRef.current = setTimeout(() => {
-      requestAnimationFrame(() => {
-        rebuildRoomGeometry();
-        buildRoomTimeoutRef.current = null;
-      });
-    }, 60);
-  }, [rebuildRoomGeometry]);
 
   /* ===== UPDATE ROOM VISUAL PREVIEW (instant in-place wall scaling) ===== */
   const updateRoomVisualPreview = useCallback((newW: number, newD: number, newH: number) => {
@@ -3423,11 +3422,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             <div key={label as string} className="mb-2">
               <div className="flex justify-between mb-0.5 items-center"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>{label as string}</span>
                 <div className="flex items-center gap-0.5">
-                  <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#4A3E32' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); } }} />
+                  <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#4A3E32' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); markUnsaved(); } }} onBlur={() => { rebuildRoomGeometry(); }} />
                   <span className="text-[12px]" style={{ color: '#4A3E32' }}>m</span>
                 </div>
               </div>
-              <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} />
+              <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} />
             </div>
           ))}
           {/* Wall Color */}
@@ -3500,15 +3499,15 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           </div>
           {/* Lighting */}
           <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
-            <div className="flex gap-1 mt-1.5 flex-wrap">
+            <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {lightMoodOptions.map(lm => {
                 const lockedMoods = new Set(['golden', 'night']);
                 const isLocked = isGuest && lockedMoods.has(lm.id);
                 return (
-                <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all relative ${isLocked ? 'opacity-50' : ''}`}
+                <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-3 py-2 rounded-md text-[12px] font-medium cursor-pointer border transition-all relative min-h-[36px] ${isLocked ? 'opacity-50' : ''}`}
                   style={{ borderColor: lightMood === lm.id ? accentColor : '#E8DFD4', color: lightMood === lm.id ? accentColor : '#4A3E32', background: lightMood === lm.id ? accentColor + '15' : 'transparent' }}>
                   {lm.icon} {lm.label}
-                  {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
+                  {isLocked && <i className="fas fa-lock text-[7px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
                 </button>
               );})}
             </div>
@@ -3770,11 +3769,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
           <div key={label as string} className="mb-2">
             <div className="flex justify-between mb-0.5 items-center"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>{label as string}</span>
               <div className="flex items-center gap-0.5">
-                <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); } }} />
+                <input type="number" className="w-10 text-[12px] text-center rounded border-none outline-none" style={{ background: 'transparent', color: '#5A4E42' }} min={min as number} max={max as number} step={step as number} value={(val as number).toFixed(1)} onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= (min as number) && v <= (max as number)) { (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); markUnsaved(); } }} onBlur={() => { rebuildRoomGeometry(); }} />
                 <span className="text-[12px]" style={{ color: '#5A4E42' }}>m</span>
               </div>
             </div>
-            <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); debouncedBuildRoom(); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} />
+            <input type="range" className="int-range" min={min as number} max={max as number} value={val as number} step={step as number} onChange={e => { const v = parseFloat(e.target.value); (setter as any)[0](v); (setter as any)[1](v); updateRoomVisualPreview(roomWRef.current, roomDRef.current, roomHRef.current); markUnsaved(); }} onMouseUp={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} onTouchEnd={() => { if (buildRoomTimeoutRef.current) { clearTimeout(buildRoomTimeoutRef.current); buildRoomTimeoutRef.current = null; } rebuildRoomGeometry(); }} />
           </div>
         ))}
 
@@ -3855,10 +3854,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
               const lockedMoods = new Set(['golden', 'night']);
               const isLocked = isGuest && lockedMoods.has(lm.id);
               return (
-              <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all relative ${isLocked ? 'opacity-50' : ''}`}
+              <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-3 py-2 rounded-md text-[12px] font-medium cursor-pointer border transition-all relative min-h-[36px] ${isLocked ? 'opacity-50' : ''}`}
                 style={{ borderColor: lightMood === lm.id ? accentColor : '#E8DFD4', color: lightMood === lm.id ? accentColor : '#4A3E32', background: lightMood === lm.id ? accentColor + '15' : 'transparent' }}>
                 {lm.icon} {lm.label}
-                {isLocked && <i className="fas fa-lock text-[6px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
+                {isLocked && <i className="fas fa-lock text-[7px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
               </button>
             );})}
           </div>

@@ -61,5 +61,9 @@ export default function EditorProjectPage() {
     );
   }
 
-  return <InteriorStudio />;
+  return <InteriorStudio projectId={projectId} projectData={project ? {
+    id: project.id,
+    name: project.name,
+    rooms: project.rooms || [],
+  } : undefined} />;
 }
