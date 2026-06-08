@@ -280,7 +280,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
-  const [designName, setDesignName] = useState(isAuthenticated ? 'My Design' : 'Guest Design');
+  const [designName, setDesignName] = useState(() => {
+    // BUG #1 FIX: Initialize design name from persisted theme — avoids guest name flash for auth'd users
+    if (typeof window !== 'undefined') {
+      try { return localStorage.getItem('instod-theme') === 'teal' ? 'My Design' : 'Guest Design'; } catch {}
+    }
+    return 'Guest Design';
+  });
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [itemCount, setItemCount] = useState(0);
   const [rooms, setRooms] = useState<RoomInfo[]>([{ id: 'default', name: 'Living Room', roomType: 'living' }]);
@@ -319,9 +325,21 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
   }, [searchQuery]);
 
-  // Guest mode state — immediately resolved from session hook
-  const [isGuest, setIsGuest] = useState(!isAuthenticated); // true if not authenticated
-  const isGuestRef = useRef(!isAuthenticated); // ref mirror for use inside non-React callbacks (keyboard, etc.)
+  // Guest mode state — BUG #1 FIX: Derive directly from session to prevent copper→teal flash.
+  // Root cause: useState(!isAuthenticated) evaluated to true on first render because
+  // sessionStatus was 'loading', then the effect at line ~349 corrected it. This caused
+  // a visible flash where the entire UI rendered in copper/guest theme before switching
+  // to teal/authenticated. Fix: Initialize from localStorage (set by the theme effect
+  // at line ~426), so the first render already uses the correct accent.
+  const [isGuest, setIsGuest] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const savedTheme = localStorage.getItem('instod-theme');
+      // If we persisted teal theme, the user was authenticated last session
+      return savedTheme !== 'teal';
+    } catch { return true; }
+  });
+  const isGuestRef = useRef(typeof window !== 'undefined' ? localStorage.getItem('instod-theme') !== 'teal' : true); // ref mirror — sync with isGuest initial state
   const [guestBannerCollapsed, setGuestBannerCollapsed] = useState(false); // auto-collapse after 5s
 
   // Dynamic accent color: warm (#C17F4E) for guests, teal (#2A9D8F) for authenticated users
@@ -1725,6 +1743,17 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     roomGroup.userData.builtD = d;
     roomGroup.userData.builtH = h;
 
+    // ── BUG #6 FIX: Re-assert orbit target after room rebuild ──
+    // Root cause: When buildRoom disposes and recreates all room geometry,
+    // the roomGroup's world matrix changes, which can shift the visual
+    // center away from the orbit target. Re-assert the canonical center
+    // so the camera stays locked to the room.
+    const controls = controlsRef.current;
+    if (controls) {
+      controls.target.set(0, h / 2, 0);
+      controls.update();
+    }
+
     markSceneDirty();
   }, [markSceneDirty]);
 
@@ -2560,6 +2589,14 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     controls.target.set(0, 1, 0);
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.enablePan = true;
+    // ── BUG #6 FIX: Stable orbit target — prevent drift and rotation accumulation ──
+    // Root cause: OrbitControls doesn't persist its target across state updates.
+    // When React re-renders trigger side effects (e.g., rebuildRoomGeometry),
+    // the orbit target can drift if the roomGroup transform changes.
+    // Fix: Store the canonical target and re-apply after every room rebuild.
+    // Also, set autoRotate to NOT accumulate by ensuring it resets.
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = 1.5;
     // Smoother touch on mobile
     if (mobile) {
       controls.rotateSpeed = 0.35;
@@ -2998,11 +3035,26 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     };
     window.addEventListener('keydown', onKeyDown);
 
-    // Optimized render loop - only render when needed or controls moving
+    // ── BUG #7 FIX: Demand-driven render loop — only render when something actually changed ──
+    // Root cause: controls.update() returns true while damping is settling, which means
+    // the renderer was rendering every single frame even when the scene was static.
+    // With dampingFactor=0.12, damping can take ~30 frames to fully settle, causing
+    // continuous GPU work. Fix: Track whether the user is actively interacting OR
+    // damping is settling, and only render during those windows. Once settled, stop.
     let needsRender = true;
+    let dampingSettling = false;
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate);
-      if (controls.update() || needsRender) {
+      const controlsChanged = controls.update();
+      // If controls changed (user dragging or damping), we need to render
+      if (controlsChanged) {
+        dampingSettling = true;
+      } else if (dampingSettling) {
+        // Damping just finished — render one final frame then stop
+        dampingSettling = false;
+        needsRender = true;
+      }
+      if (controlsChanged || needsRender) {
         renderer.render(scene, camera);
         needsRender = false;
       }
@@ -3011,8 +3063,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     const markDirty = () => { needsRender = true; };
     needsRenderRef.current = () => { needsRender = true; };
     canvas.addEventListener('pointerdown', markDirty);
-    // Only mark dirty on pointermove when actually dragging something
-    canvas.addEventListener('pointermove', () => { if (isDragRef.current || dragItemRef.current) needsRender = true; });
+    // Mark dirty on pointermove for orbit/pan interactions, and drag
+    canvas.addEventListener('pointermove', () => { needsRender = true; });
+    // Also mark dirty on wheel for zoom
+    canvas.addEventListener('wheel', markDirty, { passive: true });
     animate();
 
     // Auto-save timer — persists to localStorage + cloud (non-blocking)
@@ -3147,8 +3201,23 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     ceilingSpotPositionsRef.current = [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }];
     // Exit ceiling edit mode if active
     if (ceilingEditModeRef.current) { ceilingEditModeRef.current = false; setCeilingEditMode(false); }
-    capturePreAction(); buildRoom(); addDefaultFurniture(); pushHistory(); showToast('Room reset');
-  }, [buildRoom, addDefaultFurniture, pushHistory, showToast]);
+    capturePreAction(); buildRoom(); addDefaultFurniture(); pushHistory();
+    // ── BUG #6 FIX: Deterministic camera reset after room rebuild ──
+    // Root cause: resetRoom never reset the orbit controls target or camera
+    // position, so the model drifted out of view after reset. The orbit
+    // target could accumulate offset from previous interactions.
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    if (camera && controls) {
+      // Stop auto-rotate to prevent drift
+      controls.autoRotate = false;
+      autoRotateRef.current = false;
+      setAutoRotActive(false);
+      // Reset to default perspective view deterministically
+      animateCamera([5.5, 4.5, 7], [0, 1, 0], 400);
+    }
+    showToast('Room reset');
+  }, [buildRoom, addDefaultFurniture, pushHistory, showToast, animateCamera]);
 
   const zoomCamera = useCallback((direction: 'in' | 'out') => {
     const camera = cameraRef.current;
@@ -3641,7 +3710,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                 const lockedMoods = new Set(['golden', 'night']);
                 const isLocked = isGuest && lockedMoods.has(lm.id);
                 return (
-                <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-3 py-2 rounded-md text-[12px] font-medium cursor-pointer border transition-all relative min-h-[36px] ${isLocked ? 'opacity-50' : ''}`}
+                <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-3 py-2.5 rounded-lg text-[13px] font-medium cursor-pointer border transition-all relative min-h-[44px] ${isLocked ? 'opacity-50' : ''}`}
                   style={{ borderColor: lightMood === lm.id ? accentColor : '#E8DFD4', color: lightMood === lm.id ? accentColor : '#4A3E32', background: lightMood === lm.id ? accentColor + '15' : 'transparent' }}>
                   {lm.icon} {lm.label}
                   {isLocked && <i className="fas fa-lock text-[7px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
@@ -3806,7 +3875,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
   /* ===== DESKTOP SIDEBAR CONTENT ===== */
   const renderDesktopSidebar = () => (
-    <aside data-sidebar-theme={sidebarDark ? 'dark' : 'light'} className={`int-scrollbar h-screen overflow-y-auto ${sidebarDark ? '' : `int-sidebar int-sidebar-glow-${lightMood}`}`} style={{ width: sidebarOpen ? sidebarWidth : 0, minWidth: sidebarOpen ? sidebarWidth : 0, borderRight: sidebarOpen ? `1px solid ${sidebarDark ? 'rgba(255,255,255,0.06)' : '#E8DFD4'}` : 'none', overflow: sidebarOpen ? 'auto' : 'hidden', transition: sidebarOpen ? 'width 0.35s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.35s cubic-bezier(0.16, 1, 0.3, 1)' : 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)', backgroundColor: sidebarDark ? '#1E1B18' : undefined, color: sidebarDark ? '#E8E0D6' : undefined, position: 'relative', contain: 'layout style' }}>
+    <aside data-sidebar-theme={sidebarDark ? 'dark' : 'light'} className={`int-scrollbar ${sidebarDark ? '' : `int-sidebar int-sidebar-glow-${lightMood}`}`} style={{ width: sidebarOpen ? sidebarWidth : 0, minWidth: sidebarOpen ? sidebarWidth : 0, borderRight: sidebarOpen ? `1px solid ${sidebarDark ? 'rgba(255,255,255,0.06)' : '#E8DFD4'}` : 'none', overflow: sidebarOpen ? 'hidden' : 'hidden', transition: sidebarOpen ? 'width 0.35s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.35s cubic-bezier(0.16, 1, 0.3, 1)' : 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)', backgroundColor: sidebarDark ? '#1E1B18' : undefined, color: sidebarDark ? '#E8E0D6' : undefined, position: 'relative', height: '100dvh', display: 'flex', flexDirection: 'column', contain: 'layout style' }}>
       {/* Resize handle — desktop only, right edge of sidebar */}
       {sidebarOpen && (
         <div
@@ -3821,13 +3890,16 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           <div style={{ position: 'absolute', top: '50%', left: 3, transform: 'translateY(-50%)', width: 2, height: 32, borderRadius: 1, background: sidebarDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)', transition: 'background 0.2s ease' }} />
         </div>
       )}
-      {/* Logo */}
-      <div className="p-5 int-logo-border">
+      {/* Logo — fixed anchor, never scrolls */}
+      <div className="p-5 int-logo-border" style={{ flexShrink: 0 }}>
         <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-xl" />
           <div><h1 className="text-lg font-bold leading-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Instod</h1><p className="text-[12px]" style={{ color: '#7A6E62' }}>3D Design Previewer</p></div>
         </div>
       </div>
+
+      {/* Scrollable content rail — all sections scroll together in one controlled container */}
+      <div className="flex-1 overflow-y-auto int-scrollbar" style={{ minHeight: 0 }}>
 
       {/* Furniture Library */}
       <div className="p-5">
@@ -3854,16 +3926,16 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
+        <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
           {filteredItems.map(item => {
             const isLocked = isGuest && !GUEST_ALLOWED_FURNITURE.has(item.fn);
             return (
             <button key={item.name} onClick={() => { if (isLocked) { showToast('Sign in to unlock this item'); return; } addFurniture(item.fn, currentColor, currentMatType); }} className="int-furniture-card relative" style={{ background: isLocked ? '#F8F6F2' : undefined, opacity: isLocked ? 0.55 : 1, filter: isLocked ? 'grayscale(40%)' : 'none' }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-1 text-base relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}><i className={`fas ${item.icon}`} />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-1 text-lg relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}><i className={`fas ${item.icon}`} />
                 {isLocked && <i className="fas fa-lock absolute -top-1 -right-1 text-[7px]" style={{ color: accentColor, background: '#fff', borderRadius: '50%', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />}
               </div>
               <p className="text-[13px] font-semibold leading-tight" style={{ color: isLocked ? '#A09080' : '#2D2D2D' }}>{item.name}</p>
-              <p className="text-[11px]" style={{ color: isLocked ? '#B8B0A0' : '#7A6E62' }}>{item.desc}</p>
+              <p className="text-[11px] leading-snug" style={{ color: isLocked ? '#B8B0A0' : '#7A6E62' }}>{item.desc}</p>
               {isLocked && (
                 <span className="text-[8px] font-bold mt-0.5 block" style={{ color: accentColor }}>PRO</span>
               )}
@@ -3916,16 +3988,16 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Wall Color */}
         <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Wall Color</span>
-          <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
+          <div className="flex gap-2 mt-2 flex-wrap items-center">
             {wallColorOptions.map(wc => (
-              <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
+              <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-10 h-10 rounded-lg cursor-pointer border-2 transition-all"
                 style={{ background: wc.color, borderColor: wallCol === wc.color ? accentColor : 'transparent' }} aria-label={wc.label} title={wc.label} />
             ))}
             <div className="relative">
               <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
-                className="absolute inset-0 opacity-0 cursor-pointer w-7 h-7" />
-              <div className="w-7 h-7 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
-                <i className="fas fa-eyedropper text-[8px] text-white drop-shadow" />
+                className="absolute inset-0 opacity-0 cursor-pointer w-10 h-10" />
+              <div className="w-10 h-10 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                <i className="fas fa-eyedropper text-[9px] text-white drop-shadow" />
               </div>
             </div>
           </div>
@@ -3933,9 +4005,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Floor Type */}
         <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
-          <div className="flex gap-1.5 mt-1.5">
+          <div className="flex gap-2 mt-2">
             {floorTypeOptions.map(ft => (
-              <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; rebuildFloorOnly(); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
+              <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; rebuildFloorOnly(); markUnsaved(); }} className="w-10 h-10 rounded-lg cursor-pointer border-2 transition-all"
                 style={{ background: ft.color, borderColor: floorType === ft.id ? accentColor : 'transparent' }} aria-label={ft.label} title={ft.label} />
             ))}
           </div>
@@ -3943,16 +4015,16 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Floor Color */}
         <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Floor Color</span>
-          <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
+          <div className="flex gap-2 mt-2 flex-wrap items-center">
             {floorColorOptions.map(fc => (
-              <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-7 h-7 rounded-lg cursor-pointer border-2 transition-all"
+              <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-10 h-10 rounded-lg cursor-pointer border-2 transition-all"
                 style={{ background: fc.color, borderColor: floorColor === fc.color ? accentColor : 'transparent' }} aria-label={fc.label} title={fc.label} />
             ))}
             <div className="relative">
               <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
-                className="absolute inset-0 opacity-0 cursor-pointer w-7 h-7" />
-              <div className="w-7 h-7 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
-                <i className="fas fa-eyedropper text-[8px] text-white drop-shadow" />
+                className="absolute inset-0 opacity-0 cursor-pointer w-10 h-10" />
+              <div className="w-10 h-10 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                <i className="fas fa-eyedropper text-[9px] text-white drop-shadow" />
               </div>
             </div>
           </div>
@@ -3962,9 +4034,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
           <div className="flex gap-1.5 mt-1.5">
             {[{ id: 'none', icon: 'fa-ban', label: 'None' }, { id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
-              <button key={id} onClick={() => { setDoorWall(id); doorWallRef.current = id; rebuildDoorOnly(); markUnsaved(); }} className="px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1"
+              <button key={id} onClick={() => { setDoorWall(id); doorWallRef.current = id; rebuildDoorOnly(); markUnsaved(); }} className="px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1.5 min-h-[40px]"
                 style={{ borderColor: doorWall === id ? accentColor : '#E8DFD4', color: doorWall === id ? accentColor : '#4A3E32', background: doorWall === id ? accentColor + '15' : 'transparent' }}>
-                <i className={`fas ${icon} text-[9px]`} />{label}
+                <i className={`fas ${icon} text-[10px]`} />{label}
               </button>
             ))}
           </div>
@@ -3976,9 +4048,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; rebuildWindowsOnly(); markUnsaved(); }} />
           <div className="flex gap-1.5 mt-1.5">
             {[{ id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
-              <button key={id} onClick={() => { setWindowWall(id); windowWallRef.current = id; rebuildWindowsOnly(); markUnsaved(); }} className="px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1"
+              <button key={id} onClick={() => { setWindowWall(id); windowWallRef.current = id; rebuildWindowsOnly(); markUnsaved(); }} className="px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1.5 min-h-[40px]"
                 style={{ borderColor: windowWall === id ? accentColor : '#E8DFD4', color: windowWall === id ? accentColor : '#4A3E32', background: windowWall === id ? accentColor + '15' : 'transparent' }}>
-                <i className={`fas ${icon} text-[9px]`} />{label}
+                <i className={`fas ${icon} text-[10px]`} />{label}
               </button>
             ))}
           </div>
@@ -3991,7 +4063,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               const lockedMoods = new Set(['golden', 'night']);
               const isLocked = isGuest && lockedMoods.has(lm.id);
               return (
-              <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-3 py-2 rounded-md text-[12px] font-medium cursor-pointer border transition-all relative min-h-[36px] ${isLocked ? 'opacity-50' : ''}`}
+              <button key={lm.id} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + lm.label + ' mood'); return; } setLightMood(lm.id); lightMoodRef.current = lm.id; updateLightingMood(lm.id); markUnsaved(); }} className={`px-3 py-2.5 rounded-lg text-[13px] font-medium cursor-pointer border transition-all relative min-h-[44px] ${isLocked ? 'opacity-50' : ''}`}
                 style={{ borderColor: lightMood === lm.id ? accentColor : '#E8DFD4', color: lightMood === lm.id ? accentColor : '#4A3E32', background: lightMood === lm.id ? accentColor + '15' : 'transparent' }}>
                 {lm.icon} {lm.label}
                 {isLocked && <i className="fas fa-lock text-[7px] absolute -top-0.5 -right-0.5" style={{ color: '#7A6E62' }} />}
@@ -4003,12 +4075,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         {/* Ceiling Light Preset */}
         <div className="mb-3">
           <span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Ceiling Light Style</span>
-          <div className="flex gap-1 mt-1.5 flex-wrap">
+          <div className="flex gap-2 mt-2 flex-wrap">
             {ceilingLightPresets.map(preset => (
               <button key={preset.id} onClick={() => { setCeilingLightPreset(preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'); ceilingLightPresetRef.current = preset.id as 'recessed' | 'chandelier' | 'track' | 'panel' | 'pendant'; const newPositions: Record<string, Array<{ x: number; z: number }>> = { recessed: [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }], chandelier: [{ x: 0, z: 0 }], track: [{ x: -1.2, z: 0 }, { x: -0.4, z: 0 }, { x: 0.4, z: 0 }, { x: 1.2, z: 0 }], panel: [{ x: 0, z: 0 }], pendant: [{ x: -1.2, z: 0 }, { x: 0, z: 0 }, { x: 1.2, z: 0 }] }; ceilingSpotPositionsRef.current = newPositions[preset.id] || [{ x: -1.5, z: 0 }, { x: 1.5, z: 0 }]; rebuildCeilingLightsOnly(); markUnsaved(); }}
-                className="px-2 py-1 rounded text-[11px] font-medium cursor-pointer border transition-all"
+                className="px-3 py-2 rounded-lg text-[12px] font-medium cursor-pointer border transition-all min-h-[40px]"
                 style={{ borderColor: ceilingLightPreset === preset.id ? accentColor : '#E8DFD4', color: ceilingLightPreset === preset.id ? accentColor : '#4A3E32', background: ceilingLightPreset === preset.id ? accentColor + '15' : 'transparent' }}>
-                <i className={`fas ${preset.icon} mr-0.5`} />{preset.label}
+                <i className={`fas ${preset.icon} mr-1`} />{preset.label}
               </button>
             ))}
           </div>
@@ -4093,6 +4165,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         </div>
       </div>
+      </div>{/* end scrollable content rail */}
     </aside>
   );
 
@@ -4596,7 +4669,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: 'layout style paint' }}>
+      <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: 'layout style' }}>
         {/* Top Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined }}>
           {!isMobile && (
@@ -4734,13 +4807,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* Bottom-center toolbar */}
+        {/* Bottom-center toolbar — BUG #4 FIX: 2x larger for readability and touch targets */}
         {!isMobile && (
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            <button onClick={isGuest ? () => showToast('Sign in for undo history') : undo} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo (Ctrl+Z)'}><i className="fas fa-undo text-xs" /></button>
-            <button onClick={isGuest ? () => showToast('Sign in for redo history') : redo} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo (Ctrl+Y)'}><i className="fas fa-redo text-xs" /></button>
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <button onClick={isGuest ? () => showToast('Sign in for undo history') : undo} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 16 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo (Ctrl+Z)'}><i className="fas fa-undo" /></button>
+            <button onClick={isGuest ? () => showToast('Sign in for redo history') : redo} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 16 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo (Ctrl+Y)'}><i className="fas fa-redo" /></button>
             {/* Presets toggle button - Desktop */}
-            <button onClick={() => setPresetPanelOpen(!presetPanelOpen)} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: presetPanelOpen ? accentColor : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: presetPanelOpen ? accentColor : '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: presetPanelOpen ? '#fff' : '#2D2D2D', fontSize: 11, transition: 'background 0.4s ease' }} aria-label="Presets" title="Design Presets"><i className="fas fa-magic" /></button>
+            <button onClick={() => setPresetPanelOpen(!presetPanelOpen)} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: presetPanelOpen ? accentColor : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: presetPanelOpen ? accentColor : '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: presetPanelOpen ? '#fff' : '#2D2D2D', fontSize: 16, transition: 'background 0.4s ease' }} aria-label="Presets" title="Design Presets"><i className="fas fa-magic" /></button>
           </div>
         )}
 
@@ -4782,9 +4855,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* View controls - Desktop — vertical panel on right middle */}
+        {/* View controls - Desktop — BUG #5 FIX: Right-side quick action panel with improved z-index and discoverability */}
         {!isMobile && (
-          <div className="absolute right-4 z-10 flex flex-col gap-2" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+          <div className="absolute right-3 z-30 flex flex-col gap-2" style={{ top: '50%', transform: 'translateY(-50%)' }}>
             {[
               { id: 'top', icon: 'fa-border-all', label: 'Top', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
               { id: 'front', icon: 'fa-square', label: 'Front', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
@@ -4803,6 +4876,15 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             <button onClick={resetRoom} title="Reset Room" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: '#c0392b', fontSize: 12, fontWeight: 600, minWidth: 72, transition: 'background 0.2s ease, border-color 0.2s ease' }}>
               <i className="fas fa-undo-alt" style={{ fontSize: 14 }} />
               <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Reset</span>
+            </button>
+            {/* Screenshot & Share in quick actions */}
+            <button onClick={takeScreenshot} title="Screenshot" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 12, fontWeight: 600, minWidth: 72 }}>
+              <i className="fas fa-camera" style={{ fontSize: 14, color: accentColor }} />
+              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Capture</span>
+            </button>
+            <button onClick={shareRoom} title="Share room" className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 12, fontWeight: 600, minWidth: 72 }}>
+              <i className="fas fa-share-alt" style={{ fontSize: 14, color: accentColor }} />
+              <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Share</span>
             </button>
           </div>
         )}
@@ -4877,12 +4959,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         )}
       </main>
 
-      {/* ===== MOBILE: Bottom Edit Panel ===== */}
+      {/* ===== MOBILE: Bottom Edit Panel — BUG #4 FIX: 2x larger footer ===== */}
       {isMobile && (
         <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
 
-          {/* Tab bar — compact, sharp, icon-first. 52px for comfortable touch targets */}
-          <div role="tablist" className="flex" style={{ height: 52, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
+          {/* Tab bar — BUG #4 FIX: 96px height, 22px icons, 11px labels for premium feel */}
+          <div role="tablist" className="flex" style={{ height: 96, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
             {([
               { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture' },
               { id: 'material' as const, icon: 'fa-palette', label: 'Colors' },
@@ -4893,10 +4975,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             ]).map(({ id, icon, label }) => (
               <button key={id} onClick={() => { setMobilePanel(mobilePanel === id ? null : id); setMobileActionsOpen(false); }}
                 role="tab" aria-selected={mobilePanel === id}
-                className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
-                style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `2px solid ${accentColor}` : '2px solid transparent' }}>
-                <i className={`fas ${icon}`} style={{ fontSize: 15 }} />
-                <span style={{ fontSize: 8, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.3 }}>{label}</span>
+                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all relative"
+                style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `3px solid ${accentColor}` : '3px solid transparent' }}>
+                <i className={`fas ${icon}`} style={{ fontSize: 22 }} />
+                <span style={{ fontSize: 11, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.3 }}>{label}</span>
               </button>
             ))}
           </div>

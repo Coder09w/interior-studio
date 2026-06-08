@@ -252,8 +252,8 @@
 
 /* ===== CATEGORY TABS — glass pills ===== */
 .int-cat-tab {
-  padding: 8px 14px;
-  min-height: 36px;
+  padding: 9px 16px;
+  min-height: 40px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
@@ -292,8 +292,8 @@
 
 /* ===== MATERIAL PILLS ===== */
 .int-mat-pill {
-  padding: 8px 16px;
-  min-height: 36px;
+  padding: 10px 18px;
+  min-height: 40px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
