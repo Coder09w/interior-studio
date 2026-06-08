@@ -3028,6 +3028,54 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     // Keyboard shortcuts
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      // Arrow keys — move selected object in the XZ plane
+      // Step: 0.25m per tap (fine), Shift: 1m per tap (coarse)
+      // Moves relative to the camera's forward direction for intuitive control
+      if (selectedObjRef.current && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const item = selectedObjRef.current;
+        const step = e.shiftKey ? 1.0 : 0.25;
+
+        // Camera-relative movement: project camera's forward/right onto the XZ plane
+        const cam = camera;
+        const camForward = new THREE.Vector3();
+        cam.getWorldDirection(camForward);
+        camForward.y = 0;
+        camForward.normalize();
+        const camRight = new THREE.Vector3().crossVectors(camForward, new THREE.Vector3(0, 1, 0)).normalize();
+
+        const delta = new THREE.Vector3();
+        switch (e.key) {
+          case 'ArrowUp':    delta.addScaledVector(camForward, step);  break;
+          case 'ArrowDown':  delta.addScaledVector(camForward, -step); break;
+          case 'ArrowLeft':  delta.addScaledVector(camRight, -step);   break;
+          case 'ArrowRight': delta.addScaledVector(camRight, step);    break;
+        }
+
+        const newX = item.position.x + delta.x;
+        const newZ = item.position.z + delta.z;
+
+        // Boundary enforcement
+        const bbox = new THREE.Box3().setFromObject(item);
+        const size = new THREE.Vector3(); bbox.getSize(size);
+        const halfFW = size.x / 2;
+        const halfFD = size.z / 2;
+        const hw = Math.max(0, roomWRef.current / 2 - halfFW - 0.05);
+        const hd = Math.max(0, roomDRef.current / 2 - halfFD - 0.05);
+        item.position.x = Math.max(-hw, Math.min(hw, newX));
+        item.position.z = Math.max(-hd, Math.min(hd, newZ));
+
+        // Floor-plane projection for floor-placed furniture
+        const fnName = item.userData.fn || item.name || '';
+        const isCeilingLight = fnName === 'createPendant' || fnName === 'createChandelier';
+        if (!isCeilingLight) { item.position.y = 0; }
+
+        markUnsaved();
+        markSceneDirty();
+        return;
+      }
+
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
       else if (e.key === 'd' || e.key === 'D') { if (!e.ctrlKey && !e.metaKey) duplicateSelected(); }
       else if (e.key === 'r' || e.key === 'R') { if (!e.ctrlKey && !e.metaKey && selectedObjRef.current) { selectedObjRef.current.rotation.y += Math.PI / 12; markUnsaved(); markSceneDirty(); } }
@@ -4444,7 +4492,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                   </div>
                 </div>
                 <p className="text-xs leading-relaxed mb-4" style={{ color: '#5A4E42' }}>
-                  <b>Click</b> any furniture to select it. <b>Drag</b> to reposition. Use the <b>rotate slider</b> or press <b>R</b> to rotate. Press <b>Delete</b> to remove.
+                  <b>Click</b> any furniture to select it. <b>Drag</b> to reposition, or use <b>Arrow Keys</b> for precise nudge (hold <b>Shift</b> for larger steps). Press <b>R</b> to rotate. Press <b>Delete</b> to remove.
                 </p>
                 <div className="flex gap-2">
                   <button onClick={() => setTutorialStep(1)} className="flex-1 py-2 rounded-lg text-xs font-semibold cursor-pointer border" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}><i className="fas fa-arrow-left mr-1" /> Back</button>
@@ -4543,7 +4591,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           <div className="bg-white rounded-2xl p-6 max-w-xs w-full mx-4" onClick={e => e.stopPropagation()} onKeyDown={trapFocus}>
             <h3 className="text-base font-bold mb-3" style={{ fontFamily: "'Outfit', sans-serif" }}>Keyboard Shortcuts</h3>
             <div className="space-y-2 text-sm">
-              {[['Delete', 'Remove selected'], ['D', 'Duplicate'], ['R', 'Rotate 15°'], ['Ctrl+Z', 'Undo'], ['Ctrl+Y', 'Redo'], ['Escape', 'Deselect'], ['Two fingers', 'Rotate item (mobile)']].map(([k, d]) => (
+              {[['Arrow Keys', 'Move selected item'], ['Shift + Arrows', 'Move faster (1m)'], ['Delete', 'Remove selected'], ['D', 'Duplicate'], ['R', 'Rotate 15°'], ['Ctrl+Z', 'Undo'], ['Ctrl+Y', 'Redo'], ['Escape', 'Deselect'], ['Two fingers', 'Rotate item (mobile)']].map(([k, d]) => (
                 <div key={k} className="flex justify-between"><span style={{ color: '#5A4E42' }}>{d}</span><kbd className="px-2 py-0.5 rounded text-xs font-mono" style={{ background: '#F5F0E8' }}>{k}</kbd></div>
               ))}
             </div>
