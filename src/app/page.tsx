@@ -2,78 +2,40 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import {
   Sofa,
   Box,
-  Armchair,
+  Home as HomeIcon,
+  GraduationCap,
+  PenTool,
+  Ruler,
   LayoutGrid,
   Palette,
   Share2,
-  Settings,
-  MousePointerClick,
-  ChevronRight,
+  Layers,
+  Eye,
+  Sun,
+  ArrowRight,
   Menu,
   X,
-  RotateCcw,
-  Eye,
-  Layers,
-  Move,
-  Lamp,
-  BedDouble,
-  CookingPot,
-  Bath,
-  Monitor,
-  Sparkles,
-  ArrowRight,
   Check,
+  XCircle,
+  ChevronRight,
+  Sparkles,
   Play,
-  Zap,
-  Globe,
-  UtensilsCrossed,
-  Star,
-  Quote,
+  Twitter,
+  Github,
 } from 'lucide-react';
 
 /* ─── Animation helpers ─── */
-function FadeInWhenVisible({ children, delay = 0, direction = 'up', className = '' }: { children: React.ReactNode; delay?: number; direction?: 'up' | 'down' | 'left' | 'right'; className?: string }) {
-  const dirMap = { up: { y: 40 }, down: { y: -40 }, left: { x: 40 }, right: { x: -40 } };
-  return (
-    <motion.div
-      initial={{ opacity: 0, ...dirMap[direction] }}
-      whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/* ─── Enhanced RevealOnScroll with larger offset, scale, and buttery easing ─── */
 function RevealOnScroll({ children, delay = 0, direction = 'up', className = '' }: { children: React.ReactNode; delay?: number; direction?: 'up' | 'down' | 'left' | 'right'; className?: string }) {
   const dirMap = { up: { y: 60 }, down: { y: -60 }, left: { x: 60 }, right: { x: -60 } };
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, ...dirMap[direction] }}
       whileInView={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/* ─── HorizontalReveal — items slide in from left/right with opacity fade ─── */
-function HorizontalReveal({ children, delay = 0, from = 'left', className = '' }: { children: React.ReactNode; delay?: number; from?: 'left' | 'right'; className?: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: from === 'left' ? -60 : 60 }}
-      whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
       className={className}
@@ -105,58 +67,12 @@ const staggerItem = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
 
-/* ─── ParallaxSection — wraps sections with vertical parallax shift ─── */
-function ParallaxSection({ children, className = '', style, offset = 40 }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; offset?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
-  return (
-    <div ref={ref} className={`relative overflow-hidden ${className}`} style={style}>
-      <motion.div style={{ y }}>{children}</motion.div>
-    </div>
-  );
-}
-
-/* ─── Counter Animation ─── */
-function AnimatedCounter({ value, suffix = '' }: { value: string; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
-  const [display, setDisplay] = useState(value + suffix);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    if (!isInView || hasAnimated.current) return;
-    hasAnimated.current = true;
-    const num = parseInt(value.replace(/\D/g, ''), 10);
-    if (isNaN(num) || num === 0) { setDisplay(value + suffix); return; }
-    setDisplay('0' + suffix);
-    const duration = 1800;
-    const startTime = performance.now();
-    let rafId: number;
-    function tick() {
-      const elapsed = performance.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(eased * num);
-      setDisplay(current.toString() + suffix);
-      if (progress < 1) {
-        rafId = requestAnimationFrame(tick);
-      }
-    }
-    rafId = requestAnimationFrame(tick);
-    return () => { if (rafId) cancelAnimationFrame(rafId); };
-  }, [isInView, value, suffix]);
-
-  return <span ref={ref}>{display}</span>;
-}
-
-/* ─── Navbar — adapts between dark (hero) and light (white sections) ─── */
+/* ─── Navbar ─── */
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [darkMode, setDarkMode] = useState(true); // starts on dark hero
+  const [darkMode, setDarkMode] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: session } = useSession();
-  const editorHref = session ? '/dashboard' : '/editor';
 
   useEffect(() => {
     let ticking = false;
@@ -165,8 +81,6 @@ function Navbar() {
         requestAnimationFrame(() => {
           const y = window.scrollY;
           setScrolled(y > 20);
-          // Hero height is approximately the viewport height
-          // Switch navbar style based on whether we're in the hero or past it
           setDarkMode(y < window.innerHeight * 0.6);
           ticking = false;
         });
@@ -195,16 +109,11 @@ function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-lg transition-transform group-hover:scale-110" />
-            <span
-              className="text-xl font-bold tracking-tight"
-              style={{ fontFamily: "'Outfit', sans-serif", color: textColor }}
-            >
+            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: textColor }}>
               Instod
             </span>
-            {/* BETA badge — KEEP copper (interactive badge) */}
             <span
               className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
               style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
@@ -213,26 +122,17 @@ function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            {/* KEEP copper on hover — navigation link hover state */}
-            <a
-              href="#features"
-              className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
-              style={{ color: mutedColor }}
-            >
+            <a href="#features" className="text-sm font-medium transition-colors hover:text-[#C17F4E]" style={{ color: mutedColor }}>
               Features
             </a>
-            {/* KEEP copper on hover — navigation link hover state */}
-            <Link
-              href="/pricing"
-              className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
-              style={{ color: mutedColor }}
-            >
+            <a href="#gallery" className="text-sm font-medium transition-colors hover:text-[#C17F4E]" style={{ color: mutedColor }}>
+              Gallery
+            </a>
+            <Link href="/pricing" className="text-sm font-medium transition-colors hover:text-[#C17F4E]" style={{ color: mutedColor }}>
               Pricing
             </Link>
             {session ? (
-              /* KEEP copper — CTA button */
               <Link
                 href="/dashboard"
                 className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
@@ -249,20 +149,18 @@ function Navbar() {
                 >
                   Sign In
                 </Link>
-                {/* KEEP copper — CTA button */}
                 <Link
                   href="/editor"
                   prefetch={false}
                   className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md hover:shadow-[#C17F4E]/20"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
                 >
-                  Open Editor
+                  Start Designing
                 </Link>
               </>
             )}
           </div>
 
-          {/* Mobile hamburger */}
           <button
             className="md:hidden p-2 rounded-lg"
             style={{ color: textColor }}
@@ -274,7 +172,6 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {mobileOpen && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -285,16 +182,15 @@ function Navbar() {
         >
           <div className="px-4 py-4 space-y-3">
             <a href="#features" className="block text-sm font-medium py-2" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Features</a>
+            <a href="#gallery" className="block text-sm font-medium py-2" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Gallery</a>
             <Link href="/pricing" className="block text-sm font-medium py-2" style={{ color: mutedColor }} onClick={() => setMobileOpen(false)}>Pricing</Link>
             <div className="pt-2 flex flex-col gap-2">
               {session ? (
-                /* KEEP copper — CTA button */
                 <Link href="/dashboard" className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Dashboard</Link>
               ) : (
                 <>
                   <Link href="/auth/login" className="text-sm font-medium px-5 py-2.5 rounded-lg border text-center" style={{ borderColor, color: textColor }} onClick={() => setMobileOpen(false)}>Sign In</Link>
-                  {/* KEEP copper — CTA button */}
-                  <Link href="/editor" prefetch={false} className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: '#C17F4E' }} onClick={() => setMobileOpen(false)}>Open Editor</Link>
+                  <Link href="/editor" prefetch={false} className="text-sm font-medium px-5 py-2.5 rounded-lg text-white text-center" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }} onClick={() => setMobileOpen(false)}>Start Designing</Link>
                 </>
               )}
             </div>
@@ -305,64 +201,53 @@ function Navbar() {
   );
 }
 
-/* ─── Hero (DARK #0F0F0F) ─── */
+/* ─── 1. HERO SECTION (Dark #0F0F0F) ─── */
+const heroSlides = [
+  { image: '/images/hero-living-v2.png', label: 'Living Room' },
+  { image: '/images/hero-bedroom-v2.png', label: 'Bedroom' },
+  { image: '/images/hero-kitchen-v2.png', label: 'Kitchen' },
+  { image: '/images/hero-bathroom-v2.png', label: 'Bathroom' },
+  { image: '/images/hero-office-v2.png', label: 'Office' },
+];
+
 function HeroSection() {
+  const [currentSlide, setCurrentSlide] = useState(0);
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 500], [0, -80]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -40]);
   const opacity = useTransform(scrollY, [0, 400], [1, 0]);
 
-  return (
-    <section
-      className="relative min-h-screen flex items-center pt-20 overflow-hidden"
-      style={{ background: '#0F0F0F' }}
-    >
-      {/* Backdrop image */}
-      <div className="absolute inset-0">
-        <img
-          src="/images/hero-living-room.png"
-          alt=""
-          className="w-full h-full object-cover"
-          aria-hidden="true"
-        />
-        {/* Dark overlay */}
-        <div className="absolute inset-0" style={{ background: 'rgba(15,15,15,0.85)' }} />
-      </div>
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
+  return (
+    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden" style={{ background: '#0F0F0F' }}>
       {/* Subtle pattern overlay */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage:
-            'radial-gradient(circle at 1px 1px, #FFFFFF 1px, transparent 0)',
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #FFFFFF 1px, transparent 0)',
           backgroundSize: '40px 40px',
         }}
       />
 
-      {/* Decorative gradient blobs — neutral warm tones (no copper) */}
+      {/* Decorative gradient blobs */}
       <div
         className="absolute top-20 right-1/4 w-96 h-96 rounded-full blur-3xl animate-float1"
-        style={{ background: 'linear-gradient(135deg, rgba(139,115,85,0.2), rgba(168,152,132,0.15))', willChange: 'transform, opacity', boxShadow: '0 0 120px rgba(139,115,85,0.06)' }}
+        style={{ background: 'linear-gradient(135deg, rgba(139,115,85,0.2), rgba(168,152,132,0.15))' }}
       />
-      <motion.div
-        style={{ y: y2 }}
-        className="absolute bottom-20 left-1/4 w-72 h-72 rounded-full blur-3xl animate-float2"
-      >
-        <div
-          className="w-full h-full rounded-full"
-          style={{ background: 'linear-gradient(135deg, rgba(107,100,88,0.2), rgba(139,115,85,0.15))', willChange: 'transform, opacity', boxShadow: '0 0 80px rgba(139,115,85,0.04)' }}
-        />
-      </motion.div>
 
       <motion.div style={{ y: y1, opacity }} className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: text */}
           <div className="text-center lg:text-left">
             <RevealOnScroll delay={0.1}>
-              {/* Badge pill — neutral (not BETA) */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
                 <Sparkles className="w-4 h-4" style={{ color: '#A8A8A8' }} />
-                <span className="text-xs font-semibold tracking-wide" style={{ color: '#A8A8A8' }}>FREE 3D DESIGNER</span>
+                <span className="text-xs font-semibold tracking-wide" style={{ color: '#A8A8A8' }}>FREE 3D ROOM DESIGNER</span>
               </div>
             </RevealOnScroll>
 
@@ -371,340 +256,107 @@ function HeroSection() {
                 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight"
                 style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
               >
-                Design Your{' '}
+                Design Your Room{' '}
                 <span className="relative inline-block">
-                  {/* Bold white instead of copper — decorative heading emphasis */}
-                  <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Dream Space</span>
-                  {/* Neutral underline stroke (no copper) */}
-                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="#4A4A4A" strokeWidth="3" strokeLinecap="round" opacity="0.5"/></svg>
-                </span>{' '}
-                in 3D
+                  <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Before You Build It</span>
+                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="#4A4A4A" strokeWidth="3" strokeLinecap="round" opacity="0.5" /></svg>
+                </span>
               </h1>
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.3}>
-              <p
-                className="mt-5 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed"
-                style={{ color: '#A8A8A8' }}
-              >
-                {/* "interactive 3D" — bold neutral instead of copper */}
-                Design and explore rooms in <span className="font-semibold" style={{ color: '#FFFFFF' }}>interactive 3D</span>. Place furniture, swap materials, adjust lighting — from any angle.
+              <p className="mt-5 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed" style={{ color: '#A8A8A8' }}>
+                Create realistic room layouts, experiment with furniture, materials, colors, and lighting. Preview how your space will look before spending money.
               </p>
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.4}>
               <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                {/* KEEP copper — "Start Designing" CTA button */}
                 <Link
                   href="/editor"
                   prefetch={false}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97]"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
                 >
-                  Start Designing
+                  Start Designing Free
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <a
-                  href="#how-it-works"
+                <Link
+                  href="/editor?room=living"
+                  prefetch={false}
                   className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-base border-2 transition-all duration-200 hover:bg-white/5 hover:border-white/30 active:scale-[0.97]"
-                  style={{
-                    borderColor: 'rgba(255,255,255,0.2)',
-                    color: '#FFFFFF',
-                  }}
+                  style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#FFFFFF' }}
                 >
-                  {/* Play icon — neutral (no copper) */}
                   <Play className="w-4 h-4" style={{ color: '#A8A8A8' }} />
-                  See How It Works
-                </a>
+                  View Demo Project
+                </Link>
               </div>
             </RevealOnScroll>
 
-            {/* Social proof */}
             <RevealOnScroll delay={0.5}>
               <div className="mt-10 flex items-center gap-4 justify-center lg:justify-start">
                 <div className="flex -space-x-2">
-                  {[
-                    'bg-[#7A6E62]',
-                    'bg-[#6B7B6B]',
-                    'bg-[#6B8E6B]',
-                    'bg-[#7B8FA1]',
-                  ].map((bg, i) => (
-                    <div
-                      key={i}
-                      className={`w-8 h-8 rounded-full border-2 border-[#0F0F0F] ${bg} flex items-center justify-center`}
-                      aria-hidden="true"
-                    >
-                      <span className="text-white text-[10px] font-bold">
-                        {['🛋', '🏠', '✨', '🎨'][i]}
-                      </span>
+                  {['bg-[#7A6E62]', 'bg-[#6B7B6B]', 'bg-[#6B8E6B]', 'bg-[#7B8FA1]'].map((bg, i) => (
+                    <div key={i} className={`w-8 h-8 rounded-full border-2 border-[#0F0F0F] ${bg} flex items-center justify-center`} aria-hidden="true">
+                      <span className="text-white text-[10px] font-bold">{['🛋', '🏠', '✨', '🎨'][i]}</span>
                     </div>
                   ))}
                 </div>
                 <p className="text-sm" style={{ color: '#A8A8A8' }}>
-                  <span className="font-semibold" style={{ color: '#FFFFFF' }}>
-                    Early Access Beta
-                  </span>{' '}
-                  — Your feedback shapes this
+                  <span className="font-semibold" style={{ color: '#FFFFFF' }}>Early Access Beta</span> — Your feedback shapes this
                 </p>
               </div>
             </RevealOnScroll>
           </div>
 
-          {/* Right: stylized 3D editor preview (DARK THEME) */}
+          {/* Right: Image Carousel */}
           <RevealOnScroll delay={0.3} direction="right">
-            <div
-              className="rounded-2xl border-2 shadow-2xl overflow-hidden"
-              style={{
-                borderColor: '#2A2A2A',
-                background: '#1E1E1E',
-                boxShadow: '0 0 60px rgba(0,0,0,0.12)',
-              }}
-            >
-              {/* Window chrome — dark theme */}
-              <div
-                className="flex items-center gap-2 px-4 py-3 border-b"
-                style={{ borderColor: '#2A2A2A', background: '#1A1A1A' }}
-              >
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                </div>
-                <div
-                  className="flex-1 text-center text-xs font-medium rounded-md py-1 mx-8"
-                  style={{ background: '#2A2A2A', color: '#A8A8A8' }}
-                >
-                  Instod — Living Room
-                </div>
-              </div>
-
-              {/* Simulated room viewport — dark theme */}
-              <div
-                className="relative aspect-[4/3] overflow-hidden"
-                style={{
-                  background:
-                    'linear-gradient(135deg, #1A1A1A 0%, #222222 40%, #1E1E1E 100%)',
-                  pointerEvents: 'none',
-                }}
-              >
-                {/* Floor grid — neutral lines (no copper) */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(to right, rgba(139,115,85,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(139,115,85,0.06) 1px, transparent 1px)',
-                    backgroundSize: '40px 40px',
-                    transform: 'perspective(800px) rotateX(50deg)',
-                    transformOrigin: 'top center',
-                  }}
-                />
-
-                {/* Beta Preview badge — neutral (LIVE is not BETA) */}
-                <div className="absolute top-3 right-3 flex items-center gap-2">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: '#A8A8A8' }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    LIVE
-                  </div>
-                </div>
-
-                {/* Animated furniture items */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-full h-full">
-                    {/* Sofa — color cycles (no copper) */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 0.85, scale: 1 }}
-                      transition={{ delay: 0.5, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute flex flex-col items-center gap-1"
-                      style={{ top: '40%', left: '25%' }}
-                    >
-                      <motion.div
-                        animate={{ background: ['#7A6E62', '#6B7B6B', '#6B8E6B', '#7B8FA1', '#7A6E62'], y: [0, -3, 0] }}
-                        transition={{ background: { duration: 8, repeat: Infinity, ease: 'easeInOut' }, y: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }}
-                        className="w-24 h-12 rounded-lg shadow-md flex items-center justify-center"
-                        style={{ opacity: 0.85 }}
-                      >
-                        <Sofa className="w-6 h-6 text-white" />
-                      </motion.div>
-                      <span
-                        className="text-[10px] font-medium px-2 py-0.5 rounded"
-                        style={{ background: 'rgba(30,30,30,0.9)', color: '#A8A8A8' }}
-                      >
-                        Modern Sofa
-                      </span>
-                      {/* SWAP badge — neutral (not BETA) */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0, 1, 1, 0] }}
-                        transition={{ duration: 8, repeat: Infinity, times: [0, 0.05, 0.9, 1] }}
-                        className="absolute -top-5 px-1.5 py-0.5 rounded text-[8px] font-bold text-white"
-                        style={{ background: 'rgba(122,110,98,0.8)' }}
-                      >
-                        SWAP
-                      </motion.div>
-                    </motion.div>
-
-                    {/* Table — neutral color */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 0.85, scale: 1, y: [0, -2, 0] }}
-                      transition={{ opacity: { delay: 0.7, duration: 0.6, ease: [0.16, 1, 0.3, 1] }, scale: { delay: 0.7, duration: 0.6, ease: [0.16, 1, 0.3, 1] }, y: { delay: 1.5, duration: 4, repeat: Infinity, ease: 'easeInOut' } }}
-                      className="absolute flex flex-col items-center gap-1"
-                      style={{ top: '45%', left: '55%' }}
-                    >
-                      <div
-                        className="w-16 h-16 rounded-lg shadow-md flex items-center justify-center"
-                        style={{ background: '#6B7B6B', opacity: 0.85 }}
-                      >
-                        <Layers className="w-5 h-5 text-white" />
-                      </div>
-                      <span
-                        className="text-[10px] font-medium px-2 py-0.5 rounded"
-                        style={{ background: 'rgba(30,30,30,0.9)', color: '#A8A8A8' }}
-                      >
-                        Coffee Table
-                      </span>
-                    </motion.div>
-
-                    {/* Lamp — neutral warm glow */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 0.85, scale: 1 }}
-                      transition={{ delay: 0.9, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute flex flex-col items-center gap-1"
-                      style={{ top: '20%', left: '72%' }}
-                    >
-                      <motion.div
-                        animate={{ boxShadow: ['0 0 20px rgba(139,115,85,0.3)', '0 0 30px rgba(139,115,85,0.5)', '0 0 20px rgba(139,115,85,0.3)'] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                        className="w-10 h-10 rounded-full shadow-md flex items-center justify-center"
-                        style={{ background: '#A89888', opacity: 0.85 }}
-                      >
-                        <Lamp className="w-4 h-4 text-white" />
-                      </motion.div>
-                      <span
-                        className="text-[10px] font-medium px-2 py-0.5 rounded"
-                        style={{ background: 'rgba(30,30,30,0.9)', color: '#A8A8A8' }}
-                      >
-                        Floor Lamp
-                      </span>
-                    </motion.div>
-
-                    {/* Rug — neutral (no copper) */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute"
-                      style={{
-                        top: '55%',
-                        left: '35%',
-                        width: '120px',
-                        height: '60px',
-                        borderRadius: '8px',
-                        background: 'rgba(139,115,85,0.1)',
-                        border: '2px dashed rgba(139,115,85,0.2)',
-                      }}
+            <div className="relative rounded-2xl overflow-hidden" style={{ border: '2px solid rgba(255,255,255,0.08)' }}>
+              <div className="relative aspect-[4/3]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentSlide}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8, ease: 'easeInOut' }}
+                    className="absolute inset-0"
+                  >
+                    <img
+                      src={heroSlides[currentSlide].image}
+                      alt={heroSlides[currentSlide].label}
+                      className="w-full h-full object-cover"
                     />
-                  </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Room type label overlay */}
+                <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }}>
+                  {heroSlides[currentSlide].label}
                 </div>
 
-                {/* Toolbar overlay bottom */}
-                <motion.div
-                  initial={{ y: 40, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 1.3, duration: 0.5 }}
-                  className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg"
-                  style={{ background: 'rgba(30,30,30,0.9)', backdropFilter: 'blur(8px)', border: '1px solid #2A2A2A' }}
-                >
-                  {[
-                    { icon: MousePointerClick, label: 'Select' },
-                    { icon: Move, label: 'Move' },
-                    { icon: RotateCcw, label: 'Rotate' },
-                    { icon: Eye, label: 'View' },
-                  ].map(({ icon: Icon, label }) => (
-                    <button
-                      key={label}
-                      className="flex flex-col items-center gap-0.5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors hover:bg-[#2A2A2A]"
-                      aria-label={label}
-                      title={label}
-                    >
-                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#A8A8A8' }} />
-                      <span
-                        className="hidden sm:block text-[9px] font-medium"
-                        style={{ color: '#A8A8A8' }}
-                      >
-                        {label}
-                      </span>
-                    </button>
-                  ))}
-                </motion.div>
-              </div>
-            </div>
-          </RevealOnScroll>
-
-          {/* Floating card - left (DARK) */}
-          <RevealOnScroll delay={0.8} direction="right">
-            <div
-              className="absolute -left-4 sm:-left-8 top-1/4 px-4 py-3 rounded-xl shadow-xl border"
-              style={{
-                background: '#1E1E1E',
-                borderColor: '#2A2A2A',
-                boxShadow: '0 0 30px rgba(0,0,0,0.08)',
-              }}
-            >
-              <div className="flex items-center gap-2">
-                {/* Icon container — neutral (no copper) */}
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}
-                >
-                  <Armchair className="w-4 h-4" style={{ color: '#A8A8A8' }} />
-                </div>
-                <div>
-                  <p
-                    className="text-xs font-semibold"
-                    style={{ color: '#FFFFFF' }}
-                  >
-                    Furniture Library
-                  </p>
-                  <p className="text-[10px]" style={{ color: '#A8A8A8' }}>
-                    30+ items available
-                  </p>
+                {/* LIVE badge */}
+                <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', color: '#A8A8A8' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  LIVE 3D
                 </div>
               </div>
-            </div>
-          </RevealOnScroll>
 
-          {/* Floating card - right (DARK) */}
-          <RevealOnScroll delay={1.0} direction="left">
-            <div
-              className="absolute -right-2 sm:-right-6 bottom-1/4 px-4 py-3 rounded-xl shadow-xl border"
-              style={{
-                background: '#1E1E1E',
-                borderColor: '#2A2A2A',
-                boxShadow: '0 0 30px rgba(0,0,0,0.08)',
-              }}
-            >
-              <div className="flex items-center gap-2">
-                {/* Icon container — neutral (no copper) */}
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}
-                >
-                  <Palette className="w-4 h-4" style={{ color: '#A8A8A8' }} />
-                </div>
-                <div>
-                  <p
-                    className="text-xs font-semibold"
-                    style={{ color: '#FFFFFF' }}
-                  >
-                    Material Swap
-                  </p>
-                  <p className="text-[10px]" style={{ color: '#A8A8A8' }}>
-                    Change in real-time
-                  </p>
-                </div>
+              {/* Dot indicators */}
+              <div className="flex items-center justify-center gap-2 py-4" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                {heroSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentSlide(i)}
+                    className="transition-all duration-300 rounded-full"
+                    style={{
+                      width: i === currentSlide ? '24px' : '8px',
+                      height: '8px',
+                      background: i === currentSlide ? '#C17F4E' : 'rgba(255,255,255,0.3)',
+                    }}
+                    aria-label={`View ${heroSlides[i].label}`}
+                  />
+                ))}
               </div>
             </div>
           </RevealOnScroll>
@@ -714,325 +366,267 @@ function HeroSection() {
   );
 }
 
-/* ─── Features (WHITE #FFFFFF) ─── */
-const features = [
-  {
-    icon: Box,
-    title: '3D Real-Time Preview',
-    highlight: 'Explore',
-    description: 'every angle. Rotate, zoom — see it live.',
-    gradient: 'linear-gradient(135deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.02) 100%)',
-    image: '/images/feature-preview-3d.png',
-  },
-  {
-    icon: Armchair,
-    title: '30+ Furniture Items',
-    highlight: 'Customize',
-    description: 'every piece. Sofas, tables, lamps and more.',
-    gradient: 'linear-gradient(135deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.02) 100%)',
-    image: '/images/feature-furniture.png',
-  },
-  {
-    icon: LayoutGrid,
-    title: 'Multiple Rooms',
-    highlight: 'Instant',
-    description: 'switch. 6 room types at your fingertips.',
-    gradient: 'linear-gradient(135deg, rgba(123,143,161,0.06) 0%, rgba(61,79,95,0.04) 100%)',
-    image: '/images/feature-rooms.png',
-  },
-  {
-    icon: Palette,
-    title: 'Material & Color System',
-    highlight: 'Swap',
-    description: 'fabrics, woods, metals — see it live.',
-    gradient: 'linear-gradient(135deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.02) 100%)',
-    image: '/images/feature-materials.png',
-  },
-  {
-    icon: Share2,
-    title: 'Save & Share',
-    highlight: 'One link',
-    description: 'to share. No login needed to view.',
-    gradient: 'linear-gradient(135deg, rgba(107,142,107,0.06) 0%, rgba(0,0,0,0.02) 100%)',
-    image: '/images/feature-share.png',
-  },
-  {
-    icon: Settings,
-    title: 'Smart Room Settings',
-    highlight: 'Match',
-    description: 'your space. Dimensions, lighting, 4 mood presets.',
-    gradient: 'linear-gradient(135deg, rgba(61,79,95,0.06) 0%, rgba(123,143,161,0.04) 100%)',
-    image: '/images/feature-settings.png',
-  },
-];
-
-function FeaturesSection() {
+/* ─── 2. BEFORE / AFTER SECTION (White #FFFFFF) ─── */
+function BeforeAfterSection() {
   return (
-    <section id="features" className="py-20 sm:py-28" style={{ background: '#FFFFFF' }}>
+    <section className="py-20 sm:py-28" style={{ background: '#FFFFFF' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <h2
-              className="text-3xl sm:text-4xl font-bold tracking-tight"
-              style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
-            >
-              {/* Bold emphasis instead of copper color (light bg) */}
-              Design <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Beautiful Spaces</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}>
+              Stop Guessing. <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Start Visualizing.</span>
             </h2>
             <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
-              Everything you need. Nothing you don't.
+              Test furniture fit, layouts, and color choices before making expensive mistakes.
             </p>
           </div>
         </RevealOnScroll>
 
-        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map(({ icon: Icon, title, description, highlight, gradient, image }) => (
+        <RevealOnScroll delay={0.2}>
+          <div className="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden" style={{ border: '2px solid #E8E2DA', boxShadow: '0 8px 40px rgba(0,0,0,0.08)' }}>
+            {/* Before */}
+            <div className="relative group overflow-hidden">
+              <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider" style={{ background: 'rgba(0,0,0,0.6)', color: '#FFFFFF', backdropFilter: 'blur(8px)' }}>
+                BEFORE
+              </div>
+              <img
+                src="/images/room-empty.png"
+                alt="Empty room before design"
+                className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+
+            {/* Divider line */}
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px" style={{ background: '#E8E2DA' }} />
+
+            {/* After */}
+            <div className="relative group overflow-hidden">
+              <div className="absolute top-4 right-4 z-10 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider" style={{ background: 'rgba(193,127,78,0.9)', color: '#FFFFFF', backdropFilter: 'blur(8px)' }}>
+                AFTER
+              </div>
+              <img
+                src="/images/room-designed.png"
+                alt="Designed room after using Instod"
+                className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+          </div>
+        </RevealOnScroll>
+      </div>
+    </section>
+  );
+}
+
+/* ─── 3. WHY PEOPLE USE INSTOD (Light warm bg #FAF6F0) ─── */
+const userTypes = [
+  { icon: HomeIcon, title: 'Homeowners', description: 'Visualize renovations before spending money', color: '#8B7355' },
+  { icon: GraduationCap, title: 'Students', description: 'Learn interior design through real 3D experimentation', color: '#6B7B6B' },
+  { icon: PenTool, title: 'Interior Designers', description: 'Present concepts to clients faster', color: '#7B8FA1' },
+  { icon: Ruler, title: 'Furniture Planners', description: 'Ensure everything fits before purchase', color: '#A68B6B' },
+];
+
+function WhyPeopleUseSection() {
+  return (
+    <section className="py-20 sm:py-28" style={{ background: '#FAF6F0' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll>
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
+              Built for Everyone Who <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Designs Spaces</span>
+            </h2>
+          </div>
+        </RevealOnScroll>
+
+        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {userTypes.map(({ icon: Icon, title, description, color }) => (
             <motion.div
               key={title}
               variants={staggerItem}
-              className="group rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden"
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group rounded-2xl p-6 sm:p-8 text-center transition-all duration-300 cursor-default"
               style={{
                 background: '#FFFFFF',
-                borderColor: '#E8E2DA',
+                border: '1.5px solid #E8E2DA',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
               }}
-              whileHover={{
-                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-                borderColor: '#D4C8B8',
-              }}
             >
-              {/* Accent top bar — neutral warm (no copper) */}
               <div
-                className="h-1 w-full transition-all duration-300 group-hover:h-1.5"
-                style={{ background: 'linear-gradient(90deg, #E8DFD4, #D4C8B8)' }}
-              />
-              {/* Feature image banner */}
-              <FadeInWhenVisible delay={0.1}>
-                <div className="relative aspect-[16/9] overflow-hidden">
-                  <img
-                    src={image}
-                    alt={title}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.02) 50%, rgba(0,0,0,0.08) 100%)',
-                    }}
-                  />
-                </div>
-              </FadeInWhenVisible>
-              {/* Content area */}
-              <div className="relative z-10 p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  {/* Icon container — neutral (no copper) */}
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                    style={{ background: 'rgba(0,0,0,0.06)', border: '1.5px solid rgba(0,0,0,0.08)' }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color: '#7A6E62' }} />
-                  </div>
-                  <h3
-                    className="text-[16px] font-semibold tracking-tight"
-                    style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
-                  >
-                    {title}
-                  </h3>
-                </div>
-                <p className="text-[13px] leading-[1.55]" style={{ color: '#6B5E52' }}>
-                  {/* Highlight text — bold neutral (no copper) */}
-                  <span className="font-semibold" style={{ color: '#2D2D2D' }}>{highlight}</span>{' '}{description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </StaggerContainer>
-      </div>
-    </section>
-  );
-}
-
-/* ─── Room types showcase (DARK #121212) ─── */
-const roomTypes = [
-  { icon: Sofa, label: 'Living Room', color: '#A68B6B', image: '/images/room-living.png', type: 'living' },
-  { icon: BedDouble, label: 'Bedroom', color: '#8B7B6B', image: '/images/room-bedroom.png', type: 'bedroom' },
-  { icon: CookingPot, label: 'Kitchen', color: '#A89888', image: '/images/room-kitchen.png', type: 'kitchen' },
-  { icon: Bath, label: 'Bathroom', color: '#7B8FA1', image: '/images/room-bathroom.png', type: 'bathroom' },
-  { icon: Monitor, label: 'Office', color: '#3D4F5F', image: '/images/room-office.png', type: 'office' },
-  { icon: UtensilsCrossed, label: 'Dining Room', color: '#8B7B6B', image: '/images/room-dining.png', type: 'dining' },
-];
-
-function RoomShowcase() {
-  return (
-    <section
-      id="rooms"
-      className="py-16 sm:py-20"
-      style={{ background: '#121212' }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <RevealOnScroll>
-          <div className="text-center mb-10">
-            <h2
-              className="text-2xl sm:text-3xl font-bold tracking-tight"
-              style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
-            >
-              {/* Bold white emphasis instead of copper (dark bg) */}
-              Design Every <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Room</span>
-            </h2>
-            <p className="mt-3 text-sm" style={{ color: '#A8A8A8' }}>
-              Click any room to start designing.
-            </p>
-          </div>
-        </RevealOnScroll>
-        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-6">
-          {roomTypes.map(({ icon: Icon, label, color, image, type }) => (
-            <Link key={label} href={`/editor?room=${type}`} prefetch={false} className="block">
-              <motion.div
-                variants={staggerItem}
-                whileHover={{ y: -6, scale: 1.02 }}
-                className="group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-300"
-                style={{ boxShadow: '0 0 0 transparent', borderColor: 'rgba(255,255,255,0.08)' }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 0 40px ${color}33`; (e.currentTarget as HTMLElement).style.borderColor = `${color}88`; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 transparent'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-transform duration-300 group-hover:scale-110"
+                style={{ background: `${color}15`, border: `1.5px solid ${color}25` }}
               >
-              {/* Room image background */}
-              <img
-                src={image}
-                alt={label}
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              {/* Gradient overlay at bottom — brighter for dark bg */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.1) 60%)',
-                }}
-              />
-              {/* Hover CTA overlay — KEEP copper (CTA button) */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'rgba(0,0,0,0.4)' }}>
-                <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm" style={{ background: 'rgba(193,127,78,0.9)', boxShadow: '0 0 20px rgba(193,127,78,0.3)' }}>
-                  Design this room
-                  <ArrowRight className="w-4 h-4" />
-                </div>
+                <Icon className="w-7 h-7" style={{ color }} />
               </div>
-              {/* Label at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                    style={{ background: `${color}CC`, border: '1.5px solid rgba(255,255,255,0.15)' }}
-                  >
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <span
-                    className="text-[15px] font-semibold text-white tracking-tight"
-                    style={{ fontFamily: "'Outfit', sans-serif" }}
-                  >
-                    {label}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-            </Link>
-          ))}
-        </StaggerContainer>
-      </div>
-    </section>
-  );
-}
-
-/* ─── How It Works (WHITE #FAFAFA) ─── */
-const steps = [
-  {
-    num: 1,
-    title: 'Pick a Room',
-    description:
-      'Choose your space. Set dimensions and style.',
-    icon: LayoutGrid,
-  },
-  {
-    num: 2,
-    title: 'Add Furniture',
-    description:
-      'Place with a click. Drag, rotate, done.',
-    icon: Armchair,
-  },
-  {
-    num: 3,
-    title: 'Save & Share',
-    description:
-      'One link. Anyone can view — no login needed.',
-    icon: Share2,
-  },
-];
-
-function HowItWorksSection() {
-  return (
-    <section
-      id="how-it-works"
-      className="py-20 sm:py-28"
-      style={{ background: '#FAFAFA' }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <RevealOnScroll>
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <h2
-              className="text-3xl sm:text-4xl font-bold tracking-tight"
-              style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
-            >
-              How It Works
-            </h2>
-            <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
-              Three steps. Zero friction.
-            </p>
-          </div>
-        </RevealOnScroll>
-
-        <StaggerContainer className="grid md:grid-cols-3 gap-8 md:gap-4 relative">
-          {/* Connecting lines (desktop) */}
-          <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-0.5" style={{ background: '#E2DDD4' }} />
-
-          {steps.map(({ num, title, description, icon: Icon }) => (
-            <motion.div key={num} variants={staggerItem} className="relative flex flex-col items-center text-center">
-              {/* Number circle — neutral (decorative, not CTA) */}
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 360 }}
-                transition={{ duration: 0.6 }}
-                className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-lg mb-6 border-2"
-                style={{ background: 'linear-gradient(135deg, #5A4E42, #7A6E62)', borderColor: 'rgba(255,255,255,0.2)' }}
-              >
-                {num}
-              </motion.div>
-              <h3
-                className="text-xl font-semibold mb-2 tracking-tight"
-                style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
-              >
+              <h3 className="text-lg font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
                 {title}
               </h3>
-              <p
-                className="text-[13.5px] leading-[1.65] max-w-xs"
-                style={{ color: '#6B5E52' }}
-              >
+              <p className="text-sm leading-relaxed" style={{ color: '#5A4E42' }}>
                 {description}
               </p>
             </motion.div>
           ))}
         </StaggerContainer>
+      </div>
+    </section>
+  );
+}
 
-        {/* CTA after steps — KEEP copper */}
-        <RevealOnScroll delay={0.3}>
-          <div className="text-center mt-10">
-            <Link
-              href="/editor"
-              prefetch={false}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
-              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+/* ─── 4. DESIGN EVERY PART OF YOUR ROOM (Dark bg #0F0F0F) ─── */
+const designFeatures = [
+  { icon: Sofa, title: 'Furniture Placement', description: 'Drag and drop 30+ furniture items into your room layout', image: '/images/feature-furniture.png' },
+  { icon: Palette, title: 'Wall Materials', description: 'Choose from paints, wallpapers, tiles and textured finishes', image: '/images/feature-materials.png' },
+  { icon: Layers, title: 'Floor Materials', description: 'Swap between hardwood, tile, carpet and more instantly', image: '/images/feature-preview-3d.png' },
+  { icon: Sun, title: 'Lighting Moods', description: 'Adjust ambient, task and accent lighting in real time', image: '/images/feature-settings.png' },
+  { icon: LayoutGrid, title: 'Room Themes', description: 'Apply complete style presets from modern to traditional', image: '/images/feature-rooms.png' },
+  { icon: Eye, title: 'Live 3D Preview', description: 'See your design come alive from any angle instantly', image: '/images/feature-share.png' },
+];
+
+function DesignEveryPartSection() {
+  return (
+    <section id="features" className="py-20 sm:py-28" style={{ background: '#0F0F0F' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll>
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+              Design Every Part of <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Your Room</span>
+            </h2>
+            <p className="mt-4 text-base" style={{ color: '#A8A8A8' }}>
+              From walls to furniture, lighting to materials — control every detail.
+            </p>
+          </div>
+        </RevealOnScroll>
+
+        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {designFeatures.map(({ icon: Icon, title, description, image }) => (
+            <motion.div
+              key={title}
+              variants={staggerItem}
+              whileHover={{ y: -6 }}
+              className="group rounded-2xl overflow-hidden transition-all duration-300"
+              style={{
+                background: '#1A1A1A',
+                border: '1.5px solid rgba(255,255,255,0.08)',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+                (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+              }}
             >
-              Ready? Start designing
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+              {/* Image top */}
+              <div className="relative aspect-[16/9] overflow-hidden">
+                <img
+                  src={image}
+                  alt={title}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(26,26,26,0.6) 100%)' }} />
+              </div>
+
+              {/* Content */}
+              <div className="p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: '#A8A8A8' }} />
+                  </div>
+                  <h3 className="text-base font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+                    {title}
+                  </h3>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: '#A8A8A8' }}>
+                  {description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </StaggerContainer>
+      </div>
+    </section>
+  );
+}
+
+/* ─── 5. SAMPLE DESIGNS / GALLERY (Dark bg #121212) ─── */
+const galleryCategories = [
+  { label: 'Living Room', type: 'living', image: '/images/gallery-living.png' },
+  { label: 'Bedroom', type: 'bedroom', image: '/images/gallery-bedroom.png' },
+  { label: 'Bathroom', type: 'bathroom', image: '/images/gallery-bathroom.png' },
+  { label: 'Kitchen', type: 'kitchen', image: '/images/gallery-kitchen.png' },
+  { label: 'Office', type: 'office', image: '/images/gallery-office.png' },
+];
+
+function GallerySection() {
+  const [activeTab, setActiveTab] = useState(0);
+
+  return (
+    <section id="gallery" className="py-20 sm:py-28" style={{ background: '#121212' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll>
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+              See What&apos;s <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Possible</span>
+            </h2>
+          </div>
+        </RevealOnScroll>
+
+        <RevealOnScroll delay={0.1}>
+          {/* Tab bar */}
+          <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
+            {galleryCategories.map((cat, i) => (
+              <button
+                key={cat.type}
+                onClick={() => setActiveTab(i)}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
+                style={{
+                  background: i === activeTab ? 'linear-gradient(135deg, #C17F4E, #A86A3D)' : 'rgba(255,255,255,0.06)',
+                  color: i === activeTab ? '#FFFFFF' : '#A8A8A8',
+                  border: i === activeTab ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </RevealOnScroll>
+
+        <RevealOnScroll delay={0.2}>
+          {/* Gallery display */}
+          <div className="relative rounded-2xl overflow-hidden" style={{ border: '2px solid rgba(255,255,255,0.08)' }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="relative aspect-[16/9]"
+              >
+                <img
+                  src={galleryCategories[activeTab].image}
+                  alt={`${galleryCategories[activeTab].label} gallery`}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%)' }} />
+              </motion.div>
+            </AnimatePresence>
+
+            {/* CTA overlay */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
+              <Link
+                href={`/editor?room=${galleryCategories[activeTab].type}`}
+                prefetch={false}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30"
+                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+              >
+                Design This Room
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </RevealOnScroll>
       </div>
@@ -1040,141 +634,135 @@ function HowItWorksSection() {
   );
 }
 
-/* ─── Stats (DARK #1A1A1A) ─── */
-function StatsSection() {
-  const stats = [
-    { value: '30', suffix: '+', label: 'Furniture Items', icon: Armchair },
-    { value: '6', suffix: '', label: 'Room Types', icon: LayoutGrid },
-    { value: '4', suffix: '', label: 'Lighting Moods', icon: Lamp },
-    { value: '100', suffix: '%', label: 'Free During Beta', icon: Zap },
-  ];
+/* ─── 6. HOW INSTOD WORKS (White bg #FFFFFF) ─── */
+const steps = [
+  { icon: Box, number: 1, title: 'Create Room', description: 'Set your room dimensions and type' },
+  { icon: Sofa, number: 2, title: 'Add Furniture', description: 'Browse and place 30+ furniture items' },
+  { icon: Palette, number: 3, title: 'Customize Materials', description: 'Swap fabrics, woods, metals and colors' },
+  { icon: Share2, number: 4, title: 'Save & Share', description: 'Export your design or share a live link' },
+];
+
+function HowItWorksSection() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <ParallaxSection className="py-16 sm:py-20" style={{ background: '#1A1A1A' }} offset={20}>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map(({ value, suffix, label, icon: Icon }) => (
+    <section className="py-20 sm:py-28" style={{ background: '#FFFFFF' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll>
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}>
+              How <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Instod Works</span>
+            </h2>
+          </div>
+        </RevealOnScroll>
+
+        <div ref={ref} className="relative">
+          {/* Horizontal connecting line (desktop) */}
+          <div className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] h-0.5" style={{ background: '#E8E2DA' }}>
             <motion.div
-              key={label}
-              variants={staggerItem}
-              className="text-center p-6 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-1 group"
-              style={{ background: '#1E1E1E', borderColor: '#2E2E2E', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
-              whileHover={{ boxShadow: '0 0 30px rgba(0,0,0,0.12)', borderColor: '#4A4A4A' }}
-            >
-              {/* Accent bar — neutral warm (no copper) */}
-              <div
-                className="h-0.5 w-10 mx-auto rounded-full mb-4 transition-all duration-300 group-hover:w-16"
-                style={{ background: '#E8DFD4' }}
-              />
-              {/* Icon container — neutral (no copper) */}
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:scale-110"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.08)' }}
+              initial={{ scaleX: 0 }}
+              animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full origin-left"
+              style={{ background: 'linear-gradient(90deg, #E8E2DA, #C17F4E, #E8E2DA)' }}
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-6">
+            {steps.map(({ icon: Icon, number, title, description }, i) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 40 }}
+                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+                transition={{ duration: 0.6, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
+                className="text-center relative"
               >
-                <Icon className="w-5 h-5" style={{ color: '#A8A8A8' }} />
-              </div>
-              {/* Stat value — neutral light (no copper) */}
-              <p
-                className="text-3xl sm:text-4xl font-bold tracking-tight"
-                style={{
-                  fontFamily: "'Outfit', sans-serif",
-                  color: '#FFFFFF',
-                }}
-              >
-                <AnimatedCounter value={value} suffix={suffix} />
-              </p>
-              <p className="text-[13px] mt-1.5 font-medium tracking-wide" style={{ color: '#9A9A9A' }}>{label}</p>
-            </motion.div>
-          ))}
-        </StaggerContainer>
+                {/* Step number circle */}
+                <div className="relative z-10 mx-auto mb-5">
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center mx-auto text-sm font-bold transition-all duration-300"
+                    style={{
+                      background: isInView ? '#FFFFFF' : '#F5F0E8',
+                      color: isInView ? '#2D2D2D' : '#A8A8A8',
+                      border: isInView ? '2.5px solid #C17F4E' : '2.5px solid #E8E2DA',
+                      boxShadow: isInView ? '0 0 0 4px rgba(193,127,78,0.1)' : 'none',
+                    }}
+                  >
+                    {number}
+                  </div>
+                </div>
+
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300"
+                  style={{ background: 'rgba(0,0,0,0.04)', border: '1.5px solid rgba(0,0,0,0.06)' }}
+                >
+                  <Icon className="w-6 h-6" style={{ color: '#7A6E62' }} />
+                </div>
+
+                <h3 className="text-base font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
+                  {title}
+                </h3>
+                <p className="text-sm leading-relaxed max-w-[200px] mx-auto" style={{ color: '#5A4E42' }}>
+                  {description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
-    </ParallaxSection>
+    </section>
   );
 }
 
-/* ─── Testimonials (WHITE #FFFFFF) ─── */
-function TestimonialsSection() {
-  return (
-    <section
-      className="py-20 sm:py-28 relative overflow-hidden"
-      style={{
-        background: '#FFFFFF',
-      }}
-    >
+/* ─── 7. VALUE COMPARISON (Light warm bg #FAF6F0) ─── */
+const comparisons = [
+  { category: 'Furniture Fit', traditional: 'Guess measurements', instod: 'Visualize in 3D' },
+  { category: 'Room Layout', traditional: 'Draw on paper', instod: 'Drag and place interactively' },
+  { category: 'Material Selection', traditional: 'Buy samples', instod: 'Preview instantly' },
+  { category: 'Client Presentations', traditional: 'Mood boards', instod: 'Interactive 3D walkthrough' },
+  { category: 'Design Iterations', traditional: 'Days of revisions', instod: 'Seconds to modify' },
+];
 
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+function ValueComparisonSection() {
+  return (
+    <section className="py-20 sm:py-28" style={{ background: '#FAF6F0' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
-          {/* EARLY ACCESS badge — KEEP copper (like BETA badge) */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(193,127,78,0.08)', borderColor: 'rgba(193,127,78,0.2)' }}>
-            <Sparkles className="w-4 h-4" style={{ color: '#C17F4E' }} />
-            <span className="text-xs font-semibold tracking-wide" style={{ color: '#C17F4E' }}>EARLY ACCESS</span>
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
+              The Smarter Way to <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Design Rooms</span>
+            </h2>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}>
-            {/* Heading emphasis — bold neutral (light bg) */}
-            Be a <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Founding Member</span>
-          </h2>
-          <p className="mt-4 text-base max-w-2xl mx-auto" style={{ color: '#5A4E42' }}>
-            Your feedback shapes the product. <span className="font-semibold" style={{ color: '#2D2D2D' }}>Full access, free</span> during beta.
-          </p>
         </RevealOnScroll>
 
         <RevealOnScroll delay={0.2}>
-          <div className="grid sm:grid-cols-3 gap-6 mt-12">
-            {[
-              {
-                icon: Globe,
-                title: 'Your Voice Matters',
-                description: 'Feedback shapes features. We build what you ask for.',
-              },
-              {
-                icon: Zap,
-                title: 'Full Access, Free',
-                description: 'All premium features unlocked. No credit card, no limit.',
-              },
-              {
-                icon: Star,
-                title: 'Early Adopter Perks',
-                description: 'Exclusive discounts and extended free access at launch.',
-              },
-            ].map(({ icon: Icon, title, description }) => (
+          <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1.5px solid #E8E2DA', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            {/* Header row */}
+            <div className="grid grid-cols-3 gap-4 px-6 py-4" style={{ background: '#FAF6F0', borderBottom: '1.5px solid #E8E2DA' }}>
+              <div className="text-sm font-bold" style={{ color: '#5A4E42' }}>Feature</div>
+              <div className="text-sm font-bold text-center" style={{ color: '#B8433A' }}>Traditional Way</div>
+              <div className="text-sm font-bold text-center" style={{ color: '#6B8B5E' }}>Instod</div>
+            </div>
+
+            {/* Comparison rows */}
+            {comparisons.map((row, i) => (
               <div
-                key={title}
-                className="p-6 rounded-2xl border-2 text-left transition-all duration-300 hover:-translate-y-1 group"
-                style={{
-                  background: '#FFFFFF',
-                  borderColor: '#E8E2DA',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = '#D4C8B8';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = '#E8E2DA';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
-                }}
+                key={row.category}
+                className="grid grid-cols-3 gap-4 px-6 py-5 items-center"
+                style={{ borderBottom: i < comparisons.length - 1 ? '1px solid #F0E8DE' : 'none' }}
               >
-                {/* Accent bar — neutral warm (no copper) */}
-                <div
-                  className="h-0.5 w-8 rounded-full mb-4 transition-all duration-300 group-hover:w-14"
-                  style={{ background: '#E8DFD4' }}
-                />
-                {/* Icon container — neutral (no copper) */}
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
-                  style={{ background: 'rgba(0,0,0,0.06)', border: '1.5px solid rgba(0,0,0,0.08)' }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: '#7A6E62' }} />
+                <div className="text-sm font-semibold" style={{ color: '#2D2D2D' }}>
+                  {row.category}
                 </div>
-                <h3
-                  className="text-[15px] font-semibold mb-2 tracking-tight"
-                  style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}
-                >
-                  {title}
-                </h3>
-                <p className="text-[13px] leading-[1.65]" style={{ color: '#6B5E52' }}>
-                  {description}
-                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <XCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#B8433A' }} />
+                  <span className="text-sm text-center" style={{ color: '#7A6E62' }}>{row.traditional}</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#6B8B5E' }} />
+                  <span className="text-sm text-center font-medium" style={{ color: '#2D2D2D' }}>{row.instod}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -1184,373 +772,205 @@ function TestimonialsSection() {
   );
 }
 
-/* ─── Showcase Banner (DARK #0F0F0F) ─── */
-function ShowcaseBannerSection() {
+/* ─── 8. EARLY ACCESS BETA SECTION (Dark bg #0F0F0F) ─── */
+const betaBenefits = [
+  'Unlimited projects',
+  'Unlimited rooms',
+  'All furniture items',
+  'Premium features included',
+  'Early access benefits',
+  'Shape the product with your feedback',
+];
+
+function EarlyAccessSection() {
   return (
-    <section
-      className="py-20 sm:py-28 overflow-hidden"
-      style={{
-        background: '#0F0F0F',
-      }}
-    >
+    <section className="py-20 sm:py-28" style={{ background: '#0F0F0F' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left: text content */}
-          <HorizontalReveal from="left">
-            <div>
-              {/* LIVE PREVIEW badge — neutral (not BETA) */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
-                <Eye className="w-4 h-4" style={{ color: '#A8A8A8' }} />
-                <span className="text-xs font-semibold tracking-wide" style={{ color: '#A8A8A8' }}>LIVE PREVIEW</span>
-              </div>
-              <h2
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight"
-                style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
-                aria-label="See Your Designs Come Alive"
-              >
-                See Your Designs{' '}
-                {/* Heading emphasis — bold white (dark bg), no text shadow */}
-                <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Come Alive</span>
+        <RevealOnScroll>
+          <div
+            className="relative rounded-3xl p-1"
+            style={{ background: 'linear-gradient(135deg, rgba(193,127,78,0.3), rgba(193,127,78,0.05), rgba(193,127,78,0.3))' }}
+          >
+            <div className="rounded-[22px] p-8 sm:p-12 lg:p-16 text-center" style={{ background: '#1A1A1A' }}>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+                Early Access Beta — <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Everything Free</span>
               </h2>
-              <p className="mt-5 text-base sm:text-lg leading-relaxed" style={{ color: '#A8A8A8' }}>
-                {/* Emphasis text — bold neutral (dark bg) */}
-                Every texture, every shadow — rendered <span className="font-semibold" style={{ color: '#FFFFFF' }}>instantly</span> as you design.
+              <p className="text-base mb-10 max-w-lg mx-auto" style={{ color: '#A8A8A8' }}>
+                Join the beta and get full access to every feature at no cost. Your input helps shape the future of Instod.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row items-start gap-4">
-                {/* KEEP copper — "Try It Now" CTA button */}
-                <Link
-                  href="/editor"
-                  prefetch={false}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
-                  style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
-                >
-                  Try It Now
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-              {/* Feature highlights — neutral icons (no copper) */}
-              <div className="mt-8 grid grid-cols-2 gap-4">
-                {[
-                  { icon: Zap, text: 'Real-time rendering' },
-                  { icon: Palette, text: 'PBR materials' },
-                  { icon: Eye, text: '360° walkthrough' },
-                  { icon: Layers, text: 'Dynamic lighting' },
-                ].map(({ icon: FIcon, text }) => (
-                  <div key={text} className="flex items-center gap-2.5">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ background: 'rgba(255,255,255,0.06)' }}
-                    >
-                      <FIcon className="w-4 h-4" style={{ color: '#A8A8A8' }} />
+
+              <div className="max-w-md mx-auto mb-10">
+                <div className="grid sm:grid-cols-2 gap-3 text-left">
+                  {betaBenefits.map((benefit) => (
+                    <div key={benefit} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,139,94,0.15)' }}>
+                        <Check className="w-3 h-3" style={{ color: '#6B8B5E' }} />
+                      </div>
+                      <span className="text-sm" style={{ color: '#E8E0D6' }}>{benefit}</span>
                     </div>
-                    <span className="text-sm" style={{ color: '#A8A8A8' }}>{text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </HorizontalReveal>
-
-          {/* Right: Browser mockup (DARK theme) */}
-          <HorizontalReveal from="right" delay={0.2}>
-            <div
-              className="rounded-2xl border-2 shadow-2xl overflow-hidden"
-              style={{
-                borderColor: '#2A2A2A',
-                background: '#1E1E1E',
-                boxShadow: '0 0 60px rgba(0,0,0,0.12)',
-              }}
-            >
-              {/* Window chrome — dark */}
-              <div
-                className="flex items-center gap-2 px-4 py-3 border-b"
-                style={{ borderColor: '#2A2A2A', background: '#1A1A1A' }}
-              >
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full" style={{ background: '#FF5F57' }} />
-                  <div className="w-3 h-3 rounded-full" style={{ background: '#FFBD2E' }} />
-                  <div className="w-3 h-3 rounded-full" style={{ background: '#28CA41' }} />
-                </div>
-                <div
-                  className="flex-1 text-center text-xs font-medium rounded-md py-1 mx-8"
-                  style={{ background: '#2A2A2A', color: '#A8A8A8' }}
-                >
-                  Instod — Living Room
-                </div>
-              </div>
-
-              {/* Video/Image viewport */}
-              <div className="relative aspect-[4/3] overflow-hidden group cursor-pointer">
-                <img
-                  src="/images/hero-living-room.png"
-                  alt="Instod 3D room preview"
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                {/* Video play overlay */}
-                <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.25)', transition: 'background 0.3s' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.35)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.25)')}
-                >
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', border: '2px solid rgba(255,255,255,0.3)' }}>
-                    <Play className="w-7 h-7 text-white ml-1" />
-                  </div>
-                </div>
-                <p className="absolute bottom-14 left-0 right-0 text-center text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  Watch a 15-second demo
-                </p>
-                {/* Bottom gradient overlay */}
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 30%)' }} />
-                {/* Floating toolbar */}
-                <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  whileInView={{ y: 0, opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg"
-                  style={{ background: 'rgba(30,30,30,0.9)', backdropFilter: 'blur(8px)', border: '1px solid #2A2A2A' }}
-                >
-                  {[
-                    { icon: MousePointerClick, label: 'Select' },
-                    { icon: Move, label: 'Move' },
-                    { icon: RotateCcw, label: 'Rotate' },
-                    { icon: Eye, label: 'View' },
-                  ].map(({ icon: TIcon, label }) => (
-                    <button
-                      key={label}
-                      className="flex flex-col items-center gap-0.5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors hover:bg-[#2A2A2A]"
-                      title={label}
-                    >
-                      <TIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#A8A8A8' }} />
-                      <span className="hidden sm:block text-[9px] font-medium" style={{ color: '#A8A8A8' }}>
-                        {label}
-                      </span>
-                    </button>
                   ))}
-                </motion.div>
+                </div>
               </div>
+
+              <Link
+                href="/editor"
+                prefetch={false}
+                className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97]"
+                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
+              >
+                Start Designing
+                <ArrowRight className="w-5 h-5" />
+              </Link>
             </div>
-          </HorizontalReveal>
-        </div>
+          </div>
+        </RevealOnScroll>
       </div>
     </section>
   );
 }
 
-/* ─── CTA Section (DARK #1A1A1A with subtle radial gradient) ─── */
-function CTASection() {
+/* ─── 9. FINAL CTA SECTION (Dark bg with gradient) ─── */
+function FinalCTASection() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], [40, -40]);
+
   return (
-    <section
-      className="py-20 sm:py-28 relative overflow-hidden"
-      style={{
-        background: 'radial-gradient(ellipse at center, rgba(139,115,85,0.06) 0%, #1A1A1A 70%)',
-      }}
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+    <section ref={ref} className="relative py-24 sm:py-32 overflow-hidden" style={{ background: '#0F0F0F' }}>
+      {/* Parallax background effect */}
+      <motion.div style={{ y }} className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(193,127,78,0.08) 0%, rgba(193,127,78,0.02) 40%, transparent 70%)' }}
+        />
+      </motion.div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <RevealOnScroll>
-          {/* NO SIGN-UP badge — neutral (not BETA) */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
-            <Sparkles className="w-4 h-4" style={{ color: '#A8A8A8' }} />
-            <span className="text-xs font-semibold tracking-wide" style={{ color: '#A8A8A8' }}>NO SIGN-UP REQUIRED</span>
-          </div>
-        </RevealOnScroll>
-        <RevealOnScroll delay={0.1}>
-          <h2
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight"
-            style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
-          >
-            Ready to Design Your{' '}
-            {/* "Dream Space" — bold white (dark bg), no text shadow/glow */}
-            <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Dream Space</span>?
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-5" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+            Your Future Room <br className="hidden sm:block" />Is Waiting
           </h2>
         </RevealOnScroll>
-        <RevealOnScroll delay={0.2}>
-          <p className="mt-4 text-base sm:text-lg max-w-xl mx-auto" style={{ color: '#A8A8A8' }}>
-            No account needed. Jump in and start creating.
+
+        <RevealOnScroll delay={0.1}>
+          <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: '#A8A8A8' }}>
+            Start designing, experimenting, and visualizing your space today. No sign-up required.
           </p>
         </RevealOnScroll>
-        <RevealOnScroll delay={0.3}>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* KEEP copper — "Open 3D Editor" CTA button */}
-            <Link
-              href="/editor"
-              prefetch={false}
-              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-200 hover:opacity-90 hover:shadow-xl hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0"
-              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
-            >
-              Open 3D Editor
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl font-semibold text-lg border-2 transition-all duration-200 hover:shadow-sm hover:bg-white/5 active:scale-[0.97]"
-              style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#FFFFFF' }}
-            >
-              Sign Up to Save
-            </Link>
-          </div>
-        </RevealOnScroll>
-        <RevealOnScroll delay={0.4}>
-          <div className="mt-6 flex items-center justify-center gap-6 text-sm" style={{ color: '#A8A8A8' }}>
-            {/* Check icons — green (#6B8B5E) instead of copper */}
-            <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4" style={{ color: '#6B8B5E' }} />
-              Free during beta
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4" style={{ color: '#6B8B5E' }} />
-              No credit card
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Check className="w-4 h-4" style={{ color: '#6B8B5E' }} />
-              Works in browser
-            </div>
-          </div>
+
+        <RevealOnScroll delay={0.2}>
+          <Link
+            href="/editor"
+            prefetch={false}
+            className="inline-flex items-center justify-center gap-3 px-12 py-5 rounded-2xl text-white font-bold text-xl transition-all duration-300 hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_0_60px_rgba(193,127,78,0.4)] active:scale-[0.97]"
+            style={{
+              background: 'linear-gradient(135deg, #C17F4E, #A86A3D)',
+              boxShadow: '0 0 40px rgba(193,127,78,0.3)',
+            }}
+          >
+            Launch Designer
+            <ArrowRight className="w-6 h-6" />
+          </Link>
         </RevealOnScroll>
       </div>
     </section>
   );
 }
 
-/* ─── Footer (DARK #0A0A0A) ─── */
+/* ─── 10. FOOTER (Dark bg #0A0A0A) ─── */
+const footerLinks = {
+  Product: [
+    { label: 'Features', href: '#features' },
+    { label: 'Gallery', href: '#gallery' },
+    { label: 'Demo Projects', href: '/editor?room=living' },
+    { label: 'Beta Program', href: '#' },
+  ],
+  Resources: [
+    { label: 'Guides', href: '#' },
+    { label: 'Design Tips', href: '#' },
+    { label: 'Help Center', href: '#' },
+    { label: 'Blog', href: '#' },
+  ],
+  Company: [
+    { label: 'About', href: '#' },
+    { label: 'Contact', href: '#' },
+    { label: 'Roadmap', href: '#' },
+    { label: 'Careers', href: '#' },
+  ],
+  Legal: [
+    { label: 'Privacy', href: '/privacy' },
+    { label: 'Terms', href: '/terms' },
+    { label: 'Cookie Policy', href: '#' },
+  ],
+};
+
 function Footer() {
   return (
-    <footer style={{ background: '#0A0A0A' }} className="text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Top row: brand + CTA */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 pb-12" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="Instod" className="w-11 h-11 rounded-xl" />
-            <div>
-              <span className="text-xl font-bold block" style={{ fontFamily: "'Outfit', sans-serif" }}>
+    <footer className="pt-16 pb-10 sm:pt-24 sm:pb-14" style={{ background: '#0A0A0A' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-14">
+          {/* Logo column */}
+          <div className="lg:col-span-1">
+            <Link href="/" className="flex items-center gap-2.5 mb-5">
+              <img src="/logo.svg" alt="Instod" className="w-10 h-10 rounded-lg" />
+              <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
                 Instod
               </span>
-              <p className="text-xs text-gray-500">3D Room Design Previewer</p>
+            </Link>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: '#A8A8A8' }}>
+              Design your room before you build it. Free 3D room designer for everyone.
+            </p>
+            <div className="flex items-center gap-3">
+              <a
+                href="#"
+                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                aria-label="Twitter"
+              >
+                <Twitter className="w-4 h-4" style={{ color: '#A8A8A8' }} />
+              </a>
+              <a
+                href="#"
+                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                aria-label="GitHub"
+              >
+                <Github className="w-4 h-4" style={{ color: '#A8A8A8' }} />
+              </a>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* KEEP copper — "Open Editor" CTA button */}
-            <Link
-              href="/editor"
-              prefetch={false}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
-            >
-              Open Editor
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-            </Link>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all"
-              style={{ border: '1.5px solid rgba(255,255,255,0.15)', color: '#E0E0E0' }}
-            >
-              View Pricing
-            </Link>
-          </div>
-        </div>
 
-        {/* Middle row: link columns */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 py-12">
-          {/* Product — section heading neutral */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Product</h4>
-            <ul className="space-y-3.5">
-              {[
-                { label: '3D Editor', href: '/editor' },
-                { label: 'Pricing', href: '/pricing' },
-                { label: 'Features', href: '#features' },
-                { label: 'Room Gallery', href: '#rooms' },
-              ].map(({ label, href }) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    prefetch={String(href).startsWith('/editor') ? false : undefined}
-                    className="text-[15px] text-gray-400 hover:text-white transition-colors"
-                    style={{ fontFamily: "'DM Sans', sans-serif" }}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Company</h4>
-            <ul className="space-y-3.5">
-              {[
-                { label: 'About', href: '/about' },
-                { label: 'Contact', href: '/contact' },
-                { label: 'Feedback', href: '/contact' },
-              ].map(({ label, href }) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    className="text-[15px] text-gray-400 hover:text-white transition-colors"
-                    style={{ fontFamily: "'DM Sans', sans-serif" }}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Legal</h4>
-            <ul className="space-y-3.5">
-              {[
-                { label: 'Privacy Policy', href: '/privacy' },
-                { label: 'Terms of Service', href: '/terms' },
-                { label: 'Contact Support', href: '/contact' },
-              ].map(({ label, href }) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    className="text-[15px] text-gray-400 hover:text-white transition-colors"
-                    style={{ fontFamily: "'DM Sans', sans-serif" }}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Connect */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[1.5px] mb-5" style={{ color: '#A8A8A8' }}>Connect</h4>
-            <ul className="space-y-3.5">
-              {[
-                { label: 'Twitter / X', href: 'https://twitter.com/instodapp' },
-                { label: 'GitHub', href: 'https://github.com/instod' },
-                { label: 'Instagram', href: 'https://instagram.com/instodapp' },
-              ].map(({ label, href }) => (
-                <li key={label}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[15px] text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1.5"
-                    style={{ fontFamily: "'DM Sans', sans-serif" }}
-                  >
-                    {label}
-                    <svg className="w-3 h-3 opacity-40" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Link columns */}
+          {Object.entries(footerLinks).map(([category, links]) => (
+            <div key={category}>
+              <h4 className="text-sm font-bold tracking-wide mb-5" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+                {category}
+              </h4>
+              <ul className="space-y-3">
+                {links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      prefetch={link.href.startsWith('#') || link.href === '#' ? undefined : false}
+                      className="text-sm transition-colors duration-200 hover:text-[#C17F4E]"
+                      style={{ color: '#A8A8A8' }}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         {/* Bottom row */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-sm text-gray-500" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            &copy; {new Date().getFullYear()} Instod. Crafted by Muhammad Saadi.
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <p className="text-sm" style={{ color: '#7A6E62' }}>
+            &copy; {new Date().getFullYear()} Instod. All rights reserved.
           </p>
-          <p className="text-xs text-gray-600" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            Free during beta &middot; No credit card &middot; Works in browser
+          <p className="text-sm" style={{ color: '#7A6E62' }}>
+            Made with ❤️ for designers
           </p>
         </div>
       </div>
@@ -1558,32 +978,21 @@ function Footer() {
   );
 }
 
-/* ─── Page ─── */
-export default function HomePage() {
+/* ─── MAIN PAGE ─── */
+export default function Home() {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="min-h-screen flex flex-col"
-    >
+    <main className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">
-        <HeroSection />
-        {/* Section divider — neutral warm (no copper) */}
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
-        <FeaturesSection />
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
-        <RoomShowcase />
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
-        <HowItWorksSection />
-        <StatsSection />
-        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, #E8DFD440, transparent)' }} />
-        <TestimonialsSection />
-        <ShowcaseBannerSection />
-        <CTASection />
-      </main>
+      <HeroSection />
+      <BeforeAfterSection />
+      <WhyPeopleUseSection />
+      <DesignEveryPartSection />
+      <GallerySection />
+      <HowItWorksSection />
+      <ValueComparisonSection />
+      <EarlyAccessSection />
+      <FinalCTASection />
       <Footer />
-    </motion.div>
+    </main>
   );
 }
