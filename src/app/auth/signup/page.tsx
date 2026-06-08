@@ -198,7 +198,15 @@ export default function SignupPage() {
             <span className="text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-full text-white" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>BETA</span>
           </div>
           <h2 className="text-white text-lg font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Unlock Your Full Design Potential</h2>
-          <p className="text-white/60 text-xs leading-relaxed">Sign up free — no credit card required</p>
+          <p className="text-white/60 text-xs leading-relaxed mb-2">Sign up free — no credit card required</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {['Unlimited furniture', 'Save projects', 'Free during beta'].map((benefit) => (
+              <span key={benefit} className="text-white/70 text-[10px] flex items-center gap-1">
+                <Check className="w-2.5 h-2.5" style={{ color: '#6B8B5E' }} />
+                {benefit}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -223,9 +231,17 @@ export default function SignupPage() {
             <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
               Create an account
             </h2>
-            <p className="text-sm mb-6" style={{ color: '#5A4E42' }}>
+            <p className="text-sm mb-2" style={{ color: '#5A4E42' }}>
               Start designing your dream space for free
             </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mb-6">
+              {['Free during beta', 'No credit card', '30+ furniture items'].map((benefit) => (
+                <span key={benefit} className="text-xs flex items-center gap-1" style={{ color: '#6B8B5E' }}>
+                  <Check className="w-3 h-3" />
+                  {benefit}
+                </span>
+              ))}
+            </div>
 
             {/* Error */}
             {errors.general && (

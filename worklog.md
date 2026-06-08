@@ -848,3 +848,26 @@ Stage Summary:
 - Onboarding only shows once: guests in editor, auth via /onboarding page after signup
 - CoC cinematic loader renders with teal (auth) or warm (guest) theme
 - Full teal theme applied for auth users across all editor UI elements
+---
+Task ID: 1
+Agent: Main Agent
+Task: Implement all 5 critical fixes from audit + previous session unresolved issues
+
+Work Log:
+- Fixed drag teleporting bug — added dragGrabPointRef and dragStartPosRef for correct offset-based drag with sensitivity. Formula changed from broken accumulation to: new_pos = startPos + (currentPointer - grabPoint) * sensitivity
+- Fixed CoC loader fade-out — added loaderDismissed state so the loader properly fades out via CSS opacity transition before being removed from DOM (onTransitionEnd)
+- Added useSession() hook to InteriorStudio for immediate session detection — replaces slow manual fetch('/api/auth/session')
+- Fixed theme differentiation — isGuest state now immediately set from session hook, so teal theme (#2A9D8F) appears instantly for auth users instead of warm (#C17F4E)
+- Fixed duplicate onboarding — auth users skip in-editor onboarding immediately via useSession effect, no brief flash of onboarding overlay
+- Fixed guest banner stacking — BetaBanner now hidden on /editor pages to avoid stacking with Guest Mode banner
+- Fixed canvas flicker on tab switch — mobile bottom panel changed from flex child to fixed overlay (position: fixed)
+- Added hero video placeholder — "See Your Designs Come Alive" section now has play button overlay with "Watch a 15-second demo" text
+- Fixed hero toolbar labels unreadable on mobile — labels hidden on small screens (hidden sm:block)
+- Added benefit bullets to signup page — mobile hero gets compact benefit pills, form header gets "Free during beta · No credit card · 30+ furniture items"
+- Verified brand name is consistently "Instod" everywhere (already fixed)
+- Verified founder name "Muhammad Saadi" is on About page (already there)
+
+Stage Summary:
+- All 5 audit items addressed + 6 additional fixes
+- Build passes cleanly, no TypeScript errors
+- Key files modified: InteriorStudio.tsx, EditorLoader.tsx (unchanged but properly connected), beta-banner.tsx, page.tsx (homepage), signup/page.tsx

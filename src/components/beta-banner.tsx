@@ -2,14 +2,17 @@
 
 import { Sparkles, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 /**
  * BetaBanner — Shows an "Early Access Beta" banner at the top of the app.
  * Dismissible permanently (stored in localStorage).
  * Only renders when NEXT_PUBLIC_BETA_MODE is 'true'.
+ * Hidden on editor pages to avoid stacking with the Guest Mode banner.
  */
 export function BetaBanner() {
   const [dismissed, setDismissed] = useState(true); // Start true to avoid flash
+  const pathname = usePathname();
 
   useEffect(() => {
     // Only show if beta mode is enabled and not dismissed
@@ -20,7 +23,8 @@ export function BetaBanner() {
     }
   }, []);
 
-  if (dismissed) return null;
+  // Hide on editor pages — the in-editor Guest Mode banner serves this purpose
+  if (dismissed || pathname.startsWith('/editor')) return null;
 
   return (
     <div

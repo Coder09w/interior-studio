@@ -625,13 +625,13 @@ function HeroSection() {
                   ].map(({ icon: Icon, label }) => (
                     <button
                       key={label}
-                      className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors hover:bg-[#2A2A2A]"
+                      className="flex flex-col items-center gap-0.5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors hover:bg-[#2A2A2A]"
                       aria-label={label}
                       title={label}
                     >
-                      <Icon className="w-4 h-4" style={{ color: '#A8A8A8' }} />
+                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#A8A8A8' }} />
                       <span
-                        className="text-[9px] font-medium"
+                        className="hidden sm:block text-[9px] font-medium"
                         style={{ color: '#A8A8A8' }}
                       >
                         {label}
@@ -1278,15 +1278,27 @@ function ShowcaseBannerSection() {
                 </div>
               </div>
 
-              {/* Image viewport */}
-              <div className="relative aspect-[4/3] overflow-hidden">
+              {/* Video/Image viewport */}
+              <div className="relative aspect-[4/3] overflow-hidden group cursor-pointer">
                 <img
                   src="/images/hero-living-room.png"
                   alt="Instod 3D room preview"
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                {/* Overlay with toolbar hint */}
+                {/* Video play overlay */}
+                <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.25)', transition: 'background 0.3s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.35)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.25)')}
+                >
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', border: '2px solid rgba(255,255,255,0.3)' }}>
+                    <Play className="w-7 h-7 text-white ml-1" />
+                  </div>
+                </div>
+                <p className="absolute bottom-14 left-0 right-0 text-center text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  Watch a 15-second demo
+                </p>
+                {/* Bottom gradient overlay */}
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 30%)' }} />
                 {/* Floating toolbar */}
                 <motion.div
@@ -1305,11 +1317,11 @@ function ShowcaseBannerSection() {
                   ].map(({ icon: TIcon, label }) => (
                     <button
                       key={label}
-                      className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors hover:bg-[#2A2A2A]"
+                      className="flex flex-col items-center gap-0.5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors hover:bg-[#2A2A2A]"
                       title={label}
                     >
-                      <TIcon className="w-4 h-4" style={{ color: '#A8A8A8' }} />
-                      <span className="text-[9px] font-medium" style={{ color: '#A8A8A8' }}>
+                      <TIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#A8A8A8' }} />
+                      <span className="hidden sm:block text-[9px] font-medium" style={{ color: '#A8A8A8' }}>
                         {label}
                       </span>
                     </button>

@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { useSession } from 'next-auth/react';
 import { builders, makeMat } from '@/lib/furniture-builders';
 import EditorLoader from '@/components/EditorLoader';
 import type { MatType } from '@/lib/furniture-builders';
@@ -180,6 +181,10 @@ const floorColorOptions = [
 
 /* ===== MAIN COMPONENT ===== */
 export default function InteriorStudio({ initialRoomType }: { initialRoomType?: string }) {
+  // ── Session detection (early, synchronous via hook) ──
+  const { status: sessionStatus } = useSession();
+  const isAuthenticated = sessionStatus === 'authenticated';
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -193,6 +198,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const meshCacheRef = useRef<THREE.Mesh[]>([]);
   const dragPlaneRef = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
   const dragOffsetRef = useRef(new THREE.Vector3());
+  const dragGrabPointRef = useRef(new THREE.Vector3()); // initial intersection point at grab start
+  const dragStartPosRef = useRef(new THREE.Vector3()); // initial object position at grab start
   const intersectionRef = useRef(new THREE.Vector3());
   const raycasterRef = useRef(new THREE.Raycaster());
   const pointerRef = useRef(new THREE.Vector2());
@@ -243,7 +250,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
-  const [designName, setDesignName] = useState('Guest Design');
+  const [designName, setDesignName] = useState(isAuthenticated ? 'My Design' : 'Guest Design');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [itemCount, setItemCount] = useState(0);
   const [rooms, setRooms] = useState<RoomInfo[]>([{ id: 'default', name: 'Living Room', roomType: 'living' }]);
@@ -282,9 +289,9 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
   }, [searchQuery]);
 
-  // Guest mode state
-  const [isGuest, setIsGuest] = useState(true); // default to guest until we verify auth
-  const isGuestRef = useRef(true); // ref mirror for use inside non-React callbacks (keyboard, etc.)
+  // Guest mode state — immediately resolved from session hook
+  const [isGuest, setIsGuest] = useState(!isAuthenticated); // true if not authenticated
+  const isGuestRef = useRef(!isAuthenticated); // ref mirror for use inside non-React callbacks (keyboard, etc.)
   const [guestBannerCollapsed, setGuestBannerCollapsed] = useState(false); // auto-collapse after 5s
 
   // Dynamic accent color: warm (#C17F4E) for guests, teal (#2A9D8F) for authenticated users
@@ -299,6 +306,17 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
     const timer = setTimeout(() => setGuestBannerCollapsed(true), 5000);
     return () => clearTimeout(timer);
   }, [isGuest]);
+
+  // Sync isGuest with session status and skip onboarding for auth users
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsGuest(false);
+      isGuestRef.current = false;
+      // Auth users skip in-editor onboarding — they went through /onboarding after signup
+      setShowOnboarding(false);
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (initialRoomType && ['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'].includes(initialRoomType)) {
       setSelectedRoomType(initialRoomType as PresetRoomType);
@@ -309,6 +327,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
   // Loading state — minimum display time for loader
   const [sceneReady, setSceneReady] = useState(false);
+  const [loaderDismissed, setLoaderDismissed] = useState(false); // true after fade-out animation completes
 
   // WebGL support state
   const [webglError, setWebglError] = useState<string | null>(null);
@@ -2357,15 +2376,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       // Load saved room state from localStorage — ONLY store, do NOT auto-apply
       // The user must explicitly choose to continue or start fresh via onboarding
       try {
-        // Check if user is authenticated (has session)
-        fetch('/api/auth/session').then(r => r.json()).then(session => {
-          if (session?.user) {
-            setIsGuest(false); isGuestRef.current = false; setDesignName('My Design');
-            // Auth users skip in-editor onboarding — they already did /onboarding after signup
-            // and from dashboard they already have a project
-            setShowOnboarding(false);
-          }
-        }).catch(() => { /* guest mode */ });
+        // Session detection is now handled by useSession() hook at component level.
+        // No need for manual fetch here — isGuest and showOnboarding are already set.
 
         const savedRooms = JSON.parse(localStorage.getItem('instod_rooms') || '{}');
         const savedRoom = savedRooms['default'];
@@ -2469,6 +2481,8 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
             });
 
             if (raycasterRef.current.ray.intersectPlane(ceilingDragPlane, intersectionRef.current)) {
+              dragGrabPointRef.current.copy(intersectionRef.current);
+              dragStartPosRef.current.copy(parentSpot.position);
               dragOffsetRef.current.copy(intersectionRef.current).sub(parentSpot.position);
               dragOffsetRef.current.y = 0;
             }
@@ -2563,10 +2577,12 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         if (f) {
           selectItem(f); dragItemRef.current = f; isDragRef.current = true;
           controls.enabled = false;
-          // Offset-based drag: store the offset between grab point and object center
-          // This eliminates all accumulation bugs — furniture always follows the pointer
-          // at exactly the right distance, even when wall-constrained.
+          // Offset-based drag: store grab point, start position, and offset
+          // This eliminates all accumulation bugs and prevents teleporting at walls.
+          // The object position = startPos + (currentPointer - grabPoint) * sensitivity
           raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current);
+          dragGrabPointRef.current.copy(intersectionRef.current);
+          dragStartPosRef.current.copy(f.position);
           dragOffsetRef.current.copy(intersectionRef.current).sub(f.position);
           dragOffsetRef.current.y = 0;
           canvas.style.cursor = 'move';
@@ -2585,10 +2601,11 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
         if (raycasterRef.current.ray.intersectPlane(ceilingDragPlane, intersectionRef.current)) {
           const CEIL_DRAG_SENSITIVITY = 1.5;
           const hw = roomWRef.current / 2 - 0.2, hd = roomDRef.current / 2 - 0.2;
-          const rawDx = intersectionRef.current.x - dragOffsetRef.current.x;
-          const rawDz = intersectionRef.current.z - dragOffsetRef.current.z;
-          const nx = Math.max(-hw, Math.min(hw, dragOffsetRef.current.x + rawDx * CEIL_DRAG_SENSITIVITY));
-          const nz = Math.max(-hd, Math.min(hd, dragOffsetRef.current.z + rawDz * CEIL_DRAG_SENSITIVITY));
+          // Correct offset-based drag: startPos + (currentPointer - grabPoint) * sensitivity
+          const dx = intersectionRef.current.x - dragGrabPointRef.current.x;
+          const dz = intersectionRef.current.z - dragGrabPointRef.current.z;
+          const nx = Math.max(-hw, Math.min(hw, dragStartPosRef.current.x + dx * CEIL_DRAG_SENSITIVITY));
+          const nz = Math.max(-hd, Math.min(hd, dragStartPosRef.current.z + dz * CEIL_DRAG_SENSITIVITY));
           ceilingDragItemRef.current.position.x = nx;
           ceilingDragItemRef.current.position.z = nz;
           // Update position in ref
@@ -2610,10 +2627,14 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       pointerRef.current.y = -((e.clientY - r.top) / r.height) * 2 + 1;
       raycasterRef.current.setFromCamera(pointerRef.current, camera);
       if (raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionRef.current)) {
-        // Offset-based drag with 1.5x sensitivity for smoother object movement
+        // Offset-based drag with 1.5x sensitivity — correct formula:
+        // new_pos = startPos + (currentPointer - grabPoint) * sensitivity
+        // This prevents teleporting on grab and ensures smooth movement at walls.
         const DRAG_SENSITIVITY = 1.5;
-        let nx = dragOffsetRef.current.x + (intersectionRef.current.x - dragOffsetRef.current.x) * DRAG_SENSITIVITY;
-        let nz = dragOffsetRef.current.z + (intersectionRef.current.z - dragOffsetRef.current.z) * DRAG_SENSITIVITY;
+        const dx = intersectionRef.current.x - dragGrabPointRef.current.x;
+        const dz = intersectionRef.current.z - dragGrabPointRef.current.z;
+        let nx = dragStartPosRef.current.x + dx * DRAG_SENSITIVITY;
+        let nz = dragStartPosRef.current.z + dz * DRAG_SENSITIVITY;
         // Calculate furniture bounding box for wall constraint
         const bbox = new THREE.Box3().setFromObject(dragItemRef.current);
         const size = new THREE.Vector3();
@@ -3842,9 +3863,10 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
       {!webglError && (
         <>
 
-      {/* ===== LOADING OVERLAY — shows until scene is ready ===== */}
-      {!sceneReady && (
-        <div className="fixed inset-0 z-[200]" style={{ transition: 'opacity 0.5s ease-out' }}>
+      {/* ===== LOADING OVERLAY — shows until scene is ready AND fade-out completes ===== */}
+      {!loaderDismissed && (
+        <div className="fixed inset-0 z-[200]" style={{ transition: 'opacity 0.6s ease-out', opacity: sceneReady ? 0 : 1, pointerEvents: sceneReady ? 'none' : 'auto' }}
+          onTransitionEnd={() => { if (sceneReady) setLoaderDismissed(true); }}>
           <EditorLoader />
         </div>
       )}
@@ -4606,7 +4628,7 @@ export default function InteriorStudio({ initialRoomType }: { initialRoomType?: 
 
       {/* ===== MOBILE: Bottom Edit Panel ===== */}
       {isMobile && (
-        <div className="bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', flexShrink: 0, transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
 
           {/* Tab bar — compact, sharp, icon-first. 52px for comfortable touch targets */}
           <div role="tablist" className="flex" style={{ height: 52, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
