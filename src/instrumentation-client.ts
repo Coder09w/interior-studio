@@ -1,13 +1,19 @@
 // PostHog client-side initialization
 // This file is automatically loaded by Next.js 15.3+ on the client side
 // before hydration, making PostHog available immediately.
+//
+// ⚠️ PostHog is currently DISABLED. To re-enable:
+//    1. Uncomment the block below
+//    2. Uncomment PostHogProvider + CookieConsent in layout.tsx
+//    3. Ensure NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN is set in Vercel env vars
 import posthog from 'posthog-js'
 
 if (typeof window !== 'undefined') {
   const token = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
-  if (token) {
+  // PostHog temporarily disabled — uncomment to re-enable
+  if (false && token) {
     // Check cookie consent before enabling capture
     let optOutByDefault = false
     try {
@@ -36,6 +42,6 @@ if (typeof window !== 'undefined') {
       console.info('[PostHog] Initialized successfully')
     }
   } else if (process.env.NODE_ENV === 'development') {
-    console.warn('[PostHog] NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN not set — analytics disabled')
+    console.info('[PostHog] Disabled — analytics not active')
   }
 }

@@ -4,10 +4,10 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/components/providers/auth-provider";
-import { PostHogProvider } from "@/components/providers/posthog-provider";
+// import { PostHogProvider } from "@/components/providers/posthog-provider";
 import { BetaBanner } from "@/components/beta-banner";
 import { FeedbackButton } from "@/components/feedback-button";
-import { CookieConsent } from "@/components/cookie-consent";
+// import { CookieConsent } from "@/components/cookie-consent";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -112,14 +112,14 @@ export default function RootLayout({
           Skip to content
         </a>
         <AuthProvider>
-          <PostHogProvider>
+          {/* <PostHogProvider> */}
             <BetaBanner />
             <div id="main-content">
               {children}
             </div>
             <FeedbackButton />
-            <CookieConsent />
-          </PostHogProvider>
+            {/* <CookieConsent /> */}
+          {/* </PostHogProvider> */}
         </AuthProvider>
         <Toaster />
       </body>
