@@ -30,9 +30,9 @@ Specifically, we use essential cookies for: maintaining your login session so yo
     id: 'analytics-cookies',
     icon: BarChart3,
     title: '3. Analytics and Performance Cookies',
-    content: `We use analytics cookies to collect information about how users interact with our platform. This helps us understand which features are most popular, identify areas where users may encounter difficulties, and measure the overall performance and reliability of our service. The data collected through analytics cookies is aggregated and anonymized — it does not identify you personally.
+    content: `We use analytics cookies through PostHog, a privacy-first product analytics platform, to collect information about how users interact with our platform. This helps us understand which features are most popular, identify areas where users may encounter difficulties, and measure the overall performance and reliability of our service. The data collected through analytics cookies is aggregated and anonymized — it does not identify you personally.
 
-Analytics cookies help us track metrics such as: the number of visitors to our platform, which pages and features are used most frequently, how long users spend in the 3D editor, the types of rooms and furniture most commonly created, error rates and performance bottlenecks, and the general geographic distribution of our user base. You may choose to opt out of analytics cookies through your browser settings or cookie preference controls. Disabling analytics cookies will not affect the core functionality of the 3D editor or your ability to save and manage your designs.`,
+PostHog analytics cookies help us track metrics such as: the number of visitors to our platform, which pages and features are used most frequently, how long users spend in the 3D editor, the types of rooms and furniture most commonly created, error rates and performance bottlenecks, and the general geographic distribution of our user base. We have configured PostHog to disable session recording — no video or screen recordings of your sessions are made. You may choose to opt out of analytics cookies through the cookie consent banner on our platform or through your browser settings. If you opt out, PostHog will switch to memory-only persistence and will not store any cookies on your device. Disabling analytics cookies will not affect the core functionality of the 3D editor or your ability to save and manage your designs.`,
   },
   {
     id: 'managing-cookies',
@@ -46,7 +46,7 @@ Please note that if you choose to block or delete essential cookies, some featur
     id: 'third-party-cookies',
     icon: Settings,
     title: '5. Third-Party Cookies',
-    content: `We use a limited number of third-party services that may place their own cookies on your device. These include authentication providers that help us securely manage your login, and analytics services that help us understand platform usage. We carefully vet all third-party services to ensure they meet our privacy and security standards.
+    content: `We use a limited number of third-party services that may place their own cookies on your device. These include authentication providers that help us securely manage your login, and PostHog (posthog.com), our analytics provider that helps us understand platform usage. PostHog is a privacy-first analytics platform that processes data on our behalf and does not use your data for its own purposes. We carefully vet all third-party services to ensure they meet our privacy and security standards.
 
 We do not allow advertising cookies or tracking pixels from ad networks, data brokers, or social media platforms. We do not participate in cross-site tracking or retargeting. Any third-party cookies present on our platform are solely for operational and analytical purposes directly related to providing and improving the Instod service.`,
   },

@@ -33,7 +33,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https: https://*.ufileos.com",
-      "connect-src 'self' https://*.vercel.app https://internal-api.z.ai",
+      "connect-src 'self' https://*.vercel.app https://internal-api.z.ai https://us.i.posthog.com https://us-assets.i.posthog.com",
       "frame-ancestors 'none'",
     ].join("; "),
   },

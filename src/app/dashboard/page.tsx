@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { type PlanKey, PLAN_CONFIG, getUpgradePlan } from '@/lib/plans';
+import { trackProjectCreated, trackProjectOpened } from '@/lib/analytics';
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -163,6 +164,7 @@ function DashboardContent() {
 
       if (res.ok) {
         const project = await res.json();
+        trackProjectCreated({ project_id: project.id, project_name: project.name });
         mutateUsage(); // Refresh usage stats via SWR
         router.push(`/editor/${project.id}`);
       }
@@ -565,7 +567,10 @@ function DashboardContent() {
                 borderColor: '#E2DDD4',
                 minHeight: '220px',
               }}
-              onClick={() => router.push(`/editor/${project.id}`)}
+              onClick={() => {
+                trackProjectOpened({ project_id: project.id, project_name: project.name, room_count: project.rooms.length });
+                router.push(`/editor/${project.id}`);
+              }}
             >
               <CardContent className="flex flex-col justify-between p-6" style={{ minHeight: '220px' }}>
                 {/* Top: Room preview area */}
@@ -657,6 +662,7 @@ function DashboardContent() {
                         className="cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
+                          trackProjectOpened({ project_id: project.id, project_name: project.name, room_count: project.rooms.length });
                           router.push(`/editor/${project.id}`);
                         }}
                       >

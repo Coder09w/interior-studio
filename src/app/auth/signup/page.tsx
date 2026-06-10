@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
+import { trackSignUp } from '@/lib/analytics';
 
 interface FormErrors {
   name?: string;
@@ -82,6 +83,9 @@ export default function SignupPage() {
         setIsLoading(false);
         return;
       }
+
+      // Track signup event
+      trackSignUp({ method: 'credentials', email_domain: email.trim().split('@')[1] || 'unknown' });
 
       // Auto sign in after successful registration
       const result = await signIn('credentials', {

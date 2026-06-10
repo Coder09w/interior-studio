@@ -13,6 +13,7 @@ import type { CategoryId } from '@/lib/furniture-data';
 import { SKINS_DICTIONARY, applySkinToSkeleton, SKINS_LIST } from '@/lib/skin-system';
 import { DESIGN_PRESETS, getPresetsForRoom, getPresetById } from '@/lib/design-presets';
 import type { DesignPreset, RoomType as PresetRoomType } from '@/lib/design-presets';
+import { trackRoomCreated, trackFurnitureAdded, trackDesignSaved } from '@/lib/analytics';
 
 // Guest mode restrictions — limited subset of basic items
 const GUEST_ALLOWED_FURNITURE = new Set(['createSofa', 'createCoffeeTable', 'createBed', 'createArmchair', 'createDesk', 'createOfficeChair', 'createBookshelf', 'createRug', 'createFloorLamp', 'createTableLamp']);
@@ -931,7 +932,14 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     setTimeout(() => {
       setSaveStatus('saved');
       saveStatusRef.current = 'saved';
-      if (!silent) showToast('Design saved');
+      if (!silent) {
+        showToast('Design saved');
+        trackDesignSaved({
+          room_id: currentRoomId,
+          item_count: placedItemsRef.current.length,
+          has_cloud_save: !isGuestRef.current && currentRoomId !== 'default',
+        });
+      }
     }, 300);
   }, [currentRoomId, serializeFurniture, designName, showToast]);
 
@@ -2287,6 +2295,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     markUnsaved();
     markSceneDirty();
     showToast(`Added ${item.userData.name}`);
+    trackFurnitureAdded({ furniture_type: fnName, material_type: mtype, total_items: placedItemsRef.current.length });
     return item;
   }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, isGuest, clampToRoomBounds]);
 
@@ -2396,6 +2405,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     if (saved) loadFurnitureData(saved);
     setShowAddRoom(false); setNewRoomName(''); setNewRoomType('bedroom');
     showToast(`Added ${name}`);
+    trackRoomCreated({ room_name: name, room_type: newRoomType, project_id: _projectId });
   }, [currentRoomId, serializeFurniture, loadFurnitureData, buildRoom, newRoomName, newRoomType, showToast]);
 
   const deleteRoom = useCallback((roomId: string) => {
