@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Sofa, FileText, UserCheck, AlertTriangle, Palette, CreditCard, Scale, XCircle, RefreshCw, Gavel } from 'lucide-react';
+import { ArrowLeft, Sofa, FileText, UserCheck, AlertTriangle, Palette, CreditCard, Scale, XCircle, RefreshCw, Gavel, Sparkles } from 'lucide-react';
 import SiteNav from '@/components/site-nav';
 
 export const metadata: Metadata = {
@@ -77,12 +77,20 @@ We reserve the right to suspend or terminate your account without prior notice i
 Your continued use of the platform after the revised terms become effective constitutes your acceptance of the updated agreement. If you do not agree with the revised terms, you may choose to discontinue use of the platform before the changes take effect, and you will not be bound by the new terms. For paid subscribers, if a material change adversely affects your subscription, you may cancel within the 30-day notice period and receive a prorated refund for the unused portion of your current billing cycle.`,
   },
   {
+    id: 'beta-access',
+    icon: Sparkles,
+    title: '9. Beta Access',
+    content: `During the beta period, all premium features of Instod are available to every user at no cost. This includes unlimited saved designs, all room types, the full furniture library, and all material and lighting options. By participating in the beta, you acknowledge that certain features may be limited, changed, paused, or removed as we improve the product based on user feedback.
+
+Beta users play an important role in shaping the direction of Instod. Your feedback, bug reports, and suggestions directly influence which features we prioritize and how the product evolves. We may communicate with beta users via email or in-app notifications to request feedback or announce changes. The beta period will end when we officially launch, at which point we will provide clear information about pricing, plan tiers, and feature availability. All users will be given at least 30 days notice before any paid plans are introduced.`,
+  },
+  {
     id: 'governing-law',
     icon: Gavel,
-    title: '9. Governing Law',
-    content: `These Terms of Service shall be governed by and construed in accordance with the laws of the State of Delaware, United States, without regard to its conflict of law provisions. Any disputes arising out of or relating to these terms or your use of the platform shall be resolved exclusively in the state or federal courts located in Delaware, and you consent to the personal jurisdiction of such courts.
+    title: '10. Governing Law',
+    content: `These Terms of Service shall be governed by and construed in accordance with the laws of Pakistan. For international users, applicable local consumer and digital protection laws also apply where required. Any disputes arising out of or relating to these terms or your use of the platform shall first be attempted to be resolved through good-faith negotiation. If negotiation fails, disputes shall be resolved through binding arbitration in accordance with the rules of the relevant arbitration authority in Pakistan.
 
-If any provision of these Terms of Service is found to be unenforceable or invalid by a court of competent jurisdiction, that provision shall be limited or eliminated to the minimum extent necessary so that the remaining terms remain in full force and effect. The failure of Instod to enforce any right or provision of these terms shall not constitute a waiver of such right or provision. These Terms of Service, together with our Privacy Policy, constitute the entire agreement between you and Instod regarding the use of the platform.`,
+If any provision of these Terms of Service is found to be unenforceable or invalid by a court of competent jurisdiction, that provision shall be limited or eliminated to the minimum extent necessary so that the remaining terms remain in full force and effect. The failure of Instod to enforce any right or provision of these terms shall not constitute a waiver of such right or provision. These Terms of Service, together with our Privacy Policy and Cookie Policy, constitute the entire agreement between you and Instod regarding the use of the platform.`,
   },
 ];
 
@@ -124,7 +132,7 @@ export default function TermsOfServicePage() {
         <div className="mt-3 flex items-center justify-center gap-4 text-sm" style={{ color: '#5A4E42' }}>
           <span>Effective date: January 1, 2026</span>
           <span className="w-1 h-1 rounded-full" style={{ background: '#E2DDD4' }}></span>
-          <span>Last updated: March 4, 2026</span>
+          <span>Last updated: June 10, 2026</span>
         </div>
       </div>
 
@@ -193,6 +201,7 @@ export default function TermsOfServicePage() {
             <div className="flex items-center gap-6 text-sm" style={{ color: '#5A4E42' }}>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy Policy</Link>
               <Link href="/terms" className="font-medium" style={{ color: '#C17F4E' }}>Terms of Service</Link>
+              <Link href="/cookie-policy" className="hover:opacity-80 transition-opacity">Cookie Policy</Link>
               <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact Us</Link>
             </div>
             <p className="text-xs" style={{ color: '#5A4E42' }}>

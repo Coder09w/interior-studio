@@ -166,11 +166,13 @@ export default function ContactPage() {
                 </div>
               </div>
               <p className="text-sm" style={{ color: '#555' }}>
-                Use the contact form on this page, or reach out via our{' '}
-                <Link href="/contact" className="font-medium hover:underline" style={{ color: '#C17F4E' }}>
-                  support channel
-                </Link>
-                . We respond promptly.
+                For general support and inquiries, email us at{' '}
+                <a href="mailto:support@instod.com" className="font-medium" style={{ color: '#C17F4E' }}>support@instod.com</a>
+                . For privacy requests, contact{' '}
+                <a href="mailto:privacy@instod.com" className="font-medium" style={{ color: '#C17F4E' }}>privacy@instod.com</a>
+                . For legal matters, contact{' '}
+                <a href="mailto:legal@instod.com" className="font-medium" style={{ color: '#C17F4E' }}>legal@instod.com</a>
+                .
               </p>
             </div>
 
@@ -204,8 +206,8 @@ export default function ContactPage() {
               </div>
               <p className="text-sm" style={{ color: '#555' }}>
                 Instod<br />
-                Remote-first team<br />
-                Worldwide
+                Pakistan-based product<br />
+                Serving international users
               </p>
             </div>
 
@@ -388,6 +390,7 @@ export default function ContactPage() {
             <div className="flex items-center gap-6 text-sm" style={{ color: '#5A4E42' }}>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy Policy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms of Service</Link>
+              <Link href="/cookie-policy" className="hover:opacity-80 transition-opacity">Cookie Policy</Link>
               <Link href="/contact" className="font-medium" style={{ color: '#C17F4E' }}>Contact Us</Link>
             </div>
             <p className="text-xs" style={{ color: '#5A4E42' }}>

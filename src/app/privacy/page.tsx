@@ -51,12 +51,36 @@ We implement a comprehensive set of security measures including firewalls, intru
 Depending on your jurisdiction, you may have additional rights under data protection laws such as the General Data Protection Regulation (GDPR) for European users, or the California Consumer Privacy Act (CCPA) for California residents. These rights may include the right to restrict processing, the right to data portability, the right to object to certain types of processing, and the right not to be subject to automated decision-making. To exercise any of these rights, please contact our privacy team using the contact information provided below. We will respond to all legitimate requests within 30 days.`,
   },
   {
+    id: 'international-use',
+    icon: Users,
+    title: '6. International Use',
+    content: `Instod is a Pakistan-based product serving users internationally. If you access Instod from outside Pakistan, your data may be processed in countries where our service providers operate. By using our platform, you acknowledge that your information may be transferred to and processed in jurisdictions that may have different data protection standards than your country of residence.
+
+We take appropriate measures to ensure your data receives an adequate level of protection regardless of where it is processed. For users in the European Economic Area, we maintain compliance with the General Data Protection Regulation (GDPR) to the extent applicable to our services. For users in California, we respect the rights outlined in the California Consumer Privacy Act (CCPA). Regardless of your location, we apply the same robust security standards and privacy practices described in this policy.`,
+  },
+  {
+    id: 'childrens-privacy',
+    icon: Shield,
+    title: '7. Children\'s Privacy',
+    content: `Instod is not intended for use by children under the age of 13. We do not knowingly collect personal information from children under 13 without verifiable parental consent. If we become aware that we have collected personal data from a child under 13 without such consent, we will take steps to delete that information as quickly as possible.
+
+For users between the ages of 13 and 18, we recommend that a parent or guardian review this Privacy Policy and supervise their use of the platform. Parents who believe their child has provided us with personal information without their consent may contact us at privacy@instod.com to request the deletion of that data.`,
+  },
+  {
+    id: 'changes-to-policy',
+    icon: Mail,
+    title: '8. Changes to This Policy',
+    content: `We may update this Privacy Policy from time to time to reflect changes in our practices, technologies, legal requirements, or other factors. When we make material changes, we will notify you by posting the updated policy on our website with a revised "Last updated" date and, for significant changes, by sending a notification to the email address associated with your account.
+
+We encourage you to review this policy periodically to stay informed about how we protect your information. Your continued use of Instod after any changes to this policy constitutes your acceptance of the updated terms.`,
+  },
+  {
     id: 'contact-information',
     icon: Mail,
-    title: '6. Contact Us',
-    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data handling practices, we encourage you to reach out to us. We are committed to addressing your inquiries promptly and transparently. You may contact us through our contact form at https://instod.vercel.app/contact for all privacy-related matters, including data access requests, deletion requests, and questions about how your information is processed.
+    title: '9. Contact Us',
+    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data handling practices, we encourage you to reach out to us. We are committed to addressing your inquiries promptly and transparently.
 
-For general support inquiries, account-related issues, or technical assistance, please also use our contact form at https://instod.vercel.app/contact. Our team typically responds within 24 to 48 hours. If you are not satisfied with our response to a privacy concern, you have the right to lodge a complaint with your local data protection authority. We value your trust and are continuously working to ensure that your data is handled with the care and respect it deserves.`,
+For privacy-related matters, including data access requests and deletion requests, please contact us at privacy@instod.com. For general support inquiries, account-related issues, or technical assistance, please use our contact form at https://instod.vercel.app/contact or email support@instod.com. For legal inquiries, contact legal@instod.com. Our team typically responds within 1 to 3 business days. Instod is a Pakistan-based product serving international users.`,
   },
 ];
 
@@ -96,7 +120,7 @@ export default function PrivacyPolicyPage() {
           Your privacy matters to us. This policy explains how Instod collects, uses, and protects your personal information.
         </p>
         <p className="mt-3 text-sm" style={{ color: '#5A4E42' }}>
-          Last updated: March 4, 2026
+          Last updated: June 10, 2026
         </p>
       </div>
 
@@ -165,6 +189,7 @@ export default function PrivacyPolicyPage() {
             <div className="flex items-center gap-6 text-sm" style={{ color: '#5A4E42' }}>
               <Link href="/privacy" className="font-medium" style={{ color: '#C17F4E' }}>Privacy Policy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms of Service</Link>
+              <Link href="/cookie-policy" className="hover:opacity-80 transition-opacity">Cookie Policy</Link>
               <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact Us</Link>
             </div>
             <p className="text-xs" style={{ color: '#5A4E42' }}>
