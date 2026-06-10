@@ -207,14 +207,14 @@ const heroSlides = [
   { image: '/images/hero-bedroom-v2.png', label: 'Bedroom' },
   { image: '/images/hero-kitchen-v2.png', label: 'Kitchen' },
   { image: '/images/hero-bathroom-v2.png', label: 'Bathroom' },
+  { image: '/images/hero-dining-v2.png', label: 'Dining Room' },
   { image: '/images/hero-office-v2.png', label: 'Office' },
 ];
 
 function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, -80]);
-  const opacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const y1 = useTransform(scrollY, [0, 500], [0, -40]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -240,7 +240,7 @@ function HeroSection() {
         style={{ background: 'linear-gradient(135deg, rgba(139,115,85,0.2), rgba(168,152,132,0.15))' }}
       />
 
-      <motion.div style={{ y: y1, opacity }} className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
+      <motion.div style={{ y: y1 }} className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
         <div className="flex flex-col items-center text-center">
           {/* Centered text content */}
           <div className="text-center max-w-3xl mx-auto">
@@ -256,17 +256,17 @@ function HeroSection() {
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold leading-tight tracking-tight"
                 style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
               >
-                Design Your Room{' '}
+                See Your Room in 3D{' '}
                 <span className="relative inline-block">
-                  <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Before You Build It</span>
-                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="#4A4A4A" strokeWidth="3" strokeLinecap="round" opacity="0.5" /></svg>
+                  <span className="font-extrabold" style={{ color: '#C17F4E' }}>Before You Move a Thing</span>
+                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="#C17F4E" strokeWidth="3" strokeLinecap="round" opacity="0.4" /></svg>
                 </span>
               </h1>
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.3}>
               <p className="mt-5 text-base sm:text-lg max-w-xl mx-auto leading-relaxed" style={{ color: '#A8A8A8' }}>
-                Create realistic room layouts, experiment with furniture, materials, colors, and lighting. Preview how your space will look before spending money.
+                Place furniture, swap materials, adjust lighting, and see your room come to life in real-time 3D. Free to use — no account required.
               </p>
             </RevealOnScroll>
 
@@ -298,12 +298,12 @@ function HeroSection() {
                 <div className="flex -space-x-2">
                   {['bg-[#7A6E62]', 'bg-[#6B7B6B]', 'bg-[#6B8E6B]', 'bg-[#7B8FA1]'].map((bg, i) => (
                     <div key={i} className={`w-8 h-8 rounded-full border-2 border-[#0F0F0F] ${bg} flex items-center justify-center`} aria-hidden="true">
-                      <span className="text-white text-[10px] font-bold">{['🛋', '🏠', '✨', '🎨'][i]}</span>
+                      <span className="text-white text-[10px] font-bold">{['S', 'A', 'M', 'K'][i]}</span>
                     </div>
                   ))}
                 </div>
                 <p className="text-sm" style={{ color: '#A8A8A8' }}>
-                  <span className="font-semibold" style={{ color: '#FFFFFF' }}>Early Access Beta</span> — Your feedback shapes this
+                  <span className="font-semibold" style={{ color: '#FFFFFF' }}>200+ designers</span> in early access
                 </p>
               </div>
             </RevealOnScroll>
@@ -377,7 +377,7 @@ function BeforeAfterSection() {
               Stop Guessing. <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Start Visualizing.</span>
             </h2>
             <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
-              Test furniture fit, layouts, and color choices before making expensive mistakes.
+              See the transformation — from an empty room to a fully designed space, all in your browser.
             </p>
           </div>
         </RevealOnScroll>
@@ -472,12 +472,12 @@ function WhyPeopleUseSection() {
 
 /* ─── 4. DESIGN EVERY PART OF YOUR ROOM (Dark bg #0F0F0F) ─── */
 const designFeatures = [
-  { icon: Sofa, title: 'Furniture Placement', description: 'Drag and drop 30+ furniture items into your room layout', image: '/images/feature-furniture.png' },
-  { icon: Palette, title: 'Wall Materials', description: 'Choose from paints, wallpapers, tiles and textured finishes', image: '/images/feature-materials.png' },
-  { icon: Layers, title: 'Floor Materials', description: 'Swap between hardwood, tile, carpet and more instantly', image: '/images/feature-preview-3d.png' },
-  { icon: Sun, title: 'Lighting Moods', description: 'Adjust ambient, task and accent lighting in real time', image: '/images/feature-settings.png' },
-  { icon: LayoutGrid, title: 'Room Themes', description: 'Apply complete style presets from modern to traditional', image: '/images/feature-rooms.png' },
-  { icon: Eye, title: 'Live 3D Preview', description: 'See your design come alive from any angle instantly', image: '/images/feature-share.png' },
+  { icon: Sofa, title: 'Furniture Placement', description: 'Drag and drop 30+ furniture items into your room — sofas, beds, tables, chairs, and more', image: '/images/feature-furniture.png' },
+  { icon: Palette, title: 'Wall Materials', description: 'Choose from paints, wallpapers, tiles and textured finishes for every wall', image: '/images/feature-materials.png' },
+  { icon: Layers, title: 'Floor Materials', description: 'Swap between hardwood, tile, carpet and more with a single click', image: '/images/feature-preview-3d.png' },
+  { icon: Sun, title: 'Lighting Moods', description: 'Adjust ambient, task and accent lighting in real time to set the mood', image: '/images/feature-settings.png' },
+  { icon: LayoutGrid, title: 'Room Themes', description: 'Apply complete style presets — modern, bohemian, traditional, and more', image: '/images/feature-rooms.png' },
+  { icon: Eye, title: 'Live 3D Preview', description: 'Walk through your design from any angle in real-time 3D', image: '/images/feature-share.png' },
 ];
 
 function DesignEveryPartSection() {
@@ -557,6 +557,7 @@ const galleryCategories = [
   { label: 'Bedroom', type: 'bedroom', image: '/images/gallery-bedroom.png' },
   { label: 'Bathroom', type: 'bathroom', image: '/images/gallery-bathroom.png' },
   { label: 'Kitchen', type: 'kitchen', image: '/images/gallery-kitchen.png' },
+  { label: 'Dining Room', type: 'dining', image: '/images/gallery-dining.png' },
   { label: 'Office', type: 'office', image: '/images/gallery-office.png' },
 ];
 
@@ -639,7 +640,7 @@ const steps = [
   { icon: Box, number: 1, title: 'Create Room', description: 'Set your room dimensions and type' },
   { icon: Sofa, number: 2, title: 'Add Furniture', description: 'Browse and place 30+ furniture items' },
   { icon: Palette, number: 3, title: 'Customize Materials', description: 'Swap fabrics, woods, metals and colors' },
-  { icon: Share2, number: 4, title: 'Save & Share', description: 'Export your design or share a live link' },
+  { icon: Share2, number: 4, title: 'Save & Share', description: 'Save your design and share a live link' },
 ];
 
 function HowItWorksSection() {
@@ -880,7 +881,7 @@ function FinalCTASection() {
 
         <RevealOnScroll delay={0.1}>
           <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: '#A8A8A8' }}>
-            Start designing, experimenting, and visualizing your space today. No sign-up required.
+            Start designing, experimenting, and visualizing your space today. No account needed — start in 10 seconds.
           </p>
         </RevealOnScroll>
 
@@ -908,25 +909,18 @@ const footerLinks = {
   Product: [
     { label: 'Features', href: '#features' },
     { label: 'Gallery', href: '#gallery' },
-    { label: 'Demo Projects', href: '/editor?room=living' },
-    { label: 'Beta Program', href: '#' },
+    { label: 'Demo Project', href: '/editor?room=living' },
   ],
   Resources: [
-    { label: 'Guides', href: '#' },
-    { label: 'Design Tips', href: '#' },
-    { label: 'Help Center', href: '#' },
-    { label: 'Blog', href: '#' },
+    { label: 'Help Center', href: '/contact' },
   ],
   Company: [
-    { label: 'About', href: '#' },
-    { label: 'Contact', href: '#' },
-    { label: 'Roadmap', href: '#' },
-    { label: 'Careers', href: '#' },
+    { label: 'About', href: '/contact' },
+    { label: 'Contact', href: '/contact' },
   ],
   Legal: [
     { label: 'Privacy', href: '/privacy' },
     { label: 'Terms', href: '/terms' },
-    { label: 'Cookie Policy', href: '#' },
   ],
 };
 
