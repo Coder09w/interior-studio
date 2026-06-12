@@ -2613,9 +2613,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     controls.autoRotateSpeed = 1.5;
     // Smoother & more responsive touch on mobile
     if (mobile) {
-      controls.rotateSpeed = 0.8;
-      controls.panSpeed = 0.8;
-      controls.dampingFactor = 0.18;
+      controls.rotateSpeed = 1.2;
+      controls.panSpeed = 1.2;
+      controls.dampingFactor = 0.10;
+      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     }
     controlsRef.current = controls;
 
@@ -3233,42 +3234,71 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
   // ── Mobile: Camera auto-adjust when bottom panel opens/closes ──
   // When the bottom panel covers 50% of the screen, shift the camera
-  // target upward so the room appears in the top visible half.
+  // target and position upward so the room appears in the top visible half.
+  // The camera stores its "resting" position (panel closed) so it can
+  // reliably return even after multiple open/close cycles.
+  const cameraRestTargetRef = useRef(new THREE.Vector3(0, 1, 0));
+  const cameraRestPosRef = useRef<THREE.Vector3 | null>(null);
+
   useEffect(() => {
     if (!isMobile || !cameraRef.current || !controlsRef.current) return;
 
     const camera = cameraRef.current;
     const controls = controlsRef.current;
-    const animDuration = 300; // match panel CSS transition
+    const animDuration = 350; // match panel CSS transition
     const panelOpen = mobilePanel !== null;
 
-    // Target Y offset: when panel is open (50vh), shift camera target up
-    // so room center sits in the top half of visible area
-    const targetY = panelOpen ? 2.5 : 1.0; // default target.y is 1.0
-    const cameraYOffset = panelOpen ? 1.5 : 0; // nudge camera up too
+    // Capture current resting position before we start animating
+    if (!panelOpen && !cameraRestPosRef.current) {
+      cameraRestPosRef.current = camera.position.clone();
+      cameraRestTargetRef.current = controls.target.clone();
+    }
+
+    // When panel is open: shift camera target up and nudge camera position up
+    // so the room center sits in the upper half of the visible viewport
+    const defaultTargetY = cameraRestTargetRef.current.y;
+    const targetY = panelOpen ? defaultTargetY + 1.8 : defaultTargetY;
+
+    // Camera Y offset: proportional to how much of the viewport the panel covers
+    // Panel covers ~50vh, so camera needs to move up by roughly half that distance
+    const cameraYOffset = panelOpen ? 2.0 : 0;
 
     const startTargetY = controls.target.y;
     const startCamY = camera.position.y;
+
+    // Calculate the resting camera Y (without panel offset)
+    const restCamY = cameraRestPosRef.current?.y ?? startCamY;
+    const endCamY = restCamY + cameraYOffset;
     const endTargetY = targetY;
-    const endCamY = startCamY + (panelOpen ? cameraYOffset : -(camera.position.y - (startCamY - cameraYOffset) || cameraYOffset));
-    // Simplified: just adjust target.y which is what matters for orbit center
+
+    // Update resting position when closing
+    if (!panelOpen) {
+      cameraRestPosRef.current = new THREE.Vector3(camera.position.x, endCamY, camera.position.z);
+      cameraRestTargetRef.current = new THREE.Vector3(controls.target.x, endTargetY, controls.target.z);
+    }
+
     const startTime = performance.now();
 
     let rafId: number;
     const animate = (now: number) => {
       const elapsed = now - startTime;
       const t = Math.min(elapsed / animDuration, 1);
-      // Ease-out cubic
+      // Ease-out cubic — smooth deceleration
       const ease = 1 - Math.pow(1 - t, 3);
 
       controls.target.y = startTargetY + (endTargetY - startTargetY) * ease;
-      // Also adjust camera Y proportionally
-      camera.position.y = startCamY + (endTargetY - startTargetY) * ease * 0.8;
+      camera.position.y = startCamY + (endCamY - startCamY) * ease;
 
       controls.update();
 
       if (t < 1) {
         rafId = requestAnimationFrame(animate);
+      } else {
+        // Animation complete — update resting refs
+        if (!panelOpen) {
+          cameraRestPosRef.current = camera.position.clone();
+          cameraRestTargetRef.current = controls.target.clone();
+        }
       }
     };
     rafId = requestAnimationFrame(animate);
@@ -3650,45 +3680,48 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-5 gap-2">
             {(isGuest ? matColors[currentMatType].slice(0, GUEST_COLORS_PER_TYPE) : matColors[currentMatType]).map(c => (
               <button key={c} onClick={() => { setCurrentColor(c); if (selectedObjRef.current) applyMaterial(c, currentMatType); }}
-                className={`int-color-swatch ${currentColor === c ? 'int-color-swatch-active' : ''}`}
-                style={{ background: c }} aria-label={colorNames[c] || c} role="radio" aria-checked={currentColor === c} />
+                className="w-full aspect-square rounded-xl border-2 cursor-pointer transition-all"
+                style={{ background: c, borderColor: currentColor === c ? accentColor : 'transparent', boxShadow: currentColor === c ? `0 0 0 3px ${accentColor}22` : 'none' }}
+                aria-label={colorNames[c] || c} role="radio" aria-checked={currentColor === c} />
             ))}
           </div>
           <div className="flex items-center gap-1 mt-1"><span className="text-[10px]" style={{ color: '#5A4E42' }}>Color:</span><span className="text-[11px] font-semibold" style={{ color: '#2D2D2D' }}>{colorNames[currentColor] || currentColor}</span></div>
           {/* Wall Color */}
           <p className="int-section-header" style={{ marginTop: '12px' }}>Wall Color</p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-6 gap-2">
             {wallColorOptions.map(wc => (
               <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }}
-                className={`int-color-swatch ${wallCol === wc.color ? 'int-color-swatch-active' : ''}`}
-                style={{ background: wc.color }} aria-label={wc.label} role="radio" aria-checked={wallCol === wc.color} />
+                className="w-full aspect-square rounded-xl border-2 cursor-pointer transition-all"
+                style={{ background: wc.color, borderColor: wallCol === wc.color ? accentColor : 'transparent', boxShadow: wallCol === wc.color ? `0 0 0 3px ${accentColor}22` : 'none' }}
+                aria-label={wc.label} role="radio" aria-checked={wallCol === wc.color} />
             ))}
-            {!isMobile && (<div className="relative">
+            <div className="relative">
               <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
-                className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
-              <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+              <div className="w-full aspect-square rounded-xl border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                 <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
               </div>
-            </div>)}
+            </div>
           </div>
           {/* Floor Color */}
           <p className="int-section-header" style={{ marginTop: '12px' }}>Floor Color</p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-6 gap-2">
             {floorColorOptions.map(fc => (
               <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }}
-                className={`int-color-swatch ${floorColor === fc.color ? 'int-color-swatch-active' : ''}`}
-                style={{ background: fc.color }} aria-label={fc.label} role="radio" aria-checked={floorColor === fc.color} />
+                className="w-full aspect-square rounded-xl border-2 cursor-pointer transition-all"
+                style={{ background: fc.color, borderColor: floorColor === fc.color ? accentColor : 'transparent', boxShadow: floorColor === fc.color ? `0 0 0 3px ${accentColor}22` : 'none' }}
+                aria-label={fc.label} role="radio" aria-checked={floorColor === fc.color} />
             ))}
-            {!isMobile && (<div className="relative">
+            <div className="relative">
               <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
-                className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
-              <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+              <div className="w-full aspect-square rounded-xl border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                 <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
               </div>
-            </div>)}
+            </div>
           </div>
         </div>
       ),
@@ -4801,23 +4834,23 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             <i className="fas fa-drafting-compass text-[7px]" />Draft
           </span>
 
-          {/* Room tabs — mobile: spread across width, desktop: centered scrollable */}
-          <div className={`flex-1 flex items-center ${isMobile ? 'justify-start gap-2 overflow-x-auto' : 'justify-center gap-1 overflow-x-auto'}`}
-            style={isMobile ? { scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingRight: 4 } : undefined}>
+          {/* Room tabs — mobile: spread across full width with even gaps, desktop: centered scrollable */}
+          <div className={`flex-1 flex items-center ${isMobile ? 'justify-evenly gap-1 overflow-hidden' : 'justify-center gap-1 overflow-x-auto'}`}
+            style={isMobile ? { paddingLeft: 4, paddingRight: 4 } : undefined}>
             {rooms.slice(0, isMobile ? 3 : undefined).map(room => {
               const roomItemCount = room.id === currentRoomId ? itemCount : 0;
               return (
-                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all whitespace-nowrap border flex items-center gap-1 ${isMobile ? 'px-3 py-2 text-[11px] flex-shrink-0' : 'px-3 py-1 text-[10px]'}`}
+                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all whitespace-nowrap border flex items-center gap-1 ${isMobile ? 'px-2 py-1.5 text-[10px] flex-1 min-w-0 justify-center' : 'px-3 py-1 text-[10px]'}`}
                   style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4') }}>
-                  <i className={`fas fa-door-open ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} />{room.name}<span className="text-[8px] opacity-70">({roomItemCount})</span>
+                  <i className={`fas fa-door-open ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /><span className="truncate">{room.name}</span><span className="text-[8px] opacity-70">({roomItemCount})</span>
                 </button>
               );
             })}
             {isMobile && rooms.length > 3 && (
-              <button onClick={() => setRoomManagerOpen(true)} className="rounded-lg px-2 py-2 text-[10px] font-semibold cursor-pointer border flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
+              <button onClick={() => setRoomManagerOpen(true)} className="rounded-lg px-2 py-1.5 text-[10px] font-semibold cursor-pointer border flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
             )}
-            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
-            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
           </div>
 
           {/* Mobile right actions — save button (always visible) + sign up pill */}
@@ -5056,12 +5089,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         {/* Mobile: Selected item floating action bar — DRAGGABLE */}
         {isMobile && itemPanelVisible && !ceilingEditMode && (
           <div
-            className="absolute z-20 flex items-center gap-1.5 pl-2 pr-3 rounded-2xl select-none"
+            className="absolute z-20 flex items-center gap-1.5 pl-1 pr-3 rounded-2xl select-none"
             style={{
               left: 12 + actionBarPos.x,
               right: undefined,
               bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 68) + actionBarPos.y,
-              height: 50,
+              height: 52,
               maxWidth: 'calc(100vw - 24px)',
               background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)',
               backdropFilter: 'blur(16px)',
@@ -5072,11 +5105,11 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               touchAction: 'none',
             }}
             onTouchStart={(e) => {
-              // Only start drag from the drag handle area (left 36px)
+              // Drag from the drag handle grip area (left 44px)
               const touch = e.touches[0];
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
               const relX = touch.clientX - rect.left;
-              if (relX < 36) {
+              if (relX < 44) {
                 e.stopPropagation();
                 actionBarDragRef.current = {
                   startX: touch.clientX,
@@ -5112,11 +5145,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               }
             }}
           >
-            {/* Drag handle */}
-            <div className="flex flex-col items-center justify-center gap-0.5 w-7 h-full cursor-grab active:cursor-grabbing flex-shrink-0" style={{ opacity: 0.4 }}>
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', display: 'block' }} />
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', display: 'block' }} />
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', display: 'block' }} />
+            {/* Drag handle — prominent grip icon */}
+            <div className="flex items-center justify-center w-10 h-full cursor-grab active:cursor-grabbing flex-shrink-0" style={{ opacity: 0.5 }}>
+              <i className="fas fa-grip-vertical text-base" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} />
             </div>
             <span className="text-[12px] font-bold truncate flex-1" style={{ fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
             <button onClick={() => rotateSelected('left')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
