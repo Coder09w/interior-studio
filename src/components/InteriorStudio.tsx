@@ -298,6 +298,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const [mobilePanel, setMobilePanel] = useState<'furniture' | 'room' | 'material' | 'skin' | 'skeleton' | 'presets' | null>(null);
+  // Draggable action bar state (mobile)
+  const [actionBarPos, setActionBarPos] = useState({ x: 0, y: 0 });
+  const actionBarDragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean } | null>(null);
   const [roomManagerOpen, setRoomManagerOpen] = useState(false);
   const [editingRoomName, setEditingRoomName] = useState<string | null>(null);
   const [editingRoomNameValue, setEditingRoomNameValue] = useState('');
@@ -2608,10 +2611,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     // Also, set autoRotate to NOT accumulate by ensuring it resets.
     controls.autoRotate = false;
     controls.autoRotateSpeed = 1.5;
-    // Smoother touch on mobile
+    // Smoother & more responsive touch on mobile
     if (mobile) {
-      controls.rotateSpeed = 0.35;
-      controls.panSpeed = 0.35;
+      controls.rotateSpeed = 0.8;
+      controls.panSpeed = 0.8;
       controls.dampingFactor = 0.18;
     }
     controlsRef.current = controls;
@@ -3228,6 +3231,51 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     return () => clearTimeout(t);
   }, [sidebarOpen, sidebarWidth]);
 
+  // ── Mobile: Camera auto-adjust when bottom panel opens/closes ──
+  // When the bottom panel covers 50% of the screen, shift the camera
+  // target upward so the room appears in the top visible half.
+  useEffect(() => {
+    if (!isMobile || !cameraRef.current || !controlsRef.current) return;
+
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    const animDuration = 300; // match panel CSS transition
+    const panelOpen = mobilePanel !== null;
+
+    // Target Y offset: when panel is open (50vh), shift camera target up
+    // so room center sits in the top half of visible area
+    const targetY = panelOpen ? 2.5 : 1.0; // default target.y is 1.0
+    const cameraYOffset = panelOpen ? 1.5 : 0; // nudge camera up too
+
+    const startTargetY = controls.target.y;
+    const startCamY = camera.position.y;
+    const endTargetY = targetY;
+    const endCamY = startCamY + (panelOpen ? cameraYOffset : -(camera.position.y - (startCamY - cameraYOffset) || cameraYOffset));
+    // Simplified: just adjust target.y which is what matters for orbit center
+    const startTime = performance.now();
+
+    let rafId: number;
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / animDuration, 1);
+      // Ease-out cubic
+      const ease = 1 - Math.pow(1 - t, 3);
+
+      controls.target.y = startTargetY + (endTargetY - startTargetY) * ease;
+      // Also adjust camera Y proportionally
+      camera.position.y = startCamY + (endTargetY - startTargetY) * ease * 0.8;
+
+      controls.update();
+
+      if (t < 1) {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+    rafId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(rafId);
+  }, [isMobile, mobilePanel]);
+
   // Sidebar resize handlers (desktop only)
   const handleSidebarResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -3618,13 +3666,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                 className={`int-color-swatch ${wallCol === wc.color ? 'int-color-swatch-active' : ''}`}
                 style={{ background: wc.color }} aria-label={wc.label} role="radio" aria-checked={wallCol === wc.color} />
             ))}
-            <div className="relative">
+            {!isMobile && (<div className="relative">
               <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
               <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                 <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
               </div>
-            </div>
+            </div>)}
           </div>
           {/* Floor Color */}
           <p className="int-section-header" style={{ marginTop: '12px' }}>Floor Color</p>
@@ -3634,13 +3682,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                 className={`int-color-swatch ${floorColor === fc.color ? 'int-color-swatch-active' : ''}`}
                 style={{ background: fc.color }} aria-label={fc.label} role="radio" aria-checked={floorColor === fc.color} />
             ))}
-            <div className="relative">
+            {!isMobile && (<div className="relative">
               <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
               <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                 <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
               </div>
-            </div>
+            </div>)}
           </div>
         </div>
       ),
@@ -3704,13 +3752,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                   className={`int-color-swatch ${wallCol === wc.color ? 'int-color-swatch-active' : ''}`}
                   style={{ background: wc.color }} aria-label={wc.label} role="radio" aria-checked={wallCol === wc.color} />
               ))}
-              <div className="relative">
+              {!isMobile && (<div className="relative">
                 <input type="color" value={wallCol} onChange={e => { const c = e.target.value; setWallCol(c); updateWallColor(c); markUnsaved(); }}
                   className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
                 <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                   <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
                 </div>
-              </div>
+              </div>)}
             </div>
           </div>
           {/* Floor Type */}
@@ -3731,13 +3779,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                   className={`int-color-swatch ${floorColor === fc.color ? 'int-color-swatch-active' : ''}`}
                   style={{ background: fc.color }} aria-label={fc.label} role="radio" aria-checked={floorColor === fc.color} />
               ))}
-              <div className="relative">
+              {!isMobile && (<div className="relative">
                 <input type="color" value={floorColor} onChange={e => { const c = e.target.value; setFloorColor(c); updateFloorColor(c); markUnsaved(); }}
                   className="absolute inset-0 opacity-0 cursor-pointer w-8 h-8" />
                 <div className="w-8 h-8 rounded-lg border-2 flex items-center justify-center" style={{ borderColor: '#E8DFD4', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}>
                   <i className="fas fa-eyedropper text-[10px] text-white drop-shadow" />
                 </div>
-              </div>
+              </div>)}
             </div>
           </div>
           {/* Door - Mobile */}
@@ -4753,19 +4801,23 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             <i className="fas fa-drafting-compass text-[7px]" />Draft
           </span>
 
-          {/* Room tabs */}
-          <div className="flex-1 flex items-center justify-center gap-1 overflow-x-auto">
-            {rooms.map(room => {
+          {/* Room tabs — mobile: spread across width, desktop: centered scrollable */}
+          <div className={`flex-1 flex items-center ${isMobile ? 'justify-start gap-2 overflow-x-auto' : 'justify-center gap-1 overflow-x-auto'}`}
+            style={isMobile ? { scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingRight: 4 } : undefined}>
+            {rooms.slice(0, isMobile ? 3 : undefined).map(room => {
               const roomItemCount = room.id === currentRoomId ? itemCount : 0;
               return (
-                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all whitespace-nowrap border flex items-center gap-1 ${isMobile ? 'px-3 py-1.5 text-[11px]' : 'px-3 py-1 text-[10px]'}`}
+                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all whitespace-nowrap border flex items-center gap-1 ${isMobile ? 'px-3 py-2 text-[11px] flex-shrink-0' : 'px-3 py-1 text-[10px]'}`}
                   style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4') }}>
                   <i className={`fas fa-door-open ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} />{room.name}<span className="text-[8px] opacity-70">({roomItemCount})</span>
                 </button>
               );
             })}
-            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
-            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            {isMobile && rooms.length > 3 && (
+              <button onClick={() => setRoomManagerOpen(true)} className="rounded-lg px-2 py-2 text-[10px] font-semibold cursor-pointer border flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
+            )}
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-10 h-10 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /></button>
           </div>
 
           {/* Mobile right actions — save button (always visible) + sign up pill */}
@@ -5001,9 +5053,71 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* Mobile: Selected item floating action bar — sits just above footer tab bar */}
+        {/* Mobile: Selected item floating action bar — DRAGGABLE */}
         {isMobile && itemPanelVisible && !ceilingEditMode && (
-          <div className="absolute left-3 right-14 z-20 flex items-center gap-1.5 px-3 rounded-2xl" style={{ bottom: mobilePanel ? 'calc(50vh + 10px)' : 68, height: 50, background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', transition: 'bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'bottom' }}>
+          <div
+            className="absolute z-20 flex items-center gap-1.5 pl-2 pr-3 rounded-2xl select-none"
+            style={{
+              left: 12 + actionBarPos.x,
+              right: undefined,
+              bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 68) + actionBarPos.y,
+              height: 50,
+              maxWidth: 'calc(100vw - 24px)',
+              background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)',
+              backdropFilter: 'blur(16px)',
+              border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              transition: actionBarDragRef.current?.dragging ? 'none' : 'bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              willChange: 'bottom, left',
+              touchAction: 'none',
+            }}
+            onTouchStart={(e) => {
+              // Only start drag from the drag handle area (left 36px)
+              const touch = e.touches[0];
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              const relX = touch.clientX - rect.left;
+              if (relX < 36) {
+                e.stopPropagation();
+                actionBarDragRef.current = {
+                  startX: touch.clientX,
+                  startY: touch.clientY,
+                  startPosX: actionBarPos.x,
+                  startPosY: actionBarPos.y,
+                  dragging: true,
+                };
+                // Disable orbit controls while dragging
+                if (controlsRef.current) controlsRef.current.enabled = false;
+              }
+            }}
+            onTouchMove={(e) => {
+              if (!actionBarDragRef.current?.dragging) return;
+              e.stopPropagation();
+              e.preventDefault();
+              const touch = e.touches[0];
+              const dx = touch.clientX - actionBarDragRef.current.startX;
+              const dy = touch.clientY - actionBarDragRef.current.startY;
+              // Clamp to viewport bounds
+              const maxX = window.innerWidth - 100;
+              const maxY = window.innerHeight * 0.6;
+              setActionBarPos({
+                x: Math.max(-12, Math.min(maxX, actionBarDragRef.current.startPosX + dx)),
+                y: Math.max(-maxY, Math.min(200, actionBarDragRef.current.startPosY - dy)),
+              });
+            }}
+            onTouchEnd={() => {
+              if (actionBarDragRef.current?.dragging) {
+                actionBarDragRef.current.dragging = false;
+                // Re-enable orbit controls
+                if (controlsRef.current) controlsRef.current.enabled = true;
+              }
+            }}
+          >
+            {/* Drag handle */}
+            <div className="flex flex-col items-center justify-center gap-0.5 w-7 h-full cursor-grab active:cursor-grabbing flex-shrink-0" style={{ opacity: 0.4 }}>
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', display: 'block' }} />
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', display: 'block' }} />
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', display: 'block' }} />
+            </div>
             <span className="text-[12px] font-bold truncate flex-1" style={{ fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
             <button onClick={() => rotateSelected('left')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
             <button onClick={() => rotateSelected('right')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
