@@ -3628,7 +3628,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     if (!mobilePanel) return null;
     const panelContent: Record<string, React.ReactNode> = {
       furniture: (
-        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Category tabs */}
           <div className="flex gap-1 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
             {categories.filter(cat => {
@@ -3670,7 +3670,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       material: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Material & Color</p>
           <div className="flex gap-1 mb-2 flex-wrap">
             {(['fabric', 'leather', 'wood', 'metal'] as MatType[]).map(t => (
@@ -3726,7 +3726,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       skin: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Themes</p>
           <div className="grid grid-cols-2 gap-2">
             {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
@@ -3760,7 +3760,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       room: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Room Settings</p>
           {[
             { label: 'Width', val: roomW, min: 4, max: 14, step: 0.5, setter: [setRoomW, (v: number) => roomWRef.current = v] },
@@ -3884,7 +3884,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       skeleton: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Actions & Settings header */}
           <div className="flex items-center gap-2 mb-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: accentColor + '1A' }}>
@@ -3963,7 +3963,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       presets: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Presets</p>
           <p className="text-[11px] mb-3" style={{ color: '#7A6E62' }}>Tap a preset to instantly load a curated room design</p>
           {/* Room type filter */}
@@ -4835,22 +4835,22 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </span>
 
           {/* Room tabs — mobile: spread across full width with even gaps, desktop: centered scrollable */}
-          <div className={`flex-1 flex items-center ${isMobile ? 'justify-evenly gap-1 overflow-hidden' : 'justify-center gap-1 overflow-x-auto'}`}
-            style={isMobile ? { paddingLeft: 4, paddingRight: 4 } : undefined}>
+          <div className={`flex items-center ${isMobile ? 'flex-1 justify-evenly gap-1.5 overflow-hidden' : 'justify-center gap-1 overflow-x-auto'}`}
+            style={isMobile ? { paddingLeft: 2, paddingRight: 2 } : undefined}>
             {rooms.slice(0, isMobile ? 3 : undefined).map(room => {
               const roomItemCount = room.id === currentRoomId ? itemCount : 0;
               return (
-                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all whitespace-nowrap border flex items-center gap-1 ${isMobile ? 'px-2 py-1.5 text-[10px] flex-1 min-w-0 justify-center' : 'px-3 py-1 text-[10px]'}`}
-                  style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4') }}>
-                  <i className={`fas fa-door-open ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /><span className="truncate">{room.name}</span><span className="text-[8px] opacity-70">({roomItemCount})</span>
+                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all border flex items-center gap-1 ${isMobile ? 'px-3 py-2 text-[11px] min-w-0' : 'px-3 py-1 text-[10px] whitespace-nowrap'}`}
+                  style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), flex: isMobile ? '1 1 0%' : undefined, justifyContent: isMobile ? 'center' : undefined }}>
+                  <i className={`fas fa-door-open ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /><span className={isMobile ? '' : 'truncate'}>{room.name}</span><span className="text-[8px] opacity-70">({roomItemCount})</span>
                 </button>
               );
             })}
             {isMobile && rooms.length > 3 && (
-              <button onClick={() => setRoomManagerOpen(true)} className="rounded-lg px-2 py-1.5 text-[10px] font-semibold cursor-pointer border flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
+              <button onClick={() => setRoomManagerOpen(true)} className="rounded-lg px-2 py-2 text-[10px] font-semibold cursor-pointer border flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
             )}
-            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
-            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
           </div>
 
           {/* Mobile right actions — save button (always visible) + sign up pill */}
@@ -4884,7 +4884,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
-          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
             {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
@@ -5080,7 +5080,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Mobile: Zoom controls — bottom-left floating buttons */}
         {isMobile && !ceilingEditMode && (
-          <div className="absolute bottom-2 left-2 flex flex-col gap-1 z-10" style={{ bottom: itemPanelVisible ? 128 : 68 }}>
+          <div className="absolute bottom-2 left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (itemPanelVisible ? 110 : 60) : (itemPanelVisible ? 128 : 68) }}>
             <button onClick={() => zoomCamera('in')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom In">+</button>
             <button onClick={() => zoomCamera('out')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom Out">&minus;</button>
           </div>
@@ -5093,7 +5093,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             style={{
               left: 12 + actionBarPos.x,
               right: undefined,
-              bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 68) + actionBarPos.y,
+              bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 60) + actionBarPos.y,
               height: 52,
               maxWidth: 'calc(100vw - 24px)',
               background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)',
@@ -5191,12 +5191,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         )}
       </main>
 
-      {/* ===== MOBILE: Bottom Edit Panel — BUG #4 FIX: 2x larger footer ===== */}
+      {/* ===== MOBILE: Bottom Edit Panel — compact footer, max room view ===== */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(4px + env(safe-area-inset-bottom, 0px))', transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
 
-          {/* Tab bar — BUG #4 FIX: 96px height, 22px icons, 11px labels for premium feel */}
-          <div role="tablist" className="flex" style={{ height: 96, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
+          {/* Tab bar — compact: 56px height, 18px icons, 10px labels */}
+          <div role="tablist" className="flex" style={{ height: 56, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
             {([
               { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture' },
               { id: 'material' as const, icon: 'fa-palette', label: 'Colors' },
@@ -5207,10 +5207,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             ]).map(({ id, icon, label }) => (
               <button key={id} onClick={() => { setMobilePanel(mobilePanel === id ? null : id); setMobileActionsOpen(false); }}
                 role="tab" aria-selected={mobilePanel === id}
-                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all relative"
-                style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `3px solid ${accentColor}` : '3px solid transparent' }}>
-                <i className={`fas ${icon}`} style={{ fontSize: 22 }} />
-                <span style={{ fontSize: 11, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.3 }}>{label}</span>
+                className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
+                style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `2px solid ${accentColor}` : '2px solid transparent' }}>
+                <i className={`fas ${icon}`} style={{ fontSize: 18 }} />
+                <span style={{ fontSize: 9, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.2 }}>{label}</span>
               </button>
             ))}
           </div>
@@ -5218,7 +5218,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           {/* Panel content */}
           <div className="flex-1 overflow-hidden">
             {mobilePanel && (
-              <div className="flex items-center justify-between px-3 pt-2 pb-1">
+              <div className="flex items-center justify-between px-3 pt-1.5 pb-0.5">
                 <div className="w-10 h-1 rounded-full mx-0" style={{ background: '#D4D0C8' }} />
                 <button onClick={() => setMobilePanel(null)} className="text-[10px] font-semibold cursor-pointer flex items-center gap-1" style={{ color: '#7A6E62', background: 'none', border: 'none' }}>
                   Close <i className="fas fa-chevron-down text-[8px]" />
@@ -5226,17 +5226,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               </div>
             )}
             {/* eslint-disable-next-line react-hooks/refs */}
-            {mobilePanel ? renderMobilePanel() : (
-              <div className="h-full flex flex-col items-center justify-center p-3 text-center" style={{ minHeight: 40 }}>
-                <p className="text-[10px]" style={{ color: '#5A4E42' }}>{itemCount} items &bull; Tap tabs above to edit</p>
-              </div>
-            )}
+            {mobilePanel ? renderMobilePanel() : null}
           </div>
         </div>
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (mobilePanel ? '50vh' : (itemPanelVisible ? 120 : 60)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (mobilePanel ? '50vh' : (itemPanelVisible ? 110 : 60)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div role="status" aria-live="polite" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}><i className="fas fa-check-circle text-xs" style={{ color: '#7A8B6F' }} />{toastMsg}</div>
       </div>
       </>
