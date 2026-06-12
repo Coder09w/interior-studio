@@ -208,14 +208,14 @@
 
 /* ===== SECTION HEADER — structural bar ===== */
 .int-section-header {
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-family: 'Inter', 'Outfit', sans-serif;
+  font-size: 14px;
   font-weight: 700;
   color: var(--int-fg);
-  border-left: 3px solid var(--int-border-strong);
+  border-left: 3px solid var(--int-accent);
   padding-left: 12px;
-  margin-bottom: 12px;
-  letter-spacing: 0.3px;
+  margin-bottom: 14px;
+  letter-spacing: 0.2px;
   line-height: 1;
 }
 
@@ -226,10 +226,10 @@
 
 /* ===== FURNITURE CARDS ===== */
 .int-furniture-card {
-  padding: 12px;
+  padding: 14px;
   border-radius: var(--int-card-radius);
   background: var(--int-card);
-  border: 1px solid var(--int-border);
+  border: 1.5px solid var(--int-border);
   box-shadow: var(--int-card-shadow);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
@@ -239,28 +239,29 @@
      off-screen items, causing erratic scroll behavior as items scroll
      into view and their real height is calculated. */
   content-visibility: auto;
-  contain-intrinsic-size: 0 80px;
+  contain-intrinsic-size: 0 88px;
 }
 .int-furniture-card:hover {
   border-color: var(--int-accent);
-  box-shadow: var(--int-card-shadow-hover);
-  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+  transform: translateY(-3px);
 }
 .int-furniture-card:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0) scale(0.97);
 }
 
 /* ===== CATEGORY TABS — glass pills ===== */
 .int-cat-tab {
-  padding: 9px 16px;
-  min-height: 40px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 10px 18px;
+  min-height: 44px;
+  border-radius: 12px;
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-size: 14px;
   font-weight: 600;
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid transparent;
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid transparent;
   color: var(--int-muted);
   transition: all 0.2s ease;
   cursor: pointer;
@@ -270,34 +271,35 @@
   background: var(--int-accent);
   color: #fff;
   border-color: var(--int-accent);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
 }
 
 /* ===== COLOR SWATCHES — bigger + accessible ===== */
 .int-color-swatch {
-  width: 44px;   /* ── FIX #5: increased from 40px for better touch targets ── */
-  height: 44px;  /* ── FIX #5: increased from 40px for better touch targets ── */
-  border-radius: 10px;
-  border: 2.5px solid transparent;
+  width: 48px;   /* increased for better touch targets */
+  height: 48px;  /* increased for better touch targets */
+  border-radius: 12px;
+  border: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .int-color-swatch-active {
   border-color: var(--int-accent);
   box-shadow: 0 0 0 3px var(--int-accent-bg);
 }
 .int-color-swatch:hover {
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 
 /* ===== MATERIAL PILLS ===== */
 .int-mat-pill {
-  padding: 10px 18px;
-  min-height: 40px;
+  padding: 11px 20px;
+  min-height: 44px;
   border-radius: 999px;
-  font-size: 13px;
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-size: 14px;
   font-weight: 600;
-  border: 1px solid var(--int-border);
+  border: 1.5px solid var(--int-border);
   background: transparent;
   color: var(--int-muted);
   cursor: pointer;
@@ -307,17 +309,20 @@
   border-color: var(--int-accent);
   background: var(--int-accent-light);
   color: var(--int-accent);
+  box-shadow: 0 2px 8px var(--int-accent-bg);
 }
 
 /* ===== BUTTONS ===== */
 .int-btn-primary {
-  padding: 14px 20px;
+  padding: 16px 24px;
   border-radius: 14px;
   background: linear-gradient(135deg, var(--int-save), var(--int-save-hover));
   color: #fff;
-  font-size: 14px;
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-size: 15px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(107,139,94,0.2);
+  letter-spacing: 0.2px;
+  box-shadow: 0 3px 12px rgba(107,139,94,0.25);
   transition: all 0.2s ease;
   border: none;
   cursor: pointer;
@@ -327,19 +332,20 @@
   gap: 8px;
 }
 .int-btn-primary:hover {
-  box-shadow: 0 4px 16px rgba(107,139,94,0.3);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(107,139,94,0.35);
+  transform: translateY(-2px);
 }
 
 .int-btn-secondary {
-  padding: 14px 18px;
+  padding: 16px 20px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(10px);
   color: var(--int-fg-secondary);
+  font-family: 'Inter', 'DM Sans', sans-serif;
   font-size: 14px;
   font-weight: 600;
-  border: 1px solid var(--int-border);
+  border: 1.5px solid var(--int-border);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -348,20 +354,22 @@
   gap: 8px;
 }
 .int-btn-secondary:hover {
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   border-color: var(--int-accent);
   color: var(--int-accent);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
 }
 
 .int-btn-danger {
-  padding: 12px 18px;
+  padding: 14px 20px;
   border-radius: 12px;
   background: var(--int-danger-bg);
   color: var(--int-danger);
-  font-size: 13px;
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-size: 14px;
   font-weight: 600;
-  border: 1px solid var(--int-danger-border);
+  border: 1.5px solid var(--int-danger-border);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -372,14 +380,16 @@
 .int-btn-danger:hover {
   background: #FFECEB;
   border-color: var(--int-danger);
+  transform: translateY(-1px);
 }
 
 /* ===== SEARCH INPUT ===== */
 .int-search-input {
-  padding: 12px 14px 12px 36px;
-  border-radius: 12px;
-  font-size: 14px;
-  border: 1px solid var(--int-border);
+  padding: 14px 16px 14px 38px;
+  border-radius: 14px;
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-size: 15px;
+  border: 1.5px solid var(--int-border);
   background: var(--int-card);
   width: 100%;
   transition: all 0.2s ease;
@@ -387,7 +397,7 @@
 }
 .int-search-input:focus {
   border-color: var(--int-accent);
-  box-shadow: 0 0 0 3px var(--int-accent-bg);
+  box-shadow: 0 0 0 4px var(--int-accent-bg);
 }
 
 /* ===== SKIN COLOR BAR ===== */
@@ -552,16 +562,16 @@ input[type="range"].int-range::-moz-range-thumb {
   }
   /* Larger touch targets on mobile */
   input[type="range"].int-range {
-    height: 6px;
+    height: 8px;
   }
   input[type="range"].int-range::-webkit-slider-thumb {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     border-width: 3px;
   }
   input[type="range"].int-range::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     border-width: 3px;
   }
   /* Prevent iOS zoom on input focus */
@@ -576,21 +586,45 @@ input[type="range"].int-range::-moz-range-thumb {
   button, a, [role="tab"], [role="button"] {
     touch-action: manipulation;
   }
-  /* ── FIX #5: Minimum touch target sizing for mobile ── */
+  /* ── Minimum touch target sizing for mobile ── */
   .int-furniture-card {
-    min-height: 80px;
+    min-height: 88px;
+    padding: 12px;
   }
   .int-color-swatch {
-    width: 44px;   /* ── FIX #5: 44px Apple HIG minimum touch target ── */
-    height: 44px;
+    width: 48px;   /* 48px for comfortable mobile touch */
+    height: 48px;
+    border-radius: 12px;
   }
   .int-cat-tab {
-    padding: 10px 14px;
-    min-height: 44px;  /* ── FIX #5: 44px minimum ── */
+    padding: 11px 16px;
+    min-height: 48px;  /* 48px for comfortable mobile touch */
+    font-size: 13px;
   }
   .int-mat-pill {
-    padding: 10px 16px;
-    min-height: 44px;  /* ── FIX #5: 44px minimum ── */
+    padding: 11px 18px;
+    min-height: 48px;  /* 48px for comfortable mobile touch */
+    font-size: 13px;
+  }
+  .int-btn-primary {
+    padding: 18px 24px;
+    font-size: 16px;
+  }
+  .int-btn-secondary {
+    padding: 16px 20px;
+    font-size: 15px;
+  }
+  .int-btn-danger {
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+  .int-search-input {
+    padding: 16px 18px 16px 42px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+  .int-section-header {
+    font-size: 15px;
   }
 }
 

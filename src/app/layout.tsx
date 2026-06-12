@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit, DM_Sans } from "next/font/google";
+import { Outfit, DM_Sans, Inter } from "next/font/google";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,6 +8,12 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { BetaBanner } from "@/components/beta-banner";
 import { FeedbackButton } from "@/components/feedback-button";
 // import { CookieConsent } from "@/components/cookie-consent";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -106,7 +112,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${dmSans.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${outfit.variable} ${dmSans.variable} antialiased bg-background text-foreground`}
       >
         <a href="#main-content" className="skip-to-content">
           Skip to content

@@ -3625,7 +3625,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     if (!mobilePanel) return null;
     const panelContent: Record<string, React.ReactNode> = {
       furniture: (
-        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Category tabs */}
           <div className="flex gap-1 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
             {categories.filter(cat => {
@@ -3667,7 +3667,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       material: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Material & Color</p>
           <div className="flex gap-1 mb-2 flex-wrap">
             {(['fabric', 'leather', 'wood', 'metal'] as MatType[]).map(t => (
@@ -3723,7 +3723,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       skin: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Themes</p>
           <div className="grid grid-cols-2 gap-2">
             {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
@@ -3757,7 +3757,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       room: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Room Settings</p>
           {[
             { label: 'Width', val: roomW, min: 4, max: 14, step: 0.5, setter: [setRoomW, (v: number) => roomWRef.current = v] },
@@ -3881,7 +3881,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       skeleton: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Actions & Settings header */}
           <div className="flex items-center gap-2 mb-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: accentColor + '1A' }}>
@@ -3960,7 +3960,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       presets: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Presets</p>
           <p className="text-[11px] mb-3" style={{ color: '#7A6E62' }}>Tap a preset to instantly load a curated room design</p>
           {/* Room type filter */}
@@ -4033,7 +4033,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       <div className="p-5 int-logo-border" style={{ flexShrink: 0 }}>
         <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-xl" />
-          <div><h1 className="text-lg font-bold leading-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Instod</h1><p className="text-[12px]" style={{ color: '#7A6E62' }}>3D Design Previewer</p></div>
+          <div><h1 className="text-lg font-bold leading-tight" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Instod</h1><p className="text-[12px]" style={{ color: '#7A6E62' }}>3D Design Previewer</p></div>
         </div>
       </div>
 
@@ -4309,7 +4309,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   );
 
   return (
-    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} overflow-hidden`} style={{ background: '#F5F0E8', color: '#2D2D2D', fontFamily: "'DM Sans', sans-serif", height: '100dvh', '--accent': accentColor, '--accent-dark': accentColorDark, '--accent-light': accentColorLight } as React.CSSProperties}>
+    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} overflow-hidden`} style={{ background: '#F5F0E8', color: '#2D2D2D', fontFamily: "'Inter', 'DM Sans', sans-serif", height: '100dvh', '--accent': accentColor, '--accent-dark': accentColorDark, '--accent-light': accentColorLight } as React.CSSProperties}>
       {/* WebGL Fallback — shown when browser doesn't support WebGL */}
       {webglError && (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -4317,7 +4317,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: '#F0E8D8' }}>
               <i className="fas fa-cube text-2xl" style={{ color: '#7A6E62' }} />
             </div>
-            <h2 className="text-xl font-bold mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>3D Editor Unavailable</h2>
+            <h2 className="text-xl font-bold mb-2" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>3D Editor Unavailable</h2>
             <p className="text-sm mb-4" style={{ color: '#5A4E42' }}>{webglError}</p>
             <a href="/" className="inline-block px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: accentColor }}>Return to Homepage</a>
           </div>
@@ -4345,7 +4345,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#F0E8D8' }}>
                     <i className="fas fa-home text-xl" style={{ color: '#7A6E62' }} />
                   </div>
-                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>What would you like to design?</h2>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>What would you like to design?</h2>
                   <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>Choose a room type to get started</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -4392,7 +4392,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#F0E8D8' }}>
                     <i className="fas fa-palette text-xl" style={{ color: '#7A6E62' }} />
                   </div>
-                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Choose a Style</h2>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Choose a Style</h2>
                   <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>Pick a preset or start from scratch</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -4440,7 +4440,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#F0E8D8' }}>
                     <i className="fas fa-drafting-compass text-xl" style={{ color: '#7A6E62' }} />
                   </div>
-                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Start from Scratch</h2>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Start from Scratch</h2>
                   <p className="text-sm mt-1" style={{ color: '#5A4E42' }}>Build your room from the ground up</p>
                 </div>
 
@@ -4535,7 +4535,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                     <i className="fas fa-mouse-pointer" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Navigate Your Room</h3>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Navigate Your Room</h3>
                     <p className="text-[10px]" style={{ color: '#5A4E42' }}>Step 1 of 4</p>
                   </div>
                 </div>
@@ -4555,7 +4555,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                     <i className="fas fa-couch" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Add Furniture</h3>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Add Furniture</h3>
                     <p className="text-[10px]" style={{ color: '#5A4E42' }}>Step 2 of 4</p>
                   </div>
                 </div>
@@ -4575,7 +4575,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                     <i className="fas fa-arrows-alt" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Move &amp; Rotate</h3>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Move &amp; Rotate</h3>
                     <p className="text-[10px]" style={{ color: '#5A4E42' }}>Step 3 of 4</p>
                   </div>
                 </div>
@@ -4595,7 +4595,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                     <i className="fas fa-palette" style={{ color: '#7A6E62' }} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Customize Materials</h3>
+                    <h3 className="text-sm font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Customize Materials</h3>
                     <p className="text-[10px]" style={{ color: '#5A4E42' }}>Step 4 of 4</p>
                   </div>
                 </div>
@@ -4621,7 +4621,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {/* Guest Upsell — auto-collapses to small pill after 5 seconds */}
       {isGuest && !showOnboarding && !isMobile && (
         guestBannerCollapsed ? (
-          <button onClick={() => setGuestBannerCollapsed(false)} className="fixed top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: '#5A4E42', color: '#fff', fontFamily: "'Outfit', sans-serif", boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: 11, transition: 'all 0.3s ease' }}>
+          <button onClick={() => setGuestBannerCollapsed(false)} className="fixed top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: '#5A4E42', color: '#fff', fontFamily: "'Inter', 'Outfit', sans-serif", boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: 11, transition: 'all 0.3s ease' }}>
             <i className="fas fa-lock text-[8px]" style={{ color: 'rgba(255,255,255,0.7)' }} />
             <span className="font-semibold">Guest Mode</span>
             <span style={{ color: 'rgba(255,255,255,0.6)' }}>— Limited features</span>
@@ -4634,7 +4634,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             background: '#5A4E42',
             color: '#fff',
             height: 38,
-            fontFamily: "'Outfit', sans-serif",
+            fontFamily: "'Inter', 'Outfit', sans-serif",
             boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
             transition: 'all 0.3s ease',
           }}
@@ -4677,7 +4677,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {showShortcuts && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowShortcuts(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-xs w-full mx-4" onClick={e => e.stopPropagation()} onKeyDown={trapFocus}>
-            <h3 className="text-base font-bold mb-3" style={{ fontFamily: "'Outfit', sans-serif" }}>Keyboard Shortcuts</h3>
+            <h3 className="text-base font-bold mb-3" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Keyboard Shortcuts</h3>
             <div className="space-y-2 text-sm">
               {[['Arrow Keys', 'Move selected item'], ['Shift + Arrows', 'Move faster (1m)'], ['Delete', 'Remove selected'], ['D', 'Duplicate'], ['R', 'Rotate 15°'], ['Ctrl+Z', 'Undo'], ['Ctrl+Y', 'Redo'], ['Escape', 'Deselect'], ['Two fingers', 'Rotate item (mobile)']].map(([k, d]) => (
                 <div key={k} className="flex justify-between"><span style={{ color: '#5A4E42' }}>{d}</span><kbd className="px-2 py-0.5 rounded text-xs font-mono" style={{ background: '#F5F0E8' }}>{k}</kbd></div>
@@ -4692,7 +4692,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {showAddRoom && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowAddRoom(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()} onKeyDown={trapFocus}>
-            <h3 className="text-base font-bold mb-3" style={{ fontFamily: "'Outfit', sans-serif" }}>Add Room</h3>
+            <h3 className="text-base font-bold mb-3" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Add Room</h3>
             <div className="mb-3">
               <label className="text-xs font-medium mb-1 block">Room Name</label>
               <input value={newRoomName} onChange={e => setNewRoomName(e.target.value)} placeholder="e.g. Master Bedroom" className="w-full px-3 py-2 rounded-lg text-sm border" style={{ borderColor: '#E2DDD4' }} />
@@ -4718,7 +4718,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setRoomManagerOpen(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()} onKeyDown={trapFocus}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Room Manager</h3>
+              <h3 className="text-base font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Room Manager</h3>
               <button onClick={() => setRoomManagerOpen(false)} aria-label="Close room manager" className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-xs" /></button>
             </div>
             <div className="space-y-2 max-h-72 overflow-y-auto int-scrollbar">
@@ -4766,7 +4766,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowSnapshots(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()} onKeyDown={trapFocus}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>Revision Snapshots</h3>
+              <h3 className="text-base font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Revision Snapshots</h3>
               <button onClick={() => setShowSnapshots(false)} aria-label="Close snapshots" className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-xs" /></button>
             </div>
             {/* Create snapshot */}
@@ -4810,55 +4810,55 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {/* ===== Main 3D Viewer ===== */}
       <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: 'layout style' }}>
         {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-3 py-2" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined }}>
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-4 py-2.5" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(10px, env(safe-area-inset-top, 10px))' : undefined }}>
           {!isMobile && (
             <>
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }}><i className="fas fa-bars text-xs" /></button>
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }}><i className="fas fa-bars text-sm" /></button>
               {sidebarOpen && (
-                <button onClick={() => setSidebarDark(!sidebarDark)} aria-label={sidebarDark ? 'Light sidebar' : 'Dark sidebar'} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} title={sidebarDark ? 'Switch to light sidebar' : 'Switch to dark sidebar'}><i className={`fas ${sidebarDark ? 'fa-sun' : 'fa-moon'} text-xs`} /></button>
+                <button onClick={() => setSidebarDark(!sidebarDark)} aria-label={sidebarDark ? 'Light sidebar' : 'Dark sidebar'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} title={sidebarDark ? 'Switch to light sidebar' : 'Switch to dark sidebar'}><i className={`fas ${sidebarDark ? 'fa-sun' : 'fa-moon'} text-sm`} /></button>
               )}
             </>
           )}
           {isGuest ? (
-            <span className="px-2 py-1 rounded text-sm font-semibold" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic' }}>{designName}</span>
+            <span className="px-2 py-1 rounded text-sm font-semibold" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic' }}>{designName}</span>
           ) : (
-            <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined }} />
+            <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined }} />
           )}
-          <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#5A4E42', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
+          <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#5A4E42', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
             {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}
           </span>
-          <span className="text-[9px] px-2 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }} title="This is a layout drafting view. Use Export for polished renders.">
-            <i className="fas fa-drafting-compass text-[7px]" />Draft
+          <span className="text-[10px] px-2.5 py-1 rounded-full font-medium hidden sm:inline-flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }} title="This is a layout drafting view. Use Export for polished renders.">
+            <i className="fas fa-drafting-compass text-[8px]" />Draft
           </span>
 
           {/* Room tabs — mobile: spread across full width with even gaps, desktop: centered scrollable */}
-          <div className={`flex items-center ${isMobile ? 'flex-1 justify-evenly gap-1.5 overflow-hidden' : 'justify-center gap-1 overflow-x-auto'}`}
+          <div className={`flex items-center ${isMobile ? 'flex-1 justify-evenly gap-1 overflow-hidden' : 'justify-center gap-1.5 overflow-x-auto'}`}
             style={isMobile ? { paddingLeft: 2, paddingRight: 2 } : undefined}>
             {rooms.slice(0, isMobile ? 3 : undefined).map(room => {
               const roomItemCount = room.id === currentRoomId ? itemCount : 0;
               return (
-                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-lg font-medium cursor-pointer transition-all border flex items-center gap-1 ${isMobile ? 'px-3 py-2 text-[11px] min-w-0' : 'px-3 py-1 text-[10px] whitespace-nowrap'}`}
-                  style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), flex: isMobile ? '1 1 0%' : undefined, justifyContent: isMobile ? 'center' : undefined }}>
-                  <i className={`fas fa-door-open ${isMobile ? 'text-[10px]' : 'text-[8px]'}`} /><span className={isMobile ? '' : 'truncate'}>{room.name}</span><span className="text-[8px] opacity-70">({roomItemCount})</span>
+                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-xl font-semibold cursor-pointer transition-all border-2 flex items-center gap-1.5 ${isMobile ? 'px-3 py-2.5 text-[12px] min-w-0' : 'px-3.5 py-1.5 text-[11px] whitespace-nowrap'}`}
+                  style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), flex: isMobile ? '1 1 0%' : undefined, justifyContent: isMobile ? 'center' : undefined, boxShadow: currentRoomId === room.id ? '0 2px 8px rgba(0,0,0,0.12)' : 'none' }}>
+                  <i className={`fas fa-door-open ${isMobile ? 'text-[11px]' : 'text-[9px]'}`} /><span className={isMobile ? '' : 'truncate'}>{room.name}</span><span className="text-[9px] opacity-70">({roomItemCount})</span>
                 </button>
               );
             })}
             {isMobile && rooms.length > 3 && (
-              <button onClick={() => setRoomManagerOpen(true)} className="rounded-lg px-2 py-2 text-[10px] font-semibold cursor-pointer border flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
+              <button onClick={() => setRoomManagerOpen(true)} className="rounded-xl px-2.5 py-2.5 text-[11px] font-bold cursor-pointer border-2 flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
             )}
-            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
-            <button onClick={() => setShowAddRoom(true)} className={`rounded-lg flex items-center justify-center cursor-pointer border ${isMobile ? 'w-8 h-8 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[9px]' : 'text-[8px]'}`} /></button>
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
           </div>
 
           {/* Mobile right actions — save button (always visible) + sign up pill */}
           {isMobile && (
-            <div className="flex items-center gap-1.5" style={{ flexShrink: 0 }}>
-              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 36, flexShrink: 0, transition: 'background 0.3s ease' }} aria-label="Save Room">
-                <i className="fas fa-save text-[9px]" />{saveStatus === 'saving' ? '...' : 'Save'}
+            <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 40, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
+                <i className="fas fa-save text-[10px]" />{saveStatus === 'saving' ? '...' : 'Save'}
               </button>
               {isGuest && (
-                <a href="/auth/signup" className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap no-underline flex items-center gap-1" style={{ background: '#5A4E42', color: '#fff', minHeight: 36 }}>
-                  <i className="fas fa-lock text-[8px]" />Sign Up
+                <a href="/auth/signup" className="px-3 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5" style={{ background: '#5A4E42', color: '#fff', minHeight: 40, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                  <i className="fas fa-lock text-[9px]" />Sign Up
                 </a>
               )}
             </div>
@@ -4866,13 +4866,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
           {/* Desktop right actions */}
           {!isMobile && (
-            <div className="flex items-center gap-1">
-              <button onClick={() => window.location.href = '/dashboard'} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[9px]" /></button>
-              <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[9px]" /></button>
-              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[9px]" /></button>
-              <button onClick={shareRoom} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[9px]" /></button>
-              <button onClick={() => setShowShortcuts(true)} className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Keyboard shortcuts" title="Shortcuts"><i className="fas fa-keyboard text-[9px]" /></button>
-              <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }}>{itemCount} items</span>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => window.location.href = '/dashboard'} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /></button>
+              <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[10px]" /></button>
+              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[10px]" /></button>
+              <button onClick={shareRoom} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[10px]" /></button>
+              <button onClick={() => setShowShortcuts(true)} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Keyboard shortcuts" title="Shortcuts"><i className="fas fa-keyboard text-[10px]" /></button>
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }}>{itemCount} items</span>
             </div>
           )}
         </div>
@@ -4881,13 +4881,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
-          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
             {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}><i className="fas fa-lightbulb text-[10px]" style={{ color: '#7A6E62' }} /></div>
-                  <h3 className="text-xs font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: '#5A4E42' }}>Ceiling Light Editor</h3>
+                  <h3 className="text-xs font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif", color: '#5A4E42' }}>Ceiling Light Editor</h3>
                   <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }}>{ceilingSpotPositionsRef.current.length}/6</span>
                 </div>
                 <button onClick={exitCeilingEditMode} aria-label="Exit ceiling editor" className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-[9px]" /></button>
@@ -4950,13 +4950,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* Bottom-center toolbar — BUG #4 FIX: 2x larger for readability and touch targets */}
+        {/* Bottom-center toolbar — larger for readability and touch targets */}
         {!isMobile && (
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-            <button onClick={isGuest ? () => showToast('Sign in for undo history') : undo} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 16 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo (Ctrl+Z)'}><i className="fas fa-undo" /></button>
-            <button onClick={isGuest ? () => showToast('Sign in for redo history') : redo} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 16 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo (Ctrl+Y)'}><i className="fas fa-redo" /></button>
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
+            <button onClick={isGuest ? () => showToast('Sign in for undo history') : undo} className="w-14 h-14 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 18 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo (Ctrl+Z)'}><i className="fas fa-undo" /></button>
+            <button onClick={isGuest ? () => showToast('Sign in for redo history') : redo} className="w-14 h-14 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 18 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo (Ctrl+Y)'}><i className="fas fa-redo" /></button>
             {/* Presets toggle button - Desktop */}
-            <button onClick={() => setPresetPanelOpen(!presetPanelOpen)} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border" style={{ background: presetPanelOpen ? accentColor : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: presetPanelOpen ? accentColor : '#E2DDD4', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: presetPanelOpen ? '#fff' : '#2D2D2D', fontSize: 16, transition: 'background 0.4s ease' }} aria-label="Presets" title="Design Presets"><i className="fas fa-magic" /></button>
+            <button onClick={() => setPresetPanelOpen(!presetPanelOpen)} className="w-14 h-14 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ background: presetPanelOpen ? accentColor : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: presetPanelOpen ? accentColor : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: presetPanelOpen ? '#fff' : '#2D2D2D', fontSize: 18, transition: 'background 0.4s ease' }} aria-label="Presets" title="Design Presets"><i className="fas fa-magic" /></button>
           </div>
         )}
 
@@ -5012,11 +5012,11 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             borderColor: extra?.border ?? btnBorder,
             boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
             color: extra?.color ?? btnColor,
-            fontSize: compact ? 0 : 12,
+            fontSize: compact ? 0 : 13,
             fontWeight: 600 as const,
-            minWidth: compact ? 40 : 72,
-            width: compact ? 40 : 'auto',
-            height: compact ? 40 : 'auto',
+            minWidth: compact ? 44 : 80,
+            width: compact ? 44 : 'auto',
+            height: compact ? 44 : 'auto',
             padding: compact ? 0 : undefined,
             transition: 'background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, width 0.25s ease, min-width 0.25s ease, height 0.25s ease, padding 0.25s ease, font-size 0.25s ease',
             display: 'flex' as const,
@@ -5033,26 +5033,26 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                 { id: 'persp', icon: 'fa-cube', label: '3D', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
               ].map(v => (
                 <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} title={`${v.label} view`} className="rounded-xl cursor-pointer border" style={btnStyle()}>
-                  <i className={`fas ${v.icon}`} style={{ fontSize: compact ? 15 : 14, color: accentColor, transition: 'font-size 0.25s ease' }} />
-                  {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>{v.label}</span>}
+                  <i className={`fas ${v.icon}`} style={{ fontSize: compact ? 16 : 15, color: accentColor, transition: 'font-size 0.25s ease' }} />
+                  {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>{v.label}</span>}
                 </button>
               ))}
               <button onClick={() => { autoRotateRef.current = !autoRotateRef.current; setAutoRotActive(autoRotateRef.current); if (controlsRef.current) { controlsRef.current.autoRotate = autoRotateRef.current; controlsRef.current.autoRotateSpeed = 1.5; } }}
                 aria-label={autoRotActive ? 'Stop auto-rotate' : 'Start auto-rotate'} title="Auto-rotate" className="rounded-xl cursor-pointer border" style={btnStyle({ bg: autoRotActive ? accentColor + '1F' : btnBg, border: autoRotActive ? accentColor : btnBorder, color: autoRotActive ? accentColor : btnColor })}>
-                <i className="fas fa-sync-alt" style={{ fontSize: compact ? 15 : 14, color: autoRotActive ? accentColor : undefined, transition: 'font-size 0.25s ease' }} />
-                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Spin</span>}
+                <i className="fas fa-sync-alt" style={{ fontSize: compact ? 16 : 15, color: autoRotActive ? accentColor : undefined, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Spin</span>}
               </button>
               <button onClick={resetRoom} title="Reset Room" className="rounded-xl cursor-pointer border" style={btnStyle({ color: '#c0392b' })}>
-                <i className="fas fa-undo-alt" style={{ fontSize: compact ? 15 : 14, transition: 'font-size 0.25s ease' }} />
-                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Reset</span>}
+                <i className="fas fa-undo-alt" style={{ fontSize: compact ? 16 : 15, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Reset</span>}
               </button>
               <button onClick={takeScreenshot} title="Screenshot" className="rounded-xl cursor-pointer border" style={btnStyle()}>
-                <i className="fas fa-camera" style={{ fontSize: compact ? 15 : 14, color: accentColor, transition: 'font-size 0.25s ease' }} />
-                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Capture</span>}
+                <i className="fas fa-camera" style={{ fontSize: compact ? 16 : 15, color: accentColor, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Capture</span>}
               </button>
               <button onClick={shareRoom} title="Share room" className="rounded-xl cursor-pointer border" style={btnStyle()}>
-                <i className="fas fa-share-alt" style={{ fontSize: compact ? 15 : 14, color: accentColor, transition: 'font-size 0.25s ease' }} />
-                {!compact && <span style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Share</span>}
+                <i className="fas fa-share-alt" style={{ fontSize: compact ? 16 : 15, color: accentColor, transition: 'font-size 0.25s ease' }} />
+                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Share</span>}
               </button>
             </div>
           );
@@ -5060,26 +5060,26 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Selected item panel — slim compact bar on mobile, floating card on desktop */}
         {itemPanelVisible && !mobilePanel && !isMobile && (
-          <div className="z-10 border absolute bottom-5 left-5 rounded-xl p-3" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', minWidth: 200, transition: 'background 0.4s ease, border-color 0.4s ease' }}>
-            <div className="flex items-center justify-between mb-1">
-              <h4 className="text-sm font-bold" style={{ fontFamily: "'Outfit', sans-serif" }}>{selectedName}</h4>
-              <button onClick={deselectAll} aria-label="Deselect item" className="text-xs cursor-pointer" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }}><i className="fas fa-times" /></button>
+          <div className="z-10 border-2 absolute bottom-5 left-5 rounded-2xl p-4" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', minWidth: 220, transition: 'background 0.4s ease, border-color 0.4s ease', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+            <div className="flex items-center justify-between mb-1.5">
+              <h4 className="text-base font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>{selectedName}</h4>
+              <button onClick={deselectAll} aria-label="Deselect item" className="text-sm cursor-pointer" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }}><i className="fas fa-times" /></button>
             </div>
-            <p className="text-[10px]" style={{ color: lightMood === 'night' ? '#A09888' : '#5A4E42' }}>{selectedDesc}</p>
-            <div className="flex gap-1.5 mt-2">
-              <button onClick={() => rotateSelected('left')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 10 }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
-              <button onClick={() => rotateSelected('right')} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 10 }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
-              <button onClick={duplicateSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 10 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
-              <button onClick={deleteSelected} className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 10 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
+            <p className="text-[11px]" style={{ color: lightMood === 'night' ? '#A09888' : '#5A4E42' }}>{selectedDesc}</p>
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => rotateSelected('left')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 12 }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+              <button onClick={() => rotateSelected('right')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 12 }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+              <button onClick={duplicateSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 12 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
+              <button onClick={deleteSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 12 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
             </div>
           </div>
         )}
 
         {/* Mobile: Zoom controls — bottom-left floating buttons */}
         {isMobile && !ceilingEditMode && (
-          <div className="absolute left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (itemPanelVisible ? 108 : 60) : (itemPanelVisible ? 128 : 68) }}>
-            <button onClick={() => zoomCamera('in')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom In">+</button>
-            <button onClick={() => zoomCamera('out')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom Out">&minus;</button>
+          <div className="absolute left-2 flex flex-col gap-1.5 z-10" style={{ bottom: isMobile ? (itemPanelVisible ? 108 : 64) : (itemPanelVisible ? 128 : 68) }}>
+            <button onClick={() => zoomCamera('in')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 18, fontWeight: 700, minHeight: 48, minWidth: 48 }} aria-label="Zoom In">+</button>
+            <button onClick={() => zoomCamera('out')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 18, fontWeight: 700, minHeight: 48, minWidth: 48 }} aria-label="Zoom Out">&minus;</button>
           </div>
         )}
 
@@ -5090,8 +5090,8 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             style={{
               left: 12 + actionBarPos.x,
               right: undefined,
-              bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 60) + actionBarPos.y,
-              height: 52,
+              bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 64) + actionBarPos.y,
+              height: 56,
               maxWidth: 'calc(100vw - 24px)',
               background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)',
               backdropFilter: 'blur(16px)',
@@ -5144,21 +5144,21 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             }}
           >
             {/* Drag handle — prominent grip icon */}
-            <div className="flex items-center justify-center w-10 h-full cursor-grab active:cursor-grabbing flex-shrink-0" style={{ opacity: 0.5 }}>
-              <i className="fas fa-grip-vertical text-base" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} />
+            <div className="flex items-center justify-center w-11 h-full cursor-grab active:cursor-grabbing flex-shrink-0" style={{ opacity: 0.5 }}>
+              <i className="fas fa-grip-vertical text-lg" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} />
             </div>
-            <span className="text-[12px] font-bold truncate flex-1" style={{ fontFamily: "'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
-            <button onClick={() => rotateSelected('left')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
-            <button onClick={() => rotateSelected('right')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
-            <button onClick={duplicateSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Duplicate" title="Duplicate"><i className="fas fa-clone" /></button>
-            <button onClick={deleteSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 13, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Delete" title="Delete"><i className="fas fa-trash-alt" /></button>
-            <button onClick={deselectAll} className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 11, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
+            <span className="text-[13px] font-bold truncate flex-1" style={{ fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
+            <button onClick={() => rotateSelected('left')} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+            <button onClick={() => rotateSelected('right')} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+            <button onClick={duplicateSelected} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Duplicate" title="Duplicate"><i className="fas fa-clone" /></button>
+            <button onClick={deleteSelected} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Delete" title="Delete"><i className="fas fa-trash-alt" /></button>
+            <button onClick={deselectAll} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 12, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
           </div>
         )}
 
         {/* Mobile: two-finger rotate hint */}
         {isMobile && !mobilePanel && !ceilingEditMode && !itemPanelVisible && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 10 }}>
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 500 }}>
             <i className="fas fa-hand-pointer mr-1" />Tap to select &bull; Two fingers to rotate/zoom
           </div>
         )}
@@ -5168,21 +5168,21 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           <div className="absolute right-2 z-20" style={{ top: '50%', transform: 'translateY(-50%)' }}>
             {/* Toggle button */}
             <button onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
-              className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer shadow-lg"
-              style={{ background: mobileActionsOpen ? accentColor : (lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)'), backdropFilter: 'blur(8px)', border: mobileActionsOpen ? 'none' : (lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4'), color: mobileActionsOpen ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), boxShadow: '0 2px 8px rgba(0,0,0,0.12)', transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}
+              className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+              style={{ background: mobileActionsOpen ? accentColor : (lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)'), backdropFilter: 'blur(8px)', border: mobileActionsOpen ? 'none' : (lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4'), color: mobileActionsOpen ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), boxShadow: '0 3px 12px rgba(0,0,0,0.15)', transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}
               aria-label="Actions"
             >
-              <i className={`fas ${mobileActionsOpen ? 'fa-times' : 'fa-ellipsis-v'}`} style={{ fontSize: 13 }} />
+              <i className={`fas ${mobileActionsOpen ? 'fa-times' : 'fa-ellipsis-v'}`} style={{ fontSize: 15 }} />
             </button>
             {/* Expanded action buttons */}
             {mobileActionsOpen && (
-              <div className="flex flex-col gap-1.5 mt-1.5 items-center">
-                <button onClick={() => { saveRoom(false); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[11px]" /></button>
-                <button onClick={() => { if (isGuest) { showToast('Sign in for undo history'); return; } undo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo'}><i className="fas fa-undo text-[11px]" /></button>
-                <button onClick={() => { if (isGuest) { showToast('Sign in for redo history'); return; } redo(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo'}><i className="fas fa-redo text-[11px]" /></button>
-                <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[11px]" /></button>
-                <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[11px]" /></button>
-                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[11px]" /></button>
+              <div className="flex flex-col gap-2 mt-2 items-center">
+                <button onClick={() => { saveRoom(false); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[13px]" /></button>
+                <button onClick={() => { if (isGuest) { showToast('Sign in for undo history'); return; } undo(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo'}><i className="fas fa-undo text-[13px]" /></button>
+                <button onClick={() => { if (isGuest) { showToast('Sign in for redo history'); return; } redo(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo'}><i className="fas fa-redo text-[13px]" /></button>
+                <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[13px]" /></button>
+                <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[13px]" /></button>
+                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[13px]" /></button>
               </div>
             )}
           </div>
@@ -5193,8 +5193,8 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {isMobile && (
         <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(4px + env(safe-area-inset-bottom, 0px))', transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
 
-          {/* Tab bar — compact: 56px height, 18px icons, 10px labels */}
-          <div role="tablist" className="flex" style={{ height: 56, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
+          {/* Tab bar — 60px height, 20px icons, 10px labels */}
+          <div role="tablist" className="flex" style={{ height: 60, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
             {([
               { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture' },
               { id: 'material' as const, icon: 'fa-palette', label: 'Colors' },
@@ -5206,9 +5206,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               <button key={id} onClick={() => { setMobilePanel(mobilePanel === id ? null : id); setMobileActionsOpen(false); }}
                 role="tab" aria-selected={mobilePanel === id}
                 className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
-                style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `2px solid ${accentColor}` : '2px solid transparent' }}>
-                <i className={`fas ${icon}`} style={{ fontSize: 18 }} />
-                <span style={{ fontSize: 9, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.2 }}>{label}</span>
+                style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `2.5px solid ${accentColor}` : '2.5px solid transparent' }}>
+                <i className={`fas ${icon}`} style={{ fontSize: 20 }} />
+                <span style={{ fontSize: 10, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.2 }}>{label}</span>
               </button>
             ))}
           </div>
