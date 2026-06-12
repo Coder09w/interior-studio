@@ -301,6 +301,8 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   // Draggable action bar state (mobile)
   const [actionBarPos, setActionBarPos] = useState({ x: 0, y: 0 });
   const actionBarDragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean } | null>(null);
+  // Reset action bar position when panel opens/closes to prevent off-screen positioning
+  useEffect(() => { setActionBarPos({ x: 0, y: 0 }); }, [mobilePanel]);
   const [roomManagerOpen, setRoomManagerOpen] = useState(false);
   const [editingRoomName, setEditingRoomName] = useState<string | null>(null);
   const [editingRoomNameValue, setEditingRoomNameValue] = useState('');
@@ -577,9 +579,11 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     }
   }, []);
 
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg); setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 2200);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 2200);
   }, []);
 
   /* ===== ROOM BOUNDARY ENFORCEMENT ===== */
@@ -659,7 +663,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       item.name = d.fn;
       // Boundary enforcement: clamp to room bounds after load
       const clamped = clampToRoomBounds(item, d.position.x, d.position.z);
-      item.position.set(clamped.x, 0, clamped.z);
+      // Preserve Y position for ceiling-mounted lights (pendant, chandelier)
+      const isCeilingLight = d.fn === 'createPendant' || d.fn === 'createChandelier';
+      item.position.set(clamped.x, isCeilingLight ? d.position.y : 0, clamped.z);
       sceneRef.current?.add(item);
       placedItemsRef.current.push(item);
     });
@@ -2282,7 +2288,6 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     }
     const fn = builders[fnName]; if (!fn) return null;
     capturePreAction(); // Phase 3.3 — snapshot before add for delta undo
-    pushHistory();
     const item = fn(col, mtype, roomHRef.current);
     const w = roomWRef.current, d = roomDRef.current;
     let px = (Math.random() - 0.5) * (w * 0.4), pz = (Math.random() - 0.5) * (d * 0.3);
@@ -2294,6 +2299,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     item.position.set(clamped.x, 0, clamped.z);
     sceneRef.current?.add(item); placedItemsRef.current.push(item);
     meshCacheRef.current = []; // Invalidate mesh cache
+    pushHistory(); // AFTER mutation so delta is correct
     selectItem(item); setItemCount(placedItemsRef.current.length);
     markUnsaved();
     markSceneDirty();
@@ -2304,18 +2310,19 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
   const deleteSelected = useCallback(() => {
     const selected = selectedObjRef.current; if (!selected) return;
-    capturePreAction(); pushHistory();
+    capturePreAction();
     const name = selected.userData.name;
     sceneRef.current?.remove(selected); placedItemsRef.current = placedItemsRef.current.filter(i => i !== selected);
     selected.traverse(c => { if (c instanceof THREE.Mesh) { const mat = c.material as THREE.MeshStandardMaterial; mat.map?.dispose(); c.geometry?.dispose(); if (Array.isArray(c.material)) c.material.forEach(m => { (m as THREE.MeshStandardMaterial).map?.dispose(); m.dispose(); }); else c.material?.dispose(); } });
     meshCacheRef.current = []; // Invalidate mesh cache
     selectedObjRef.current = null; setItemPanelVisible(false); setItemCount(placedItemsRef.current.length);
+    pushHistory(); // AFTER mutation so delta is correct
     markUnsaved(); markSceneDirty(); showToast(`Removed ${name}`);
   }, [capturePreAction, pushHistory, showToast, markUnsaved, markSceneDirty]);
 
   const duplicateSelected = useCallback(() => {
     const selected = selectedObjRef.current; if (!selected) return;
-    capturePreAction(); pushHistory();
+    capturePreAction();
     const d = selected.userData;
     const fn = builders[d.fn || '']; if (!fn) return;
     const item = fn(d.matColor, d.matType, roomHRef.current);
@@ -2326,13 +2333,14 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     item.position.set(clamped.x, 0, clamped.z);
     sceneRef.current?.add(item); placedItemsRef.current.push(item);
     meshCacheRef.current = []; // Invalidate mesh cache
+    pushHistory(); // AFTER mutation so delta is correct
     selectItem(item); setItemCount(placedItemsRef.current.length);
     markUnsaved(); markSceneDirty(); showToast(`Duplicated ${d.name}`);
   }, [capturePreAction, pushHistory, selectItem, showToast, markUnsaved, markSceneDirty, clampToRoomBounds]);
 
   const applyMaterial = useCallback((color: string, type: MatType) => {
     const selected = selectedObjRef.current; if (!selected) { showToast('Select an item first'); return; }
-    capturePreAction(); pushHistory();
+    capturePreAction();
     // Determine material properties based on type
     let roughness: number, metalness: number;
     switch (type) {
@@ -2359,6 +2367,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       }
     });
     selected.userData.matColor = color; selected.userData.matType = type;
+    pushHistory(); // AFTER mutation so delta is correct
     setSelectedMat(`${type} — ${color}`); markUnsaved(); markSceneDirty();
   }, [capturePreAction, pushHistory, showToast, markUnsaved, markSceneDirty]);
 
@@ -2731,6 +2740,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       camera.aspect = p.clientWidth / p.clientHeight;
       camera.updateProjectionMatrix();
       setViewportWidth(window.innerWidth);
+      // Keep isMobile state/ref in sync with viewport changes
+      const mobile = isMobileDevice();
+      setIsMobile(mobile);
+      isMobileRef.current = mobile;
     };
     onResize(); window.addEventListener('resize', onResize);
     // Use ResizeObserver for container-aware resizing (prevents flicker on panel toggle)
@@ -2898,6 +2911,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         }
         if (f) {
           selectItem(f); dragItemRef.current = f; isDragRef.current = true;
+          capturePreAction(); // Capture state BEFORE drag starts for undo
           controls.enabled = false;
           // Offset-based drag: store grab point, start position, and offset
           // This eliminates all accumulation bugs and prevents teleporting at walls.
@@ -2991,7 +3005,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       }
       // Normal mode - push history if we were dragging
       if (isDragRef.current && dragItemRef.current) {
-        capturePreAction(); pushHistory();
+        pushHistory(); // preAction was captured on pointerDown, now push after drag
         // Phase 1.7 — Debounced save after furniture drag (500ms).
         // The Three.js scene already updated optimistically during drag.
         // Now persist to localStorage after a short delay, allowing
@@ -3039,8 +3053,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', onTouchEnd);
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts — disabled on mobile to prevent accidental triggers
     const onKeyDown = (e: KeyboardEvent) => {
+      if (isMobileRef.current) return; // Skip keyboard shortcuts on mobile
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
       // Arrow keys — move selected object in the XZ plane
@@ -3217,6 +3232,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       texCache.forEach(v => v.dispose()); texCache.clear();
       if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current);
       if (dragSaveTimeoutRef.current) clearTimeout(dragSaveTimeoutRef.current);
+      if (cloudSaveTimeoutRef.current) clearTimeout(cloudSaveTimeoutRef.current);
       clearTimeout(minLoadTimer);
     };
   }, []);
@@ -3235,10 +3251,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   // ── Mobile: Camera auto-adjust when bottom panel opens/closes ──
   // When the bottom panel covers 50% of the screen, shift the camera
   // target and position upward so the room appears in the top visible half.
-  // The camera stores its "resting" position (panel closed) so it can
-  // reliably return even after multiple open/close cycles.
-  const cameraRestTargetRef = useRef(new THREE.Vector3(0, 1, 0));
-  const cameraRestPosRef = useRef<THREE.Vector3 | null>(null);
+  // Uses an offset approach: stores the camera Y offset (0 when closed, ~2 when open)
+  // so that closing always removes the offset from the CURRENT position, even if
+  // the user manually orbited while the panel was open.
+  const cameraPanelOffsetRef = useRef(0); // 0 when panel closed, >0 when open
 
   useEffect(() => {
     if (!isMobile || !cameraRef.current || !controlsRef.current) return;
@@ -3248,34 +3264,21 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     const animDuration = 350; // match panel CSS transition
     const panelOpen = mobilePanel !== null;
 
-    // Capture current resting position before we start animating
-    if (!panelOpen && !cameraRestPosRef.current) {
-      cameraRestPosRef.current = camera.position.clone();
-      cameraRestTargetRef.current = controls.target.clone();
-    }
-
-    // When panel is open: shift camera target up and nudge camera position up
-    // so the room center sits in the upper half of the visible viewport
-    const defaultTargetY = cameraRestTargetRef.current.y;
-    const targetY = panelOpen ? defaultTargetY + 1.8 : defaultTargetY;
-
-    // Camera Y offset: proportional to how much of the viewport the panel covers
-    // Panel covers ~50vh, so camera needs to move up by roughly half that distance
+    // Target Y offset: when panel is open, shift orbit target up
+    const targetYOffset = panelOpen ? 1.8 : 0;
+    // Camera Y offset: proportional to panel coverage
     const cameraYOffset = panelOpen ? 2.0 : 0;
 
     const startTargetY = controls.target.y;
     const startCamY = camera.position.y;
 
-    // Calculate the resting camera Y (without panel offset)
-    const restCamY = cameraRestPosRef.current?.y ?? startCamY;
-    const endCamY = restCamY + cameraYOffset;
-    const endTargetY = targetY;
+    // End values: remove old offset, apply new offset
+    const oldOffset = cameraPanelOffsetRef.current;
+    const endTargetY = startTargetY - oldOffset + targetYOffset;
+    const endCamY = startCamY - oldOffset + cameraYOffset;
 
-    // Update resting position when closing
-    if (!panelOpen) {
-      cameraRestPosRef.current = new THREE.Vector3(camera.position.x, endCamY, camera.position.z);
-      cameraRestTargetRef.current = new THREE.Vector3(controls.target.x, endTargetY, controls.target.z);
-    }
+    // Store the new offset for next transition
+    cameraPanelOffsetRef.current = cameraYOffset;
 
     const startTime = performance.now();
 
@@ -3293,12 +3296,6 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
       if (t < 1) {
         rafId = requestAnimationFrame(animate);
-      } else {
-        // Animation complete — update resting refs
-        if (!panelOpen) {
-          cameraRestPosRef.current = camera.position.clone();
-          cameraRestTargetRef.current = controls.target.clone();
-        }
       }
     };
     rafId = requestAnimationFrame(animate);
@@ -3405,7 +3402,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     showToast(`Applied "${skin.name}" theme`);
   }, [markSceneDirty, markUnsaved, showToast]);
 
-  const rotateSelected = useCallback((dir: 'left' | 'right') => { if (selectedObjRef.current) { capturePreAction(); pushHistory(); selectedObjRef.current.rotation.y += dir === 'left' ? Math.PI / 12 : -Math.PI / 12; markUnsaved(); markSceneDirty(); } }, [capturePreAction, pushHistory, markUnsaved, markSceneDirty]);
+  const rotateSelected = useCallback((dir: 'left' | 'right') => { if (selectedObjRef.current) { capturePreAction(); selectedObjRef.current.rotation.y += dir === 'left' ? Math.PI / 12 : -Math.PI / 12; pushHistory(); markUnsaved(); markSceneDirty(); } }, [capturePreAction, pushHistory, markUnsaved, markSceneDirty]);
 
   const shareRoom = useCallback(() => { if (currentRoomId) { navigator.clipboard.writeText(`${window.location.origin}/view/${currentRoomId}`); showToast('Share link copied!'); } else { showToast('Save the room first to share it'); } }, [currentRoomId, showToast]);
 
@@ -3445,11 +3442,11 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     if (rs.ceilingLightPreset) { ceilingLightPresetRef.current = rs.ceilingLightPreset; setCeilingLightPreset(rs.ceilingLightPreset); }
     if (rs.ceilingSpotPositions) { ceilingSpotPositionsRef.current = rs.ceilingSpotPositions; }
     buildRoom();
-    capturePreAction(); pushHistory();
+    capturePreAction(); loadFurnitureData(snap.data); pushHistory();
     markUnsaved();
     setShowSnapshots(false);
     showToast(`Restored "${snap.name}"`);
-  }, [snapshots, loadFurnitureData, buildRoom, pushHistory, markUnsaved, showToast]);
+  }, [snapshots, capturePreAction, loadFurnitureData, buildRoom, pushHistory, markUnsaved, showToast]);
 
   const deleteSnapshot = useCallback((idx: number) => {
     setSnapshots(prev => prev.filter((_, i) => i !== idx));
@@ -5080,7 +5077,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Mobile: Zoom controls — bottom-left floating buttons */}
         {isMobile && !ceilingEditMode && (
-          <div className="absolute bottom-2 left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (itemPanelVisible ? 110 : 60) : (itemPanelVisible ? 128 : 68) }}>
+          <div className="absolute left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (itemPanelVisible ? 108 : 60) : (itemPanelVisible ? 128 : 68) }}>
             <button onClick={() => zoomCamera('in')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom In">+</button>
             <button onClick={() => zoomCamera('out')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom Out">&minus;</button>
           </div>
@@ -5110,6 +5107,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
               const relX = touch.clientX - rect.left;
               if (relX < 44) {
+                e.preventDefault(); // Prevent synthetic click event
                 e.stopPropagation();
                 actionBarDragRef.current = {
                   startX: touch.clientX,
