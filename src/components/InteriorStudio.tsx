@@ -298,11 +298,35 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const [mobilePanel, setMobilePanel] = useState<'furniture' | 'room' | 'material' | 'skin' | 'skeleton' | 'presets' | null>(null);
+  // Progressive bottom sheet state: collapsed (just tab bar), half (35vh), full (70vh)
+  const [bottomSheetState, setBottomSheetState] = useState<'collapsed' | 'half' | 'full'>('collapsed');
+  const bottomSheetDragRef = useRef<{ startY: number; startHeight: number; dragging: boolean } | null>(null);
+  // Zoom level tracking for percentage display
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const defaultCameraDistance = useRef(9.5); // will be computed from initial camera position
+  // Auto-dismiss rotate hint after 5s
+  const [showRotateHint, setShowRotateHint] = useState(true);
   // Draggable action bar state (mobile)
   const [actionBarPos, setActionBarPos] = useState({ x: 0, y: 0 });
   const actionBarDragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean } | null>(null);
   // Reset action bar position when panel opens/closes to prevent off-screen positioning
   useEffect(() => { setActionBarPos({ x: 0, y: 0 }); }, [mobilePanel]);
+
+  // Auto-dismiss rotate hint after 5 seconds
+  useEffect(() => {
+    if (!showRotateHint) return;
+    const timer = setTimeout(() => setShowRotateHint(false), 5000);
+    return () => clearTimeout(timer);
+  }, [showRotateHint]);
+
+  // Sync bottom sheet state with mobilePanel: opening a panel sets to 'half', closing sets to 'collapsed'
+  useEffect(() => {
+    if (mobilePanel) {
+      setBottomSheetState('half');
+    } else {
+      setBottomSheetState('collapsed');
+    }
+  }, [mobilePanel]);
   const [roomManagerOpen, setRoomManagerOpen] = useState(false);
   const [editingRoomName, setEditingRoomName] = useState<string | null>(null);
   const [editingRoomNameValue, setEditingRoomNameValue] = useState('');
@@ -349,10 +373,25 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   const isGuestRef = useRef(typeof window !== 'undefined' ? localStorage.getItem('instod-theme') !== 'teal' : true); // ref mirror — sync with isGuest initial state
   const [guestBannerCollapsed, setGuestBannerCollapsed] = useState(false); // auto-collapse after 5s
 
-  // Dynamic accent color: warm (#C17F4E) for guests, teal (#2A9D8F) for authenticated users
-  const accentColor = isGuest ? '#C17F4E' : '#2A9D8F';
+  // Dynamic accent color: warm (#C47F4E) for guests, teal (#2A9D8F) for authenticated users
+  const accentColor = isGuest ? '#C47F4E' : '#2A9D8F';
   const accentColorDark = isGuest ? '#A86A3D' : '#1F7A6E';
   const accentColorLight = isGuest ? '#D4A76A' : '#3DB8A8';
+
+  // Update zoom level when camera moves
+  useEffect(() => {
+    const updateZoom = () => {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      if (!camera || !controls) return;
+      const currentDist = camera.position.distanceTo(controls.target);
+      const pct = Math.round((defaultCameraDistance.current / currentDist) * 100);
+      setZoomLevel(pct);
+    };
+    // Update zoom on a periodic check (since we can't easily hook into OrbitControls change event)
+    const interval = setInterval(updateZoom, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   // Apply initialRoomType from URL query param (e.g. ?room=bedroom)
   // Auto-collapse guest banner after 5 seconds to reduce visual clutter
@@ -478,11 +517,11 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       root.setProperty('--int-accent-bg', 'rgba(42,157,143,0.08)');
       root.setProperty('--int-accent-border', 'rgba(42,157,143,0.15)');
     } else {
-      root.setProperty('--int-accent', '#C17F4E');
+      root.setProperty('--int-accent', '#C47F4E');
       root.setProperty('--int-accent-hover', '#A86A3D');
       root.setProperty('--int-accent-light', '#F5E8DC');
-      root.setProperty('--int-accent-bg', 'rgba(193,127,78,0.08)');
-      root.setProperty('--int-accent-border', 'rgba(193,127,78,0.15)');
+      root.setProperty('--int-accent-bg', 'rgba(196,127,78,0.08)');
+      root.setProperty('--int-accent-border', 'rgba(196,127,78,0.15)');
     }
     try { localStorage.setItem('instod-theme', theme); } catch {}
   }, [sessionStatus]);
@@ -2626,7 +2665,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       controls.panSpeed = 1.2;
       controls.dampingFactor = 0.10;
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+      controls.minPolarAngle = 0.1; // prevent looking from directly above (disorienting)
+      controls.enableZoom = true;
+      controls.zoomSpeed = 0.8; // smooth dolly zoom on mobile
     }
+    // Store default camera distance for zoom level calculation
+    defaultCameraDistance.current = camera.position.distanceTo(controls.target);
     controlsRef.current = controls;
 
     // Lighting
@@ -2735,9 +2779,15 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     }, 1800);
 
     const onResize = () => {
-      const p = canvas.parentElement; if (!p) return;
-      renderer.setSize(p.clientWidth, p.clientHeight);
-      camera.aspect = p.clientWidth / p.clientHeight;
+      // On mobile with fixed canvas, use window dimensions instead of parent
+      if (isMobileDevice()) {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+      } else {
+        const p = canvas.parentElement; if (!p) return;
+        renderer.setSize(p.clientWidth, p.clientHeight);
+        camera.aspect = p.clientWidth / p.clientHeight;
+      }
       camera.updateProjectionMatrix();
       setViewportWidth(window.innerWidth);
       // Keep isMobile state/ref in sync with viewport changes
@@ -3362,13 +3412,28 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     const factor = direction === 'in' ? 0.8 : 1.25;
     const target = controls.target.clone();
     const offset = camera.position.clone().sub(target);
-    offset.multiplyScalar(factor);
+    const newOffset = offset.clone().multiplyScalar(factor);
     // Clamp minimum distance to 2 and max to 20
-    const newDist = offset.length();
-    if (newDist < 2 || newDist > 20) return;
-    camera.position.copy(target.clone().add(offset));
-    controls.update();
-    markSceneDirty();
+    const newDist = newOffset.length();
+    if (newDist < 2 || newDist > 22) return;
+    // Smooth zoom animation over 300ms
+    const startPos = camera.position.clone();
+    const endPos = target.clone().add(newOffset);
+    const startTime = performance.now();
+    const dur = 300;
+    function step() {
+      const t = Math.min(1, (performance.now() - startTime) / dur);
+      const ease = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      camera!.position.lerpVectors(startPos, endPos, ease);
+      controls!.update();
+      // Update zoom level display
+      const currentDist = camera!.position.distanceTo(controls!.target);
+      const pct = Math.round((defaultCameraDistance.current / currentDist) * 100);
+      setZoomLevel(pct);
+      needsRenderRef.current?.();
+      if (t < 1) requestAnimationFrame(step);
+    }
+    step();
   }, [markSceneDirty]);
 
   const takeScreenshot = useCallback(() => {
@@ -3625,9 +3690,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     if (!mobilePanel) return null;
     const panelContent: Record<string, React.ReactNode> = {
       furniture: (
-        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Category tabs */}
-          <div className="flex gap-1 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-2 overflow-x-auto px-3 pt-2 pb-1" style={{ scrollbarWidth: 'none' }}>
             {categories.filter(cat => {
               if (isGuest && !GUEST_ALLOWED_CATEGORIES.has(cat.id)) return false;
               const currentRoom = rooms.find(r => r.id === currentRoomId);
@@ -3652,11 +3717,11 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               return (
               <button key={item.name} onClick={() => { if (isLocked) { showToast('Sign in to unlock this item'); return; } addFurniture(item.fn, currentColor, currentMatType); }} className="int-furniture-card text-center relative"
                 style={{ background: isLocked ? '#F8F6F2' : undefined, opacity: isLocked ? 0.55 : 1, filter: isLocked ? 'grayscale(40%)' : 'none' }}>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-1 text-sm relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#5A4E42' }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-1 text-sm relative" style={{ background: isLocked ? '#E8E4DE' : '#F0E8D8', color: isLocked ? '#A09080' : '#4A3E32' }}>
                   <i className={`fas ${item.icon}`} />
                   {isLocked && <i className="fas fa-lock absolute -top-1 -right-1 text-[8px]" style={{ color: accentColor, background: '#fff', borderRadius: '50%', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />}
                 </div>
-                <p className="text-[12px] font-semibold leading-tight" style={{ color: isLocked ? '#A09080' : '#2D2D2D' }}>{item.name}</p>
+                <p className="text-[12px] font-bold leading-tight" style={{ color: isLocked ? '#A09080' : '#1A1A1A' }}>{item.name}</p>
                 {isLocked && (
                   <span className="text-[8px] font-bold mt-0.5 block" style={{ color: accentColor }}>PRO</span>
                 )}
@@ -4309,7 +4374,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   );
 
   return (
-    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} overflow-hidden`} style={{ background: '#F5F0E8', color: '#2D2D2D', fontFamily: "'Inter', 'DM Sans', sans-serif", height: '100dvh', '--accent': accentColor, '--accent-dark': accentColorDark, '--accent-light': accentColorLight } as React.CSSProperties}>
+    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} overflow-hidden`} style={{ background: '#F5F0E8', color: '#1A1A1A', fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", height: '100dvh', '--accent': accentColor, '--accent-dark': accentColorDark, '--accent-light': accentColorLight } as React.CSSProperties}>
       {/* WebGL Fallback — shown when browser doesn't support WebGL */}
       {webglError && (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -4808,9 +4873,10 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {!isMobile && renderDesktopSidebar()}
 
       {/* ===== Main 3D Viewer ===== */}
-      <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: 'layout style' }}>
-        {/* Top Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-4 py-2.5" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(10px, env(safe-area-inset-top, 10px))' : undefined }}>
+      <main className={isMobile ? 'fixed inset-0' : 'flex-1 relative min-h-0'} style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: isMobile ? undefined : 'layout style', zIndex: isMobile ? 0 : undefined }}>
+        {/* Top Bar — 3-zone layout on mobile: [Left: Logo/Back] [Center: Room Tabs] [Right: Save+Status] */}
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-3 px-3" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(8px, env(safe-area-inset-top, 8px))' : undefined, paddingBottom: isMobile ? 6 : undefined, minHeight: isMobile ? undefined : undefined }}>
+          {/* Left zone: Logo/name on mobile, sidebar toggle on desktop */}
           {!isMobile && (
             <>
               <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }}><i className="fas fa-bars text-sm" /></button>
@@ -4819,60 +4885,74 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               )}
             </>
           )}
-          {isGuest ? (
-            <span className="px-2 py-1 rounded text-sm font-semibold" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic' }}>{designName}</span>
-          ) : (
-            <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined }} />
+          {isMobile && (
+            isGuest ? (
+              <span className="px-2 py-1 rounded text-sm font-semibold" style={{ background: 'transparent', maxWidth: 100, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic', letterSpacing: '-0.01em' }}>{designName}</span>
+            ) : (
+              <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: 100, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined, letterSpacing: '-0.01em' }} />
+            )
           )}
-          <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#5A4E42', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
-            {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}
-          </span>
-          <span className="text-[10px] px-2.5 py-1 rounded-full font-medium hidden sm:inline-flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }} title="This is a layout drafting view. Use Export for polished renders.">
-            <i className="fas fa-drafting-compass text-[8px]" />Draft
-          </span>
+          {!isMobile && (isGuest ? (
+            <span className="px-2 py-1 rounded text-sm font-semibold" style={{ background: 'transparent', maxWidth: 180, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic' }}>{designName}</span>
+          ) : (
+            <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: 180, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined }} />
+          ))}
 
-          {/* Room tabs — mobile: spread across full width with even gaps, desktop: centered scrollable */}
-          <div className={`flex items-center ${isMobile ? 'flex-1 justify-evenly gap-1 overflow-hidden' : 'justify-center gap-1.5 overflow-x-auto'}`}
+          {/* Center zone: Room tabs */}
+          <div className={`flex items-center ${isMobile ? 'flex-1 justify-center gap-2 overflow-hidden' : 'justify-center gap-2 overflow-x-auto'}`}
             style={isMobile ? { paddingLeft: 2, paddingRight: 2 } : undefined}>
             {rooms.slice(0, isMobile ? 3 : undefined).map(room => {
               const roomItemCount = room.id === currentRoomId ? itemCount : 0;
               return (
-                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-xl font-semibold cursor-pointer transition-all border-2 flex items-center gap-1.5 ${isMobile ? 'px-3 py-2.5 text-[12px] min-w-0' : 'px-3.5 py-1.5 text-[11px] whitespace-nowrap'}`}
-                  style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), flex: isMobile ? '1 1 0%' : undefined, justifyContent: isMobile ? 'center' : undefined, boxShadow: currentRoomId === room.id ? '0 2px 8px rgba(0,0,0,0.12)' : 'none' }}>
+                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-xl font-bold cursor-pointer transition-all border-2 flex items-center gap-1.5 ${isMobile ? 'px-4 py-2 text-[12px] min-w-0' : 'px-3.5 py-1.5 text-[11px] whitespace-nowrap'}`}
+                  style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), flex: isMobile ? '1 1 0%' : undefined, justifyContent: isMobile ? 'center' : undefined, boxShadow: currentRoomId === room.id ? '0 2px 8px rgba(0,0,0,0.12)' : 'none', minHeight: 40, letterSpacing: '-0.01em' }}>
                   <i className={`fas fa-door-open ${isMobile ? 'text-[11px]' : 'text-[9px]'}`} /><span className={isMobile ? '' : 'truncate'}>{room.name}</span><span className="text-[9px] opacity-70">({roomItemCount})</span>
                 </button>
               );
             })}
             {isMobile && rooms.length > 3 && (
-              <button onClick={() => setRoomManagerOpen(true)} className="rounded-xl px-2.5 py-2.5 text-[11px] font-bold cursor-pointer border-2 flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
+              <button onClick={() => setRoomManagerOpen(true)} className="rounded-xl px-2.5 py-2 text-[11px] font-bold cursor-pointer border-2 flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#4A3E32', background: '#FAF8F4', minHeight: 40 }}>+{rooms.length - 3}</button>
             )}
-            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
-            <button onClick={() => setShowAddRoom(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
+            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-10 h-10 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
+            <button onClick={() => setShowAddRoom(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-10 h-10 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
           </div>
 
-          {/* Mobile right actions — save button (always visible) + sign up pill */}
+          {/* Right zone: Save status pill + Save button (mobile) */}
           {isMobile && (
             <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
-              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 40, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
+              {/* Save status pill */}
+              <span className="int-save-pill" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#C47F4E', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.12)' : saveStatus === 'saving' ? 'rgba(138,132,120,0.12)' : 'rgba(196,127,78,0.12)' }}>
+                {saveStatus === 'saved' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#7A8B6F', display: 'inline-block' }} />}
+                {saveStatus === 'saving' && <i className="fas fa-spinner fa-spin text-[8px]" />}
+                {saveStatus === 'unsaved' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#C47F4E', display: 'inline-block' }} />}
+                {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving' : 'Unsaved'}
+              </span>
+              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 40, minWidth: 64, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
                 <i className="fas fa-save text-[10px]" />{saveStatus === 'saving' ? '...' : 'Save'}
               </button>
               {isGuest && (
-                <a href="/auth/signup" className="px-3 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5" style={{ background: '#5A4E42', color: '#fff', minHeight: 40, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <a href="/auth/signup" className="px-3 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5" style={{ background: '#4A3E32', color: '#fff', minHeight: 40, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                   <i className="fas fa-lock text-[9px]" />Sign Up
                 </a>
               )}
             </div>
           )}
 
-          {/* Desktop right actions */}
+          {/* Desktop: Save status + right actions */}
           {!isMobile && (
             <div className="flex items-center gap-1.5">
-              <button onClick={() => window.location.href = '/dashboard'} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /></button>
-              <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[10px]" /></button>
-              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[10px]" /></button>
+              <span className="int-save-pill" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#C47F4E', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.12)' : saveStatus === 'saving' ? 'rgba(138,132,120,0.12)' : 'rgba(196,127,78,0.12)' }}>
+                {saveStatus === 'saved' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#7A8B6F', display: 'inline-block' }} />}
+                {saveStatus === 'saving' && <i className="fas fa-spinner fa-spin text-[8px]" />}
+                {saveStatus === 'unsaved' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#C47F4E', display: 'inline-block' }} />}
+                {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving' : 'Unsaved'}
+              </span>
+              <button onClick={() => window.location.href = '/dashboard'} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /></button>
+              <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[10px]" /></button>
+              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[10px]" /></button>
               <button onClick={shareRoom} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[10px]" /></button>
               <button onClick={() => setShowShortcuts(true)} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Keyboard shortcuts" title="Shortcuts"><i className="fas fa-keyboard text-[10px]" /></button>
-              <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }}>{itemCount} items</span>
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }}>{itemCount} items</span>
             </div>
           )}
         </div>
@@ -5075,23 +5155,34 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* Mobile: Zoom controls — bottom-left floating buttons */}
+        {/* Mobile: Zoom controls — bottom-left floating buttons with zoom indicator, reset view, and fit-to-room */}
         {isMobile && !ceilingEditMode && (
-          <div className="absolute left-2 flex flex-col gap-1.5 z-10" style={{ bottom: isMobile ? (itemPanelVisible ? 108 : 64) : (itemPanelVisible ? 128 : 68) }}>
-            <button onClick={() => zoomCamera('in')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 18, fontWeight: 700, minHeight: 48, minWidth: 48 }} aria-label="Zoom In">+</button>
-            <button onClick={() => zoomCamera('out')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 18, fontWeight: 700, minHeight: 48, minWidth: 48 }} aria-label="Zoom Out">&minus;</button>
+          <div className="absolute left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : (itemPanelVisible ? 108 : 64)) : (itemPanelVisible ? 128 : 68) }}>
+            <button onClick={() => zoomCamera('in')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 18, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom In">+</button>
+            <button onClick={() => zoomCamera('out')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 18, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom Out">&minus;</button>
+            {/* Zoom level percentage indicator */}
+            <div className="int-zoom-indicator">{zoomLevel}%</div>
+            {/* Reset View button — compass icon, animates camera to default position */}
+            <button onClick={() => animateCamera([5.5, 4.5, 7], [0, 1, 0])} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: accentColor, minHeight: 44, minWidth: 44 }} aria-label="Reset View" title="Reset View"><i className="fas fa-compass text-lg" /></button>
+            {/* Fit to Room button */}
+            <button onClick={() => {
+              const rw = roomWRef.current, rd = roomDRef.current;
+              const maxDim = Math.max(rw, rd);
+              const dist = maxDim * 1.3;
+              animateCamera([dist * 0.6, dist * 0.5, dist * 0.8], [0, 1, 0]);
+            }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', minHeight: 44, minWidth: 44 }} aria-label="Fit to Room" title="Fit to Room"><i className="fas fa-expand text-[13px]" /></button>
           </div>
         )}
 
-        {/* Mobile: Selected item floating action bar — DRAGGABLE */}
+        {/* Mobile: Selected item floating action bar — DRAGGABLE, 48px height, positioned above bottom panel */}
         {isMobile && itemPanelVisible && !ceilingEditMode && (
           <div
             className="absolute z-20 flex items-center gap-1.5 pl-1 pr-3 rounded-2xl select-none"
             style={{
               left: 12 + actionBarPos.x,
               right: undefined,
-              bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 64) + actionBarPos.y,
-              height: 56,
+              bottom: (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : 64) + actionBarPos.y,
+              height: 48,
               maxWidth: 'calc(100vw - 24px)',
               background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)',
               backdropFilter: 'blur(16px)',
@@ -5148,28 +5239,46 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               <i className="fas fa-grip-vertical text-lg" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} />
             </div>
             <span className="text-[13px] font-bold truncate flex-1" style={{ fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
-            <button onClick={() => rotateSelected('left')} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
-            <button onClick={() => rotateSelected('right')} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
-            <button onClick={duplicateSelected} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Duplicate" title="Duplicate"><i className="fas fa-clone" /></button>
-            <button onClick={deleteSelected} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Delete" title="Delete"><i className="fas fa-trash-alt" /></button>
-            <button onClick={deselectAll} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 12, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
+            <button onClick={() => rotateSelected('left')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+            <button onClick={() => rotateSelected('right')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+            <button onClick={duplicateSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Duplicate" title="Duplicate"><i className="fas fa-clone" /></button>
+            <button onClick={deleteSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Delete" title="Delete"><i className="fas fa-trash-alt" /></button>
+            <button onClick={deselectAll} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 12, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
           </div>
         )}
 
-        {/* Mobile: two-finger rotate hint */}
-        {isMobile && !mobilePanel && !ceilingEditMode && !itemPanelVisible && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 500 }}>
+        {/* Mobile: two-finger rotate hint — auto-dismisses after 5s */}
+        {isMobile && !mobilePanel && !ceilingEditMode && !itemPanelVisible && showRotateHint && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 500, transition: 'opacity 0.5s ease' }}>
             <i className="fas fa-hand-pointer mr-1" />Tap to select &bull; Two fingers to rotate/zoom
           </div>
         )}
 
-        {/* Mobile: Floating side action panel (collapsed by default, expands on tap) */}
-        {isMobile && !mobilePanel && !ceilingEditMode && (
+        {/* Mobile: Compass indicator in top-right corner of canvas */}
+        {isMobile && !ceilingEditMode && (
+          <div className="absolute z-10" style={{ top: 60 + (isMobile ? 20 : 0), right: 12 }}>
+            <div className="int-compass-indicator">
+              {(() => {
+                const camera = cameraRef.current;
+                if (!camera) return 'N';
+                const azimuth = Math.atan2(camera.position.x, camera.position.z);
+                const deg = ((azimuth * 180 / Math.PI) + 360) % 360;
+                if (deg < 45 || deg > 315) return 'N';
+                if (deg >= 45 && deg < 135) return 'E';
+                if (deg >= 135 && deg < 225) return 'S';
+                return 'W';
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: Floating side action panel (collapsed by default, expands on tap) — AUTO-HIDES when bottom panel is open or action bar is visible */}
+        {isMobile && !mobilePanel && !ceilingEditMode && !itemPanelVisible && (
           <div className="absolute right-2 z-20" style={{ top: '50%', transform: 'translateY(-50%)' }}>
             {/* Toggle button */}
             <button onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
               className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer shadow-lg"
-              style={{ background: mobileActionsOpen ? accentColor : (lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)'), backdropFilter: 'blur(8px)', border: mobileActionsOpen ? 'none' : (lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4'), color: mobileActionsOpen ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), boxShadow: '0 3px 12px rgba(0,0,0,0.15)', transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}
+              style={{ background: mobileActionsOpen ? accentColor : (lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)'), backdropFilter: 'blur(8px)', border: mobileActionsOpen ? 'none' : (lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4'), color: mobileActionsOpen ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32'), boxShadow: '0 3px 12px rgba(0,0,0,0.15)', transition: 'background 0.4s ease, border-color 0.4s ease, color 0.4s ease' }}
               aria-label="Actions"
             >
               <i className={`fas ${mobileActionsOpen ? 'fa-times' : 'fa-ellipsis-v'}`} style={{ fontSize: 15 }} />
@@ -5178,59 +5287,112 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             {mobileActionsOpen && (
               <div className="flex flex-col gap-2 mt-2 items-center">
                 <button onClick={() => { saveRoom(false); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: '#7A8B6F', color: '#fff', border: 'none' }} aria-label="Save" title="Save"><i className="fas fa-save text-[13px]" /></button>
-                <button onClick={() => { if (isGuest) { showToast('Sign in for undo history'); return; } undo(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo'}><i className="fas fa-undo text-[13px]" /></button>
-                <button onClick={() => { if (isGuest) { showToast('Sign in for redo history'); return; } redo(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', opacity: isGuest ? 0.45 : 1 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo'}><i className="fas fa-redo text-[13px]" /></button>
-                <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[13px]" /></button>
-                <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[13px]" /></button>
-                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid #E2DDD4', color: '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[13px]" /></button>
+                <button onClick={() => { if (isGuest) { showToast('Sign in for undo history'); return; } undo(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', opacity: isGuest ? 0.45 : 1 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo'}><i className="fas fa-undo text-[13px]" /></button>
+                <button onClick={() => { if (isGuest) { showToast('Sign in for redo history'); return; } redo(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', opacity: isGuest ? 0.45 : 1 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo'}><i className="fas fa-redo text-[13px]" /></button>
+                <button onClick={() => { takeScreenshot(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }} aria-label="Screenshot" title="Screenshot"><i className="fas fa-camera text-[13px]" /></button>
+                <button onClick={() => { shareRoom(); setMobileActionsOpen(false); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }} aria-label="Share" title="Share"><i className="fas fa-share-alt text-[13px]" /></button>
+                <button onClick={() => { window.location.href = '/dashboard'; }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid #E2DDD4', color: '#4A3E32' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[13px]" /></button>
               </div>
             )}
           </div>
         )}
       </main>
 
-      {/* ===== MOBILE: Bottom Edit Panel — compact footer, max room view ===== */}
+      {/* ===== MOBILE: Bottom Edit Panel — progressive bottom sheet ===== */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t flex flex-col" style={{ borderColor: '#E2DDD4', height: mobilePanel ? '50vh' : 'auto', paddingBottom: 'calc(4px + env(safe-area-inset-bottom, 0px))', transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'height' }}>
-
-          {/* Tab bar — 60px height, 20px icons, 10px labels */}
-          <div role="tablist" className="flex" style={{ height: 60, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
-            {([
-              { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture' },
-              { id: 'material' as const, icon: 'fa-palette', label: 'Colors' },
-              { id: 'room' as const, icon: 'fa-sliders-h', label: 'Room' },
-              { id: 'skin' as const, icon: 'fa-wand-magic-sparkles', label: 'Skins' },
-              { id: 'presets' as const, icon: 'fa-magic', label: 'Presets' },
-              { id: 'skeleton' as const, icon: 'fa-cog', label: 'More' },
-            ]).map(({ id, icon, label }) => (
-              <button key={id} onClick={() => { setMobilePanel(mobilePanel === id ? null : id); setMobileActionsOpen(false); }}
-                role="tab" aria-selected={mobilePanel === id}
-                className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
-                style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `2.5px solid ${accentColor}` : '2.5px solid transparent' }}>
-                <i className={`fas ${icon}`} style={{ fontSize: 20 }} />
-                <span style={{ fontSize: 10, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.2 }}>{label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Panel content */}
-          <div className="flex-1 overflow-hidden">
+        <>
+          {/* Dim overlay behind bottom panel when open */}
+          {mobilePanel && (
+            <div className="int-canvas-dim-overlay" onClick={() => { setMobilePanel(null); setBottomSheetState('collapsed'); }} style={{ opacity: 1, zIndex: 25 }} />
+          )}
+          <div className="fixed bottom-0 left-0 right-0 z-30 flex flex-col" style={{
+            borderColor: '#E2DDD4',
+            height: bottomSheetState === 'collapsed' ? 'auto' : (bottomSheetState === 'half' ? '35vh' : '70vh'),
+            paddingBottom: `calc(4px + env(safe-area-inset-bottom, 0px))`,
+            transition: 'height 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+            willChange: 'height',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
+            backdropFilter: 'blur(16px)',
+            borderTop: '1px solid #E2DDD4',
+          }}
+            onTouchStart={(e) => {
+              // Handle drag on the bottom sheet handle area
+              const touch = e.touches[0];
+              const target = e.target as HTMLElement;
+              if (target.closest('.int-bottom-sheet-handle') || target.closest('[data-bottom-sheet-handle]')) {
+                bottomSheetDragRef.current = {
+                  startY: touch.clientY,
+                  startHeight: window.innerHeight * (bottomSheetState === 'half' ? 0.35 : bottomSheetState === 'full' ? 0.7 : 0),
+                  dragging: true,
+                };
+              }
+            }}
+            onTouchMove={(e) => {
+              if (!bottomSheetDragRef.current?.dragging) return;
+              e.preventDefault();
+              const touch = e.touches[0];
+              const dy = bottomSheetDragRef.current.startY - touch.clientY;
+              const newHeight = bottomSheetDragRef.current.startHeight + dy;
+              const vh = window.innerHeight;
+              if (newHeight < vh * 0.15) {
+                setBottomSheetState('collapsed');
+                if (mobilePanel) setMobilePanel(null);
+              } else if (newHeight < vh * 0.5) {
+                setBottomSheetState('half');
+              } else {
+                setBottomSheetState('full');
+              }
+            }}
+            onTouchEnd={() => {
+              if (bottomSheetDragRef.current?.dragging) {
+                bottomSheetDragRef.current.dragging = false;
+              }
+            }}
+          >
+            {/* Drag handle — always visible when panel is open */}
             {mobilePanel && (
-              <div className="flex items-center justify-between px-3 pt-1.5 pb-0.5">
-                <div className="w-10 h-1 rounded-full mx-0" style={{ background: '#D4D0C8' }} />
-                <button onClick={() => setMobilePanel(null)} className="text-[10px] font-semibold cursor-pointer flex items-center gap-1" style={{ color: '#7A6E62', background: 'none', border: 'none' }}>
-                  Close <i className="fas fa-chevron-down text-[8px]" />
-                </button>
-              </div>
+              <div data-bottom-sheet-handle className="int-bottom-sheet-handle" />
             )}
-            {/* eslint-disable-next-line react-hooks/refs */}
-            {mobilePanel ? renderMobilePanel() : null}
+
+            {/* Tab bar — 60px height, 20px icons, 10px labels */}
+            <div role="tablist" className="flex" style={{ height: 60, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
+              {([
+                { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture' },
+                { id: 'material' as const, icon: 'fa-palette', label: 'Colors' },
+                { id: 'room' as const, icon: 'fa-sliders-h', label: 'Room' },
+                { id: 'skin' as const, icon: 'fa-wand-magic-sparkles', label: 'Skins' },
+                { id: 'presets' as const, icon: 'fa-magic', label: 'Presets' },
+                { id: 'skeleton' as const, icon: 'fa-cog', label: 'More' },
+              ]).map(({ id, icon, label }) => (
+                <button key={id} onClick={() => { const newPanel = mobilePanel === id ? null : id; setMobilePanel(newPanel); setMobileActionsOpen(false); setBottomSheetState(newPanel ? 'half' : 'collapsed'); }}
+                  role="tab" aria-selected={mobilePanel === id}
+                  className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
+                  style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `2.5px solid ${accentColor}` : '2.5px solid transparent', minHeight: 60 }}>
+                  <i className={`fas ${icon}`} style={{ fontSize: 20 }} />
+                  <span style={{ fontSize: 10, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.2 }}>{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Panel content */}
+            <div className="flex-1 overflow-hidden">
+              {mobilePanel && (
+                <div className="flex items-center justify-between px-3 pt-1 pb-0.5">
+                  <div className="w-10 h-1 rounded-full mx-0" style={{ background: '#D4D0C8' }} />
+                  <button onClick={() => setBottomSheetState(bottomSheetState === 'full' ? 'half' : bottomSheetState === 'half' ? 'full' : 'half')} className="text-[10px] font-semibold cursor-pointer flex items-center gap-1" style={{ color: '#7A6E62', background: 'none', border: 'none' }}>
+                    {bottomSheetState === 'full' ? 'Less' : 'More'} <i className={`fas ${bottomSheetState === 'full' ? 'fa-chevron-down' : 'fa-chevron-up'} text-[8px]`} />
+                  </button>
+                </div>
+              )}
+              {/* eslint-disable-next-line react-hooks/refs */}
+              {mobilePanel ? renderMobilePanel() : null}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (mobilePanel ? '50vh' : (itemPanelVisible ? 110 : 60)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : (itemPanelVisible ? 110 : 60)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div role="status" aria-live="polite" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}><i className="fas fa-check-circle text-xs" style={{ color: '#7A8B6F' }} />{toastMsg}</div>
       </div>
       </>
