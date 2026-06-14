@@ -1,0 +1,352 @@
+  4808→      {!isMobile && renderDesktopSidebar()}
+  4809→
+  4810→      {/* ===== Main 3D Viewer ===== */}
+  4811→      <main className="flex-1 relative min-h-0" style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: 'layout style' }}>
+  4812→        {/* Top Bar */}
+  4813→        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-2 px-4 py-2.5" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.88)', backdropFilter: 'blur(10px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.2)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(10px, env(safe-area-inset-top, 10px))' : undefined }}>
+  4814→          {!isMobile && (
+  4815→            <>
+  4816→              <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }}><i className="fas fa-bars text-sm" /></button>
+  4817→              {sidebarOpen && (
+  4818→                <button onClick={() => setSidebarDark(!sidebarDark)} aria-label={sidebarDark ? 'Light sidebar' : 'Dark sidebar'} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} title={sidebarDark ? 'Switch to light sidebar' : 'Switch to dark sidebar'}><i className={`fas ${sidebarDark ? 'fa-sun' : 'fa-moon'} text-sm`} /></button>
+  4819→              )}
+  4820→            </>
+  4821→          )}
+  4822→          {isGuest ? (
+  4823→            <span className="px-2 py-1 rounded text-sm font-semibold" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic' }}>{designName}</span>
+  4824→          ) : (
+  4825→            <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-sm font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: isMobile ? 140 : 180, fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined }} />
+  4826→          )}
+  4827→          <span className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#5A4E42', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.1)' : 'rgba(138,132,120,0.1)' }}>
+  4828→            {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}
+  4829→          </span>
+  4830→          <span className="text-[10px] px-2.5 py-1 rounded-full font-medium hidden sm:inline-flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }} title="This is a layout drafting view. Use Export for polished renders.">
+  4831→            <i className="fas fa-drafting-compass text-[8px]" />Draft
+  4832→          </span>
+  4833→
+  4834→          {/* Room tabs — mobile: spread across full width with even gaps, desktop: centered scrollable */}
+  4835→          <div className={`flex items-center ${isMobile ? 'flex-1 justify-evenly gap-1 overflow-hidden' : 'justify-center gap-1.5 overflow-x-auto'}`}
+  4836→            style={isMobile ? { paddingLeft: 2, paddingRight: 2 } : undefined}>
+  4837→            {rooms.slice(0, isMobile ? 3 : undefined).map(room => {
+  4838→              const roomItemCount = room.id === currentRoomId ? itemCount : 0;
+  4839→              return (
+  4840→                <button key={room.id} onClick={() => switchRoom(room.id)} className={`rounded-xl font-semibold cursor-pointer transition-all border-2 flex items-center gap-1.5 ${isMobile ? 'px-3 py-2.5 text-[12px] min-w-0' : 'px-3.5 py-1.5 text-[11px] whitespace-nowrap'}`}
+  4841→                  style={{ background: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#FAF8F4'), color: currentRoomId === room.id ? '#fff' : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42'), borderColor: currentRoomId === room.id ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), flex: isMobile ? '1 1 0%' : undefined, justifyContent: isMobile ? 'center' : undefined, boxShadow: currentRoomId === room.id ? '0 2px 8px rgba(0,0,0,0.12)' : 'none' }}>
+  4842→                  <i className={`fas fa-door-open ${isMobile ? 'text-[11px]' : 'text-[9px]'}`} /><span className={isMobile ? '' : 'truncate'}>{room.name}</span><span className="text-[9px] opacity-70">({roomItemCount})</span>
+  4843→                </button>
+  4844→              );
+  4845→            })}
+  4846→            {isMobile && rooms.length > 3 && (
+  4847→              <button onClick={() => setRoomManagerOpen(true)} className="rounded-xl px-2.5 py-2.5 text-[11px] font-bold cursor-pointer border-2 flex-shrink-0" style={{ borderColor: '#E2DDD4', color: '#5A4E42', background: '#FAF8F4' }}>+{rooms.length - 3}</button>
+  4848→            )}
+  4849→            <button onClick={() => setRoomManagerOpen(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Room Manager" title="Room Manager"><i className={`fas fa-th-list ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
+  4850→            <button onClick={() => setShowAddRoom(true)} className={`rounded-xl flex items-center justify-center cursor-pointer border-2 ${isMobile ? 'w-9 h-9 flex-shrink-0' : 'w-8 h-8'}`} style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Add Room" title="Add Room"><i className={`fas fa-plus ${isMobile ? 'text-[10px]' : 'text-[9px]'}`} /></button>
+  4851→          </div>
+  4852→
+  4853→          {/* Mobile right actions — save button (always visible) + sign up pill */}
+  4854→          {isMobile && (
+  4855→            <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+  4856→              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 40, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
+  4857→                <i className="fas fa-save text-[10px]" />{saveStatus === 'saving' ? '...' : 'Save'}
+  4858→              </button>
+  4859→              {isGuest && (
+  4860→                <a href="/auth/signup" className="px-3 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5" style={{ background: '#5A4E42', color: '#fff', minHeight: 40, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+  4861→                  <i className="fas fa-lock text-[9px]" />Sign Up
+  4862→                </a>
+  4863→              )}
+  4864→            </div>
+  4865→          )}
+  4866→
+  4867→          {/* Desktop right actions */}
+  4868→          {!isMobile && (
+  4869→            <div className="flex items-center gap-1.5">
+  4870→              <button onClick={() => window.location.href = '/dashboard'} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[10px]" /></button>
+  4871→              <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[10px]" /></button>
+  4872→              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#5A4E42') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[10px]" /></button>
+  4873→              <button onClick={shareRoom} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[10px]" /></button>
+  4874→              <button onClick={() => setShowShortcuts(true)} className="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Keyboard shortcuts" title="Shortcuts"><i className="fas fa-keyboard text-[10px]" /></button>
+  4875→              <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }}>{itemCount} items</span>
+  4876→            </div>
+  4877→          )}
+  4878→        </div>
+  4879→
+  4880→        <canvas ref={canvasRef} role="application" aria-label="3D Room Editor — use mouse to orbit, scroll to zoom" style={{ width: '100%', height: '100%', display: 'block', cursor: ceilingEditMode ? 'crosshair' : 'grab' }} />
+  4881→
+  4882→        {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
+  4883→        {ceilingEditMode && (
+  4884→          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+  4885→            {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
+  4886→            <div className="p-3">
+  4887→              <div className="flex items-center justify-between mb-2">
+  4888→                <div className="flex items-center gap-2">
+  4889→                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}><i className="fas fa-lightbulb text-[10px]" style={{ color: '#7A6E62' }} /></div>
+  4890→                  <h3 className="text-xs font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif", color: '#5A4E42' }}>Ceiling Light Editor</h3>
+  4891→                  <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.05)', color: '#7A6E62' }}>{ceilingSpotPositionsRef.current.length}/6</span>
+  4892→                </div>
+  4893→                <button onClick={exitCeilingEditMode} aria-label="Exit ceiling editor" className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer border" style={{ borderColor: '#E2DDD4' }}><i className="fas fa-times text-[9px]" /></button>
+  4894→              </div>
+  4895→              <div className="flex gap-1.5 mb-2">
+  4896→                <button onClick={addCeilingLight} className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: ceilingSpotPositionsRef.current.length >= 6 ? '#C4B8A8' : accentColor, color: '#fff', border: 'none', opacity: ceilingSpotPositionsRef.current.length >= 6 ? 0.5 : 1 }} disabled={ceilingSpotPositionsRef.current.length >= 6}>
+  4897→                  <i className="fas fa-plus text-[8px]" />{ceilingSpotPositionsRef.current.length >= 6 ? 'Max (6/6)' : 'Add Light'}
+  4898→                </button>
+  4899→                <button onClick={deleteSelectedCeilingLight} className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer" style={{ background: '#fff', color: selectedCeilingLightIdx >= 0 ? '#c0392b' : '#5A4E42', border: `1px solid ${selectedCeilingLightIdx >= 0 ? '#e8d0d0' : '#E2DDD4'}` }} disabled={selectedCeilingLightIdx < 0}>
+  4900→                  <i className="fas fa-trash-alt text-[8px]" />Delete
+  4901→                </button>
+  4902→              </div>
+  4903→            {selectedCeilingLightIdx >= 0 && (
+  4904→              <div className="p-2 rounded-lg mb-1" style={{ background: '#FAF8F4' }}>
+  4905→                <p className="text-[9px] font-bold mb-1" style={{ color: '#5A4E42' }}>LIGHT #{selectedCeilingLightIdx + 1} POSITION</p>
+  4906→                <div className="mb-1">
+  4907→                  <div className="flex justify-between"><span className="text-[9px]">X</span><span className="text-[9px]" style={{ color: '#5A4E42' }}>{selectedLightX.toFixed(2)}m</span></div>
+  4908→                  <input type="range" className="int-range" min={-roomW / 2 + 0.2} max={roomW / 2 - 0.2} step={0.1}
+  4909→                    value={selectedLightX}
+  4910→                    onChange={e => {
+  4911→                      const v = parseFloat(e.target.value);
+  4912→                      const idx = selectedCeilingLightIdx;
+  4913→                      if (idx >= 0 && idx < ceilingSpotPositionsRef.current.length) {
+  4914→                        ceilingSpotPositionsRef.current[idx].x = v;
+  4915→                        setSelectedLightX(v);
+  4916→                        const roomGroup = roomGroupRef.current;
+  4917→                        if (roomGroup) {
+  4918→                          const spot = roomGroup.getObjectByName(`ceilingSpot_${idx}`);
+  4919→                          if (spot) { spot.position.x = v; markSceneDirty(); }
+  4920→                        }
+  4921→                        markUnsaved();
+  4922→                      }
+  4923→                    }} />
+  4924→                </div>
+  4925→                <div>
+  4926→                  <div className="flex justify-between"><span className="text-[9px]">Z</span><span className="text-[9px]" style={{ color: '#5A4E42' }}>{selectedLightZ.toFixed(2)}m</span></div>
+  4927→                  <input type="range" className="int-range" min={-roomD / 2 + 0.2} max={roomD / 2 - 0.2} step={0.1}
+  4928→                    value={selectedLightZ}
+  4929→                    onChange={e => {
+  4930→                      const v = parseFloat(e.target.value);
+  4931→                      const idx = selectedCeilingLightIdx;
+  4932→                      if (idx >= 0 && idx < ceilingSpotPositionsRef.current.length) {
+  4933→                        ceilingSpotPositionsRef.current[idx].z = v;
+  4934→                        setSelectedLightZ(v);
+  4935→                        const roomGroup = roomGroupRef.current;
+  4936→                        if (roomGroup) {
+  4937→                          const spot = roomGroup.getObjectByName(`ceilingSpot_${idx}`);
+  4938→                          if (spot) { spot.position.z = v; markSceneDirty(); }
+  4939→                        }
+  4940→                        markUnsaved();
+  4941→                      }
+  4942→                    }} />
+  4943→                </div>
+  4944→              </div>
+  4945→            )}
+  4946→            <p className="text-[8px] text-center" style={{ color: '#5A4E42' }}>
+  4947→              {selectedCeilingLightIdx >= 0 ? 'Drag light or use sliders to reposition' : 'Click ceiling to add • Click light to select'}
+  4948→            </p>
+  4949→            </div>{/* end p-3 wrapper */}
+  4950→          </div>
+  4951→        )}
+  4952→
+  4953→        {/* Bottom-center toolbar — larger for readability and touch targets */}
+  4954→        {!isMobile && (
+  4955→          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2.5 z-10">
+  4956→            <button onClick={isGuest ? () => showToast('Sign in for undo history') : undo} className="w-14 h-14 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 18 }} aria-label="Undo" title={isGuest ? 'Sign in for Undo' : 'Undo (Ctrl+Z)'}><i className="fas fa-undo" /></button>
+  4957→            <button onClick={isGuest ? () => showToast('Sign in for redo history') : redo} className="w-14 h-14 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', opacity: isGuest ? 0.45 : 1, fontSize: 18 }} aria-label="Redo" title={isGuest ? 'Sign in for Redo' : 'Redo (Ctrl+Y)'}><i className="fas fa-redo" /></button>
+  4958→            {/* Presets toggle button - Desktop */}
+  4959→            <button onClick={() => setPresetPanelOpen(!presetPanelOpen)} className="w-14 h-14 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ background: presetPanelOpen ? accentColor : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderColor: presetPanelOpen ? accentColor : '#E2DDD4', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', color: presetPanelOpen ? '#fff' : '#2D2D2D', fontSize: 18, transition: 'background 0.4s ease' }} aria-label="Presets" title="Design Presets"><i className="fas fa-magic" /></button>
+  4960→          </div>
+  4961→        )}
+  4962→
+  4963→        {/* Presets floating panel - Desktop */}
+  4964→        {!isMobile && presetPanelOpen && (
+  4965→          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 border rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', borderColor: '#E2DDD4', width: 320, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}>
+  4966→            <div className="flex items-center justify-between mb-2">
+  4967→              <p className="text-xs font-bold" style={{ color: '#2D2D2D' }}>Design Presets</p>
+  4968→              <button onClick={() => setPresetPanelOpen(false)} className="text-xs cursor-pointer" style={{ color: '#7A6E62' }}><i className="fas fa-times" /></button>
+  4969→            </div>
+  4970→            <div className="flex gap-1 mb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+  4971→              {(['living', 'bedroom', 'kitchen', 'dining', 'office', 'bathroom'] as PresetRoomType[]).map(type => {
+  4972→                const lockedTypes = new Set(['kitchen', 'dining', 'bathroom']);
+  4973→                const isLocked = isGuest && lockedTypes.has(type);
+  4974→                return (
+  4975→                <button key={type} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + type.charAt(0).toUpperCase() + type.slice(1)); return; } setSelectedRoomType(type); }}
+  4976→                  className={`px-2 py-1 rounded text-[10px] font-semibold cursor-pointer transition-all whitespace-nowrap border ${isLocked ? 'opacity-50' : ''}`}
+  4977→                  style={{ borderColor: selectedRoomType === type ? accentColor : '#E2DDD4', color: selectedRoomType === type ? accentColor : '#5A4E42', background: selectedRoomType === type ? accentColor + '0D' : '#FAF8F4' }}>
+  4978→                  {isLocked && <i className="fas fa-lock text-[6px] mr-0.5" style={{ color: '#7A6E62' }} />}
+  4979→                  {type.charAt(0).toUpperCase() + type.slice(1)}
+  4980→                </button>
+  4981→              );})}
+  4982→            </div>
+  4983→            <div className="space-y-1.5">
+  4984→              {getPresetsForRoom(selectedRoomType).map(preset => (
+  4985→                <button key={preset.id} onClick={() => { loadPreset(preset); setPresetPanelOpen(false); }}
+  4986→                  className="w-full p-2.5 rounded-xl border cursor-pointer transition-all text-left hover:shadow-sm flex items-center gap-2"
+  4987→                  style={{ borderColor: preset.accent + '30', background: '#FFFFFF' }}>
+  4988→                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: preset.accent + '18', color: preset.accent }}>
+  4989→                    <i className={`fas ${preset.icon} text-[12px]`} />
+  4990→                  </div>
+  4991→                  <div className="flex-1 min-w-0">
+  4992→                    <p className="text-[11px] font-bold" style={{ color: '#2D2D2D' }}>{preset.name}</p>
+  4993→                    <p className="text-[9px]" style={{ color: '#7A6E62' }}>{preset.description}</p>
+  4994→                  </div>
+  4995→                </button>
+  4996→              ))}
+  4997→            </div>
+  4998→          </div>
+  4999→        )}
+  5000→
+  5001→        {/* View controls - Desktop — Right-side quick action panel: dynamically adapts to sidebar width */}
+  5002→        {!isMobile && (() => {
+  5003→          // Compute available width for the main content area (reactive to both sidebar drag and window resize)
+  5004→          const availableWidth = viewportWidth - (sidebarOpen ? sidebarWidth : 0);
+  5005→          const compact = availableWidth < 560;
+  5006→          const btnBg = lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.94)';
+  5007→          const btnBorder = lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4';
+  5008→          const btnColor = lightMood === 'night' ? '#C8C0B0' : '#4A3E32';
+  5009→          const btnStyle = (extra?: { bg?: string; border?: string; color?: string }) => ({
+  5010→            background: extra?.bg ?? btnBg,
+  5011→            backdropFilter: 'blur(12px)',
+  5012→            borderColor: extra?.border ?? btnBorder,
+  5013→            boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+  5014→            color: extra?.color ?? btnColor,
+  5015→            fontSize: compact ? 0 : 13,
+  5016→            fontWeight: 600 as const,
+  5017→            minWidth: compact ? 44 : 80,
+  5018→            width: compact ? 44 : 'auto',
+  5019→            height: compact ? 44 : 'auto',
+  5020→            padding: compact ? 0 : undefined,
+  5021→            transition: 'background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, width 0.25s ease, min-width 0.25s ease, height 0.25s ease, padding 0.25s ease, font-size 0.25s ease',
+  5022→            display: 'flex' as const,
+  5023→            alignItems: 'center' as const,
+  5024→            justifyContent: 'center' as const,
+  5025→            gap: compact ? 0 : 8,
+  5026→          });
+  5027→
+  5028→          return (
+  5029→            <div className="absolute z-30 flex flex-col" style={{ right: compact ? 6 : 12, top: '50%', transform: 'translateY(-50%)', gap: compact ? 4 : 8, transition: 'right 0.25s ease, gap 0.25s ease' }}>
+  5030→              {[
+  5031→                { id: 'top', icon: 'fa-border-all', label: 'Top', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
+  5032→                { id: 'front', icon: 'fa-square', label: 'Front', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+  5033→                { id: 'persp', icon: 'fa-cube', label: '3D', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+  5034→              ].map(v => (
+  5035→                <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} title={`${v.label} view`} className="rounded-xl cursor-pointer border" style={btnStyle()}>
+  5036→                  <i className={`fas ${v.icon}`} style={{ fontSize: compact ? 16 : 15, color: accentColor, transition: 'font-size 0.25s ease' }} />
+  5037→                  {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>{v.label}</span>}
+  5038→                </button>
+  5039→              ))}
+  5040→              <button onClick={() => { autoRotateRef.current = !autoRotateRef.current; setAutoRotActive(autoRotateRef.current); if (controlsRef.current) { controlsRef.current.autoRotate = autoRotateRef.current; controlsRef.current.autoRotateSpeed = 1.5; } }}
+  5041→                aria-label={autoRotActive ? 'Stop auto-rotate' : 'Start auto-rotate'} title="Auto-rotate" className="rounded-xl cursor-pointer border" style={btnStyle({ bg: autoRotActive ? accentColor + '1F' : btnBg, border: autoRotActive ? accentColor : btnBorder, color: autoRotActive ? accentColor : btnColor })}>
+  5042→                <i className="fas fa-sync-alt" style={{ fontSize: compact ? 16 : 15, color: autoRotActive ? accentColor : undefined, transition: 'font-size 0.25s ease' }} />
+  5043→                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Spin</span>}
+  5044→              </button>
+  5045→              <button onClick={resetRoom} title="Reset Room" className="rounded-xl cursor-pointer border" style={btnStyle({ color: '#c0392b' })}>
+  5046→                <i className="fas fa-undo-alt" style={{ fontSize: compact ? 16 : 15, transition: 'font-size 0.25s ease' }} />
+  5047→                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Reset</span>}
+  5048→              </button>
+  5049→              <button onClick={takeScreenshot} title="Screenshot" className="rounded-xl cursor-pointer border" style={btnStyle()}>
+  5050→                <i className="fas fa-camera" style={{ fontSize: compact ? 16 : 15, color: accentColor, transition: 'font-size 0.25s ease' }} />
+  5051→                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Capture</span>}
+  5052→              </button>
+  5053→              <button onClick={shareRoom} title="Share room" className="rounded-xl cursor-pointer border" style={btnStyle()}>
+  5054→                <i className="fas fa-share-alt" style={{ fontSize: compact ? 16 : 15, color: accentColor, transition: 'font-size 0.25s ease' }} />
+  5055→                {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>Share</span>}
+  5056→              </button>
+  5057→            </div>
+  5058→          );
+  5059→        })()}
+  5060→
+  5061→        {/* Selected item panel — slim compact bar on mobile, floating card on desktop */}
+  5062→        {itemPanelVisible && !mobilePanel && !isMobile && (
+  5063→          <div className="z-10 border-2 absolute bottom-5 left-5 rounded-2xl p-4" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.92)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', minWidth: 220, transition: 'background 0.4s ease, border-color 0.4s ease', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+  5064→            <div className="flex items-center justify-between mb-1.5">
+  5065→              <h4 className="text-base font-bold" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>{selectedName}</h4>
+  5066→              <button onClick={deselectAll} aria-label="Deselect item" className="text-sm cursor-pointer" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }}><i className="fas fa-times" /></button>
+  5067→            </div>
+  5068→            <p className="text-[11px]" style={{ color: lightMood === 'night' ? '#A09888' : '#5A4E42' }}>{selectedDesc}</p>
+  5069→            <div className="flex gap-2 mt-3">
+  5070→              <button onClick={() => rotateSelected('left')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 12 }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+  5071→              <button onClick={() => rotateSelected('right')} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 12 }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+  5072→              <button onClick={duplicateSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined, fontSize: 12 }} aria-label="Duplicate item" title="Duplicate"><i className="fas fa-clone" /></button>
+  5073→              <button onClick={deleteSelected} className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: '#e8d0d0', color: '#c0392b', fontSize: 12 }} aria-label="Delete item" title="Delete"><i className="fas fa-trash-alt" /></button>
+  5074→            </div>
+  5075→          </div>
+  5076→        )}
+  5077→
+  5078→        {/* Mobile: Zoom controls — bottom-left floating buttons */}
+  5079→        {isMobile && !ceilingEditMode && (
+  5080→          <div className="absolute left-2 flex flex-col gap-1.5 z-10" style={{ bottom: isMobile ? (itemPanelVisible ? 108 : 64) : (itemPanelVisible ? 128 : 68) }}>
+  5081→            <button onClick={() => zoomCamera('in')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 18, fontWeight: 700, minHeight: 48, minWidth: 48 }} aria-label="Zoom In">+</button>
+  5082→            <button onClick={() => zoomCamera('out')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 18, fontWeight: 700, minHeight: 48, minWidth: 48 }} aria-label="Zoom Out">&minus;</button>
+  5083→          </div>
+  5084→        )}
+  5085→
+  5086→        {/* Mobile: Selected item floating action bar — DRAGGABLE */}
+  5087→        {isMobile && itemPanelVisible && !ceilingEditMode && (
+  5088→          <div
+  5089→            className="absolute z-20 flex items-center gap-1.5 pl-1 pr-3 rounded-2xl select-none"
+  5090→            style={{
+  5091→              left: 12 + actionBarPos.x,
+  5092→              right: undefined,
+  5093→              bottom: (mobilePanel ? window.innerHeight * 0.5 + 10 : 64) + actionBarPos.y,
+  5094→              height: 56,
+  5095→              maxWidth: 'calc(100vw - 24px)',
+  5096→              background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)',
+  5097→              backdropFilter: 'blur(16px)',
+  5098→              border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4',
+  5099→              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+  5100→              transition: actionBarDragRef.current?.dragging ? 'none' : 'bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+  5101→              willChange: 'bottom, left',
+  5102→              touchAction: 'none',
+  5103→            }}
+  5104→            onTouchStart={(e) => {
+  5105→              // Drag from the drag handle grip area (left 44px)
+  5106→              const touch = e.touches[0];
+  5107→              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  5108→              const relX = touch.clientX - rect.left;
+  5109→              if (relX < 44) {
+  5110→                e.preventDefault(); // Prevent synthetic click event
+  5111→                e.stopPropagation();
+  5112→                actionBarDragRef.current = {
+  5113→                  startX: touch.clientX,
+  5114→                  startY: touch.clientY,
+  5115→                  startPosX: actionBarPos.x,
+  5116→                  startPosY: actionBarPos.y,
+  5117→                  dragging: true,
+  5118→                };
+  5119→                // Disable orbit controls while dragging
+  5120→                if (controlsRef.current) controlsRef.current.enabled = false;
+  5121→              }
+  5122→            }}
+  5123→            onTouchMove={(e) => {
+  5124→              if (!actionBarDragRef.current?.dragging) return;
+  5125→              e.stopPropagation();
+  5126→              e.preventDefault();
+  5127→              const touch = e.touches[0];
+  5128→              const dx = touch.clientX - actionBarDragRef.current.startX;
+  5129→              const dy = touch.clientY - actionBarDragRef.current.startY;
+  5130→              // Clamp to viewport bounds
+  5131→              const maxX = window.innerWidth - 100;
+  5132→              const maxY = window.innerHeight * 0.6;
+  5133→              setActionBarPos({
+  5134→                x: Math.max(-12, Math.min(maxX, actionBarDragRef.current.startPosX + dx)),
+  5135→                y: Math.max(-maxY, Math.min(200, actionBarDragRef.current.startPosY - dy)),
+  5136→              });
+  5137→            }}
+  5138→            onTouchEnd={() => {
+  5139→              if (actionBarDragRef.current?.dragging) {
+  5140→                actionBarDragRef.current.dragging = false;
+  5141→                // Re-enable orbit controls
+  5142→                if (controlsRef.current) controlsRef.current.enabled = true;
+  5143→              }
+  5144→            }}
+  5145→          >
+  5146→            {/* Drag handle — prominent grip icon */}
+  5147→            <div className="flex items-center justify-center w-11 h-full cursor-grab active:cursor-grabbing flex-shrink-0" style={{ opacity: 0.5 }}>
+  5148→              <i className="fas fa-grip-vertical text-lg" style={{ color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42' }} />
+  5149→            </div>
+  5150→            <span className="text-[13px] font-bold truncate flex-1" style={{ fontFamily: "'Inter', 'Outfit', sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#2D2D2D' }}>{selectedName}</span>
+  5151→            <button onClick={() => rotateSelected('left')} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Left" title="Rotate Left"><i className="fas fa-undo" /></button>
+  5152→            <button onClick={() => rotateSelected('right')} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Rotate Right" title="Rotate Right"><i className="fas fa-redo" /></button>
+  5153→            <button onClick={duplicateSelected} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.1)' : '#F5F0E8', color: lightMood === 'night' ? '#C8C0B0' : '#5A4E42', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Duplicate" title="Duplicate"><i className="fas fa-clone" /></button>
+  5154→            <button onClick={deleteSelected} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ background: '#FDE8E8', color: '#c0392b', fontSize: 14, border: 'none', transition: 'transform 0.15s ease' }} aria-label="Delete" title="Delete"><i className="fas fa-trash-alt" /></button>
+  5155→            <button onClick={deselectAll} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer" style={{ color: '#8A8478', fontSize: 12, border: 'none' }} aria-label="Deselect" title="Deselect"><i className="fas fa-times" /></button>
+  5156→          </div>
+  5157→        )}
+
+[showing lines 4808-5157 of 5241; use offset=5158 with limit to continue reading]
