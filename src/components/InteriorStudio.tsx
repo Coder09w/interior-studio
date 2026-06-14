@@ -1,5 +1,13 @@
 'use client';
 
+// Extend HTMLElement for zoom button long-press cleanup
+declare global {
+  interface HTMLElement {
+    _zoomTimeout?: ReturnType<typeof setTimeout>;
+    _zoomCleanup?: () => void;
+  }
+}
+
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -242,10 +250,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   // so they don't lose work between the 30s auto-save intervals.
   const dragSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Touch rotation refs for two-finger rotate
-  const touchStartAngleRef = useRef<number | null>(null);
-  const touchItemStartRotRef = useRef<number>(0);
-  const touchStartDistRef = useRef<number | null>(null);
+  // Double-tap-to-zoom refs
+  const lastTapTimeRef = useRef<number>(0);
+  const lastTapPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // State
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -2664,10 +2671,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       controls.rotateSpeed = 1.2;
       controls.panSpeed = 1.2;
       controls.dampingFactor = 0.10;
-      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+      // One finger = orbit only. Two-finger zoom is handled by our custom
+      // pinch handler above (logarithmic, no pan). This prevents the default
+      // DOLLY_PAN from making the room "slip away" during pinch gestures.
+      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.ROTATE };
       controls.minPolarAngle = 0.1; // prevent looking from directly above (disorienting)
-      controls.enableZoom = true;
-      controls.zoomSpeed = 0.8; // smooth dolly zoom on mobile
+      controls.enableZoom = false; // disable built-in zoom — our custom pinch handler takes over
+      controls.enablePan = false; // disable two-finger pan on mobile — reduces gesture conflict
     }
     // Store default camera distance for zoom level calculation
     defaultCameraDistance.current = camera.position.distanceTo(controls.target);
@@ -2809,7 +2819,62 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
     // Single pointer down for selecting & starting drag
     const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === 'touch' && touchStartAngleRef.current !== null) return; // ignore if two-finger gesture active
+      if (e.pointerType === 'touch') {
+        // Double-tap-to-zoom detection (maps-style zoom toward tap point)
+        const now = performance.now();
+        const dt = now - lastTapTimeRef.current;
+        const dx = e.clientX - lastTapPosRef.current.x;
+        const dy = e.clientY - lastTapPosRef.current.y;
+        const dist = Math.hypot(dx, dy);
+        if (dt < 350 && dist < 40) {
+          // Double-tap detected! Zoom 1.8× toward the tapped point
+          lastTapTimeRef.current = 0; // reset to prevent triple-tap
+          const rect = canvas.getBoundingClientRect();
+          const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          // Cast ray from tap point to find what user is looking at
+          const tapRay = new THREE.Raycaster();
+          tapRay.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+          const hits = tapRay.intersectObjects(meshCacheRef.current.length > 0 ? meshCacheRef.current : placedItemsRef.current, true);
+          // Determine zoom target: hit point, or project onto room floor plane
+          let zoomTarget: THREE.Vector3;
+          if (hits.length > 0 && hits[0].point) {
+            zoomTarget = hits[0].point.clone();
+          } else {
+            // Default: project onto the y=0 floor plane
+            const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            zoomTarget = new THREE.Vector3();
+            tapRay.ray.intersectPlane(floorPlane, zoomTarget);
+            if (!zoomTarget) zoomTarget = controls.target.clone();
+          }
+          // Zoom: move camera 1.8× closer toward the zoom target
+          const currentDist = camera.position.distanceTo(controls.target);
+          const targetDist = Math.max(mobile ? 1.5 : 2, currentDist / 1.8);
+          const direction = camera.position.clone().sub(zoomTarget).normalize();
+          const endPos = zoomTarget.clone().add(direction.multiplyScalar(targetDist));
+          // Animate smoothly
+          const startPos = camera.position.clone();
+          const startTarget = controls.target.clone();
+          const startTime = performance.now();
+          function zoomStep() {
+            const t = Math.min(1, (performance.now() - startTime) / 350);
+            const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            camera!.position.lerpVectors(startPos, endPos, ease);
+            // Also move the orbit target toward the zoom point for natural feel
+            controls!.target.lerpVectors(startTarget, zoomTarget, ease * 0.3);
+            controls!.update();
+            const d = camera!.position.distanceTo(controls!.target);
+            const pct = Math.round((defaultCameraDistance.current / d) * 100);
+            setZoomLevel(pct);
+            needsRenderRef.current?.();
+            if (t < 1) requestAnimationFrame(zoomStep);
+          }
+          zoomStep();
+          return; // Don't process as a regular tap
+        }
+        lastTapTimeRef.current = now;
+        lastTapPosRef.current = { x: e.clientX, y: e.clientY };
+      }
       const r = canvas.getBoundingClientRect();
       pointerRef.current.x = ((e.clientX - r.left) / r.width) * 2 - 1;
       pointerRef.current.y = -((e.clientY - r.top) / r.height) * 2 + 1;
@@ -2976,7 +3041,6 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       } else { deselectAll(); }
     };
     const onPointerMove = (e: PointerEvent) => {
-      if (e.pointerType === 'touch' && touchStartAngleRef.current !== null) return; // two-finger gesture active
 
       // === CEILING EDIT MODE DRAG ===
       if (ceilingEditModeRef.current && isDragRef.current && ceilingDragItemRef.current) {
@@ -3068,40 +3132,56 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
     canvas.addEventListener('pointerdown', onPointerDown); canvas.addEventListener('pointermove', onPointerMove); canvas.addEventListener('pointerup', onPointerUp);
 
-    // ===== TWO-FINGER ROTATION GESTURE =====
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2 && selectedObjRef.current) {
-        e.preventDefault();
-        const t1 = e.touches[0], t2 = e.touches[1];
-        const dx = t2.clientX - t1.clientX, dy = t2.clientY - t1.clientY;
-        touchStartAngleRef.current = Math.atan2(dy, dx);
-        touchItemStartRotRef.current = selectedObjRef.current.rotation.y;
-        touchStartDistRef.current = Math.hypot(dx, dy);
-        controls.enabled = false;
-      }
+    // ===== PINCH-TO-ZOOM (custom, logarithmic) =====
+    // Replaces OrbitControls' default two-finger handler with a pure-zoom gesture.
+    // Key improvements over default OrbitControls DOLLY_PAN:
+    //   1. Logarithmic scaling (Weber's Law) — perceptually uniform zoom steps
+    //   2. Pure zoom only — no simultaneous pan that makes the room "slip away"
+    //   3. Zooms toward the midpoint between fingers, not just the orbit target
+    //   4. No conflict with furniture rotation (rotation is on action bar buttons only)
+    const pinchStartDist = useRef<number | null>(null);
+    const pinchStartCamDist = useRef<number>(0);
+    const onPinchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+      const t1 = e.touches[0], t2 = e.touches[1];
+      pinchStartDist.current = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      pinchStartCamDist.current = camera.position.distanceTo(controls.target);
+      // Disable OrbitControls two-finger handling so our custom zoom takes over
+      controls.enabled = false;
     };
-    const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && selectedObjRef.current && touchStartAngleRef.current !== null) {
-        e.preventDefault();
-        const t1 = e.touches[0], t2 = e.touches[1];
-        const dx = t2.clientX - t1.clientX, dy = t2.clientY - t1.clientY;
-        const currentAngle = Math.atan2(dy, dx);
-        const angleDelta = currentAngle - touchStartAngleRef.current;
-        selectedObjRef.current.rotation.y = touchItemStartRotRef.current + angleDelta;
-        markUnsaved();
-      }
+    const onPinchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || pinchStartDist.current === null) return;
+      e.preventDefault();
+      const t1 = e.touches[0], t2 = e.touches[1];
+      const currentPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const pinchRatio = currentPinchDist / pinchStartDist.current;
+      // LOGARITHMIC SCALING (Weber's Law): perceptually uniform zoom
+      // newDist = startDist * (pinchRatio ^ sensitivity)
+      // sensitivity < 1 makes zoom less twitchy on small screens
+      const sensitivity = 0.6;
+      const newCamDist = pinchStartCamDist.current * Math.pow(pinchRatio, sensitivity);
+      const clampedDist = Math.max(mobile ? 1.5 : 2, Math.min(mobile ? 16 : 22, newCamDist));
+      // Move camera along the target→camera vector to the new distance
+      const direction = camera.position.clone().sub(controls.target).normalize();
+      camera.position.copy(controls.target.clone().add(direction.multiplyScalar(clampedDist)));
+      controls.update();
+      // Update zoom level display
+      const pct = Math.round((defaultCameraDistance.current / clampedDist) * 100);
+      setZoomLevel(pct);
+      needsRenderRef.current?.();
+      markSceneDirty();
     };
-    const onTouchEnd = (e: TouchEvent) => {
+    const onPinchEnd = (e: TouchEvent) => {
       if (e.touches.length < 2) {
-        touchStartAngleRef.current = null;
-        touchStartDistRef.current = null;
+        pinchStartDist.current = null;
         controls.enabled = true;
       }
     };
 
-    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
-    canvas.addEventListener('touchend', onTouchEnd);
+    canvas.addEventListener('touchstart', onPinchStart, { passive: false });
+    canvas.addEventListener('touchmove', onPinchMove, { passive: false });
+    canvas.addEventListener('touchend', onPinchEnd);
 
     // Keyboard shortcuts — disabled on mobile to prevent accidental triggers
     const onKeyDown = (e: KeyboardEvent) => {
@@ -3263,7 +3343,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       window.removeEventListener('beforeunload', beforeUnload);
       resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', onPointerDown); canvas.removeEventListener('pointermove', onPointerMove); canvas.removeEventListener('pointerup', onPointerUp);
-      canvas.removeEventListener('touchstart', onTouchStart); canvas.removeEventListener('touchmove', onTouchMove); canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchstart', onPinchStart); canvas.removeEventListener('touchmove', onPinchMove); canvas.removeEventListener('touchend', onPinchEnd);
       canvas.removeEventListener('pointerdown', markDirty); canvas.removeEventListener('pointermove', markDirty);
       window.removeEventListener('keydown', onKeyDown);
       // Dispose Three.js resources to prevent GPU memory leaks
@@ -3409,24 +3489,29 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     const camera = cameraRef.current;
     const controls = controlsRef.current;
     if (!camera || !controls) return;
-    const factor = direction === 'in' ? 0.8 : 1.25;
+    // Haptic feedback on mobile (subtle 5ms pulse)
+    if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(5); } catch {} }
+    const isMob = isMobileRef.current;
+    const minDist = isMob ? 1.5 : 2;
+    const maxDist = isMob ? 16 : 22;
+    // Logarithmic step: same perceived change regardless of current distance (Weber's Law)
+    const factor = direction === 'in' ? 0.82 : 1.22;
     const target = controls.target.clone();
     const offset = camera.position.clone().sub(target);
     const newOffset = offset.clone().multiplyScalar(factor);
-    // Clamp minimum distance to 2 and max to 20
     const newDist = newOffset.length();
-    if (newDist < 2 || newDist > 22) return;
-    // Smooth zoom animation over 300ms
+    if (newDist < minDist || newDist > maxDist) return;
+    // Smooth zoom with ease-in-out cubic for natural feel
     const startPos = camera.position.clone();
     const endPos = target.clone().add(newOffset);
     const startTime = performance.now();
-    const dur = 300;
+    const dur = 250;
     function step() {
       const t = Math.min(1, (performance.now() - startTime) / dur);
-      const ease = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      // Ease-in-out cubic: slow start, fast middle, slow end
+      const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       camera!.position.lerpVectors(startPos, endPos, ease);
       controls!.update();
-      // Update zoom level display
       const currentDist = camera!.position.distanceTo(controls!.target);
       const pct = Math.round((defaultCameraDistance.current / currentDist) * 100);
       setZoomLevel(pct);
@@ -5155,13 +5240,96 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* Mobile: Zoom controls — bottom-left floating buttons with zoom indicator, reset view, and fit-to-room */}
+        {/* Mobile: Zoom controls — bottom-left floating buttons with long-press repeat, zoom indicator, reset view, and fit-to-room */}
         {isMobile && !ceilingEditMode && (
           <div className="absolute left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : (itemPanelVisible ? 108 : 64)) : (itemPanelVisible ? 128 : 68) }}>
-            <button onClick={() => zoomCamera('in')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 18, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom In">+</button>
-            <button onClick={() => zoomCamera('out')} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 18, fontWeight: 700, minHeight: 44, minWidth: 44 }} aria-label="Zoom Out">&minus;</button>
-            {/* Zoom level percentage indicator */}
-            <div className="int-zoom-indicator">{zoomLevel}%</div>
+            {/* Zoom In — long-press repeats with acceleration */}
+            <button
+              onClick={() => zoomCamera('in')}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                zoomCamera('in'); // immediate first zoom
+                let delay = 350; // start slow
+                let timeout: ReturnType<typeof setTimeout>;
+                const repeat = () => {
+                  zoomCamera('in');
+                  delay = Math.max(80, delay * 0.75); // accelerate
+                  timeout = setTimeout(repeat, delay);
+                };
+                timeout = setTimeout(repeat, delay);
+                // Store cleanup on the event target
+                (e.currentTarget as HTMLElement)._zoomTimeout = timeout;
+                (e.currentTarget as HTMLElement)._zoomCleanup = () => { clearTimeout(timeout); };
+              }}
+              onTouchEnd={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                if (el._zoomCleanup) { el._zoomCleanup(); el._zoomCleanup = undefined; }
+              }}
+              onTouchCancel={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                if (el._zoomCleanup) { el._zoomCleanup(); el._zoomCleanup = undefined; }
+              }}
+              className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md select-none"
+              style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 18, fontWeight: 700, minHeight: 44, minWidth: 44, touchAction: 'none' }}
+              aria-label="Zoom In"
+            >+</button>
+            {/* Zoom Out — long-press repeats with acceleration */}
+            <button
+              onClick={() => zoomCamera('out')}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                zoomCamera('out');
+                let delay = 350;
+                let timeout: ReturnType<typeof setTimeout>;
+                const repeat = () => {
+                  zoomCamera('out');
+                  delay = Math.max(80, delay * 0.75);
+                  timeout = setTimeout(repeat, delay);
+                };
+                timeout = setTimeout(repeat, delay);
+                (e.currentTarget as HTMLElement)._zoomTimeout = timeout;
+                (e.currentTarget as HTMLElement)._zoomCleanup = () => { clearTimeout(timeout); };
+              }}
+              onTouchEnd={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                if (el._zoomCleanup) { el._zoomCleanup(); el._zoomCleanup = undefined; }
+              }}
+              onTouchCancel={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                if (el._zoomCleanup) { el._zoomCleanup(); el._zoomCleanup = undefined; }
+              }}
+              className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md select-none"
+              style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32', fontSize: 18, fontWeight: 700, minHeight: 44, minWidth: 44, touchAction: 'none' }}
+              aria-label="Zoom Out"
+            >&minus;</button>
+            {/* Vertical zoom slider — direct manipulation for precise zoom control */}
+            <div className="flex justify-center" style={{ height: 80 }}>
+              <input
+                type="range"
+                min={1}
+                max={100}
+                value={Math.min(100, Math.max(1, zoomLevel))}
+                onChange={(e) => {
+                  const targetPct = parseInt(e.target.value);
+                  const camera = cameraRef.current;
+                  const controls = controlsRef.current;
+                  if (!camera || !controls) return;
+                  // Convert percentage to target distance
+                  const targetDist = defaultCameraDistance.current / (targetPct / 100);
+                  const isMob = isMobileRef.current;
+                  const clampedDist = Math.max(isMob ? 1.5 : 2, Math.min(isMob ? 16 : 22, targetDist));
+                  const direction = camera.position.clone().sub(controls.target).normalize();
+                  camera.position.copy(controls.target.clone().add(direction.multiplyScalar(clampedDist)));
+                  controls.update();
+                  setZoomLevel(Math.round((defaultCameraDistance.current / clampedDist) * 100));
+                  needsRenderRef.current?.();
+                  markSceneDirty();
+                }}
+                className="int-zoom-slider"
+                style={{ writingMode: 'vertical-lr', direction: 'rtl', width: 44, height: 80 }}
+                aria-label="Zoom level"
+              />
+            </div>
             {/* Reset View button — compass icon, animates camera to default position */}
             <button onClick={() => animateCamera([5.5, 4.5, 7], [0, 1, 0])} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer shadow-md" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.9)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', border: lightMood === 'night' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E2DDD4', color: accentColor, minHeight: 44, minWidth: 44 }} aria-label="Reset View" title="Reset View"><i className="fas fa-compass text-lg" /></button>
             {/* Fit to Room button */}
@@ -5250,7 +5418,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         {/* Mobile: two-finger rotate hint — auto-dismisses after 5s */}
         {isMobile && !mobilePanel && !ceilingEditMode && !itemPanelVisible && showRotateHint && (
           <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 500, transition: 'opacity 0.5s ease' }}>
-            <i className="fas fa-hand-pointer mr-1" />Tap to select &bull; Two fingers to rotate/zoom
+            <i className="fas fa-hand-pointer mr-1" />Tap to select &bull; Pinch to zoom &bull; Double-tap to zoom in
           </div>
         )}
 
