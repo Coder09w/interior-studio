@@ -3337,10 +3337,60 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     };
     window.addEventListener('beforeunload', beforeUnload);
 
+    /* ── Global error capture ──
+     * Three.js throws many errors from inside requestAnimationFrame / WebGL
+     * callbacks. Those escape React's render cycle, so EditorErrorBoundary
+     * never sees them. Capture them here and POST to /api/editor-crash so we
+     * actually know what's going wrong on users' phones.
+     */
+    const sendCrashReport = (payload: Record<string, unknown>) => {
+      try {
+        const body = JSON.stringify({ ...payload, url: window.location.href, userAgent: navigator.userAgent, timestamp: new Date().toISOString() });
+        // keepalive so the request still fires if the tab is being closed
+        fetch('/api/editor-crash', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+      } catch { /* never let crash reporting itself throw */ }
+    };
+    const onGlobalError = (event: ErrorEvent) => {
+      // Ignore trivial cross-origin script errors (message === 'Script error.')
+      if (!event.message && !event.error) return;
+      sendCrashReport({
+        reportId: `crash_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        source: 'window-error',
+        error: event.error
+          ? { name: event.error.name, message: event.error.message, stack: event.error.stack }
+          : { name: 'ErrorEvent', message: event.message || 'Script error', stack: null },
+        componentStack: null,
+        viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
+      });
+    };
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      let errObj: { name?: string; message?: string; stack?: string };
+      if (reason instanceof Error) {
+        errObj = { name: reason.name, message: reason.message, stack: reason.stack };
+      } else if (typeof reason === 'string') {
+        errObj = { name: 'UnhandledRejection', message: reason, stack: null };
+      } else {
+        try { errObj = { name: 'UnhandledRejection', message: JSON.stringify(reason), stack: null }; }
+        catch { errObj = { name: 'UnhandledRejection', message: String(reason), stack: null }; }
+      }
+      sendCrashReport({
+        reportId: `crash_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        source: 'unhandledrejection',
+        error: errObj,
+        componentStack: null,
+        viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
+      });
+    };
+    window.addEventListener('error', onGlobalError);
+    window.addEventListener('unhandledrejection', onUnhandledRejection);
+
     return () => {
       cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('beforeunload', beforeUnload);
+      window.removeEventListener('error', onGlobalError);
+      window.removeEventListener('unhandledrejection', onUnhandledRejection);
       resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', onPointerDown); canvas.removeEventListener('pointermove', onPointerMove); canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('touchstart', onPinchStart); canvas.removeEventListener('touchmove', onPinchMove); canvas.removeEventListener('touchend', onPinchEnd);
