@@ -3139,28 +3139,33 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     //   2. Pure zoom only — no simultaneous pan that makes the room "slip away"
     //   3. Zooms toward the midpoint between fingers, not just the orbit target
     //   4. No conflict with furniture rotation (rotation is on action bar buttons only)
-    const pinchStartDist = useRef<number | null>(null);
-    const pinchStartCamDist = useRef<number>(0);
+    // NOTE: these MUST be plain closures, not useRef() — calling useRef inside
+    // a useEffect violates the Rules of Hooks and throws React error #321
+    // ("Invalid hook call") on every editor load. The pinch handlers below
+    // close over these two variables, which is fine because the effect runs
+    // only once and the touch listeners it registers live for the same lifetime.
+    let pinchStartDist: number | null = null;
+    let pinchStartCamDist = 0;
     const onPinchStart = (e: TouchEvent) => {
       if (e.touches.length !== 2) return;
       e.preventDefault();
       const t1 = e.touches[0], t2 = e.touches[1];
-      pinchStartDist.current = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-      pinchStartCamDist.current = camera.position.distanceTo(controls.target);
+      pinchStartDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      pinchStartCamDist = camera.position.distanceTo(controls.target);
       // Disable OrbitControls two-finger handling so our custom zoom takes over
       controls.enabled = false;
     };
     const onPinchMove = (e: TouchEvent) => {
-      if (e.touches.length !== 2 || pinchStartDist.current === null) return;
+      if (e.touches.length !== 2 || pinchStartDist === null) return;
       e.preventDefault();
       const t1 = e.touches[0], t2 = e.touches[1];
       const currentPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-      const pinchRatio = currentPinchDist / pinchStartDist.current;
+      const pinchRatio = currentPinchDist / (pinchStartDist as number);
       // LOGARITHMIC SCALING (Weber's Law): perceptually uniform zoom
       // newDist = startDist * (pinchRatio ^ sensitivity)
       // sensitivity < 1 makes zoom less twitchy on small screens
       const sensitivity = 0.6;
-      const newCamDist = pinchStartCamDist.current * Math.pow(pinchRatio, sensitivity);
+      const newCamDist = pinchStartCamDist * Math.pow(pinchRatio, sensitivity);
       const clampedDist = Math.max(mobile ? 1.5 : 2, Math.min(mobile ? 16 : 22, newCamDist));
       // Move camera along the target→camera vector to the new distance
       const direction = camera.position.clone().sub(controls.target).normalize();
@@ -3174,7 +3179,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     };
     const onPinchEnd = (e: TouchEvent) => {
       if (e.touches.length < 2) {
-        pinchStartDist.current = null;
+        pinchStartDist = null;
         controls.enabled = true;
       }
     };
