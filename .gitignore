@@ -82,3 +82,6 @@ Caddyfile
 /examples/
 
 upload/
+
+# Tool output artifacts (read tool, bash output captures)
+tool-results/
