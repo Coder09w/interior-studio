@@ -165,10 +165,30 @@ function Navbar() {
 function HeroSection() {
   return (
     <section
-      className="relative min-h-screen flex items-center pt-20"
+      className="relative min-h-screen flex items-center pt-20 overflow-hidden"
       style={{ background: '#F5F0E8' }}
     >
-      {/* Subtle pattern overlay */}
+      {/* Backdrop image — warm architectural interior matching brand palette */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: 'url(/hero/hero-backdrop.png)',
+          // Push focal point slightly right so it sits behind the editor preview
+          backgroundPosition: '70% 50%',
+        }}
+        aria-hidden="true"
+      />
+      {/* Cream wash + soft vignette to keep text readable and on-theme */}
+      <div
+        className="absolute inset-0"
+        style={{
+          // Layer 1: warm cream wash (left-heavy so the text column stays bright)
+          background:
+            'linear-gradient(90deg, rgba(245,240,232,0.96) 0%, rgba(245,240,232,0.88) 35%, rgba(245,240,232,0.55) 65%, rgba(245,240,232,0.35) 100%)',
+        }}
+        aria-hidden="true"
+      />
+      {/* Subtle dot pattern overlay — kept at 3% to maintain brand texture */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
@@ -176,6 +196,7 @@ function HeroSection() {
             'radial-gradient(circle at 1px 1px, #2D2D2D 1px, transparent 0)',
           backgroundSize: '40px 40px',
         }}
+        aria-hidden="true"
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
