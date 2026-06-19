@@ -2108,7 +2108,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     controls.maxPolarAngle = Math.PI * 0.85;
     controls.minPolarAngle = Math.PI * 0.5;
     controls.minDistance = 0.5;
-    controls.maxDistance = 15;
+    controls.maxDistance = 25;
 
     ceilingEditModeRef.current = true;
     setCeilingEditMode(true);
@@ -2168,7 +2168,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     controls.maxPolarAngle = Math.PI * 0.48;
     controls.minPolarAngle = 0;
     controls.minDistance = 2;
-    controls.maxDistance = 22;
+    controls.maxDistance = 40;
 
     ceilingEditModeRef.current = false;
     setCeilingEditMode(false);
@@ -2654,7 +2654,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     controls.enableDamping = true; controls.dampingFactor = 0.12;
     controls.rotateSpeed = 0.5;
     controls.panSpeed = 0.5;
-    controls.maxPolarAngle = Math.PI * 0.48; controls.minDistance = 2; controls.maxDistance = 22;
+    controls.maxPolarAngle = Math.PI * 0.48; controls.minDistance = 2; controls.maxDistance = 40;
     controls.target.set(0, 1, 0);
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.enablePan = true;
@@ -3166,7 +3166,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       // sensitivity < 1 makes zoom less twitchy on small screens
       const sensitivity = 0.6;
       const newCamDist = pinchStartCamDist * Math.pow(pinchRatio, sensitivity);
-      const clampedDist = Math.max(mobile ? 1.5 : 2, Math.min(mobile ? 16 : 22, newCamDist));
+      const clampedDist = Math.max(mobile ? 1.5 : 2, Math.min(mobile ? 30 : 40, newCamDist));
       // Move camera along the target→camera vector to the new distance
       const direction = camera.position.clone().sub(controls.target).normalize();
       camera.position.copy(controls.target.clone().add(direction.multiplyScalar(clampedDist)));
@@ -3548,7 +3548,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(5); } catch {} }
     const isMob = isMobileRef.current;
     const minDist = isMob ? 1.5 : 2;
-    const maxDist = isMob ? 16 : 22;
+    const maxDist = isMob ? 30 : 40;
     // Logarithmic step: same perceived change regardless of current distance (Weber's Law)
     const factor = direction === 'in' ? 0.82 : 1.22;
     const target = controls.target.clone();
@@ -5372,7 +5372,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                   // Convert percentage to target distance
                   const targetDist = defaultCameraDistance.current / (targetPct / 100);
                   const isMob = isMobileRef.current;
-                  const clampedDist = Math.max(isMob ? 1.5 : 2, Math.min(isMob ? 16 : 22, targetDist));
+                  const clampedDist = Math.max(isMob ? 1.5 : 2, Math.min(isMob ? 30 : 40, targetDist));
                   const direction = camera.position.clone().sub(controls.target).normalize();
                   camera.position.copy(controls.target.clone().add(direction.multiplyScalar(clampedDist)));
                   controls.update();
