@@ -47,10 +47,11 @@ export function BetaBanner() {
             setDismissed(true);
             localStorage.setItem('beta-banner-dismissed', 'true');
           }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:opacity-80 transition-opacity"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110"
+          style={{ background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.35)' }}
           aria-label="Dismiss banner"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" style={{ color: '#FFFFFF' }} />
         </button>
       </div>
     </div>

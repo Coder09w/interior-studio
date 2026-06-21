@@ -4148,9 +4148,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           {/* Ceiling Light Edit - Mobile */}
           <div className="mt-3">
             <button onClick={ceilingEditMode ? exitCeilingEditMode : enterCeilingEditMode}
-              className="w-full py-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer border transition-all"
+              className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer border transition-all"
               style={{ borderColor: ceilingEditMode ? accentColor : '#E8DFD4', color: ceilingEditMode ? accentColor : '#4A3E32', background: ceilingEditMode ? accentColor + '1A' : 'transparent' }}>
-              <i className="fas fa-lightbulb text-[9px]" />{ceilingEditMode ? 'Exit Light Editor' : 'Edit Ceiling Lights'}
+              <i className="fas fa-lightbulb text-[10px]" />{ceilingEditMode ? 'Exit Light Editor' : 'Edit Ceiling Lights'}
             </button>
           </div>
         </div>
@@ -4925,11 +4925,11 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {/* Guest Upsell — auto-collapses to small pill after 5 seconds */}
       {isGuest && !showOnboarding && !isMobile && (
         guestBannerCollapsed ? (
-          <button onClick={() => setGuestBannerCollapsed(false)} className="fixed top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: '#5A4E42', color: '#fff', fontFamily: "'Inter', 'Outfit', sans-serif", boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: 11, transition: 'all 0.3s ease' }}>
-            <i className="fas fa-lock text-[8px]" style={{ color: 'rgba(255,255,255,0.7)' }} />
+          <button onClick={() => setGuestBannerCollapsed(false)} className="fixed z-30 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ top: 70, right: 12, background: '#5A4E42', color: '#fff', fontFamily: "'Inter', 'Outfit', sans-serif", boxShadow: '0 4px 14px rgba(90,78,66,0.35)', fontSize: 11, transition: 'all 0.3s ease' }}>
+            <i className="fas fa-lock text-[8px]" style={{ color: 'rgba(255,255,255,0.85)' }} />
             <span className="font-semibold">Guest Mode</span>
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>— Limited features</span>
-            <i className="fas fa-chevron-down text-[7px]" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <span style={{ color: 'rgba(255,255,255,0.85)' }}>— Limited</span>
+            <i className="fas fa-chevron-down text-[7px]" style={{ color: 'rgba(255,255,255,0.75)' }} />
           </button>
         ) : (
         <div
@@ -4952,8 +4952,8 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-[13px] tracking-wide">Guest Mode</span>
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>|</span>
-              <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.8)' }}>Limited features — sign up for full access</span>
+              <span style={{ color: 'rgba(255,255,255,0.7)' }}>|</span>
+              <span className="text-[12px]" style={{ color: 'rgba(255,255,255,0.92)' }}>Limited features — sign up for full access</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -5114,7 +5114,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {/* ===== Main 3D Viewer ===== */}
       <main className={isMobile ? 'fixed inset-0' : 'flex-1 relative min-h-0'} style={{ background: lightMoods[lightMood]?.bg ? `#${lightMoods[lightMood].bg.toString(16).padStart(6, '0')}` : '#FAF8F4', transition: 'background-color 0.6s ease', contain: isMobile ? undefined : 'layout style', zIndex: isMobile ? 0 : undefined }}>
         {/* Top Bar — 3-zone layout on mobile: [Left: Logo/Back] [Center: Room Tabs] [Right: Save+Status] */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-3 px-3" style={{ background: lightMood === 'night' ? 'rgba(30,28,25,0.62)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.18)' : '1px solid rgba(226,221,212,0.6)', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease', paddingTop: isMobile ? 'max(10px, env(safe-area-inset-top, 10px))' : 10, paddingBottom: isMobile ? 10 : 10, minHeight: isMobile ? 64 : 64 }}>
+        <div className="absolute left-0 right-0 z-20 flex items-center gap-3 px-3" style={{ top: (isGuest && !guestBannerCollapsed && !isMobile) ? 38 : 0, background: lightMood === 'night' ? 'rgba(30,28,25,0.62)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: lightMood === 'night' ? '1px solid rgba(68,85,170,0.18)' : '1px solid rgba(226,221,212,0.6)', color: lightMood === 'night' ? '#E8E0D0' : undefined, transition: 'background 0.5s ease, border-color 0.5s ease, color 0.5s ease, top 0.3s ease', paddingTop: isMobile ? 'max(10px, env(safe-area-inset-top, 10px))' : 10, paddingBottom: isMobile ? 10 : 10, minHeight: isMobile ? 64 : 64 }}>
           {/* Left zone: Logo/name on mobile, sidebar toggle on desktop */}
           {!isMobile && (
             <>
@@ -5210,7 +5210,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2 transition-all hover:bg-[#FAF6F0]" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[13px]" /></button>
               <button onClick={shareRoom} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2 transition-all hover:bg-[#FAF6F0]" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[13px]" /></button>
               <button onClick={() => setShowShortcuts(true)} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2 transition-all hover:bg-[#FAF6F0]" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Keyboard shortcuts" title="Shortcuts"><i className="fas fa-keyboard text-[13px]" /></button>
-              <span className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }}>{itemCount} items</span>
+              <span className="text-[12px] px-3 py-1.5 rounded-full font-medium flex-shrink-0 whitespace-nowrap" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }}>{itemCount} items</span>
             </div>
           )}
         </div>
@@ -5445,15 +5445,16 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             color: extra?.color ?? btnColor,
             fontSize: compact ? 0 : 13,
             fontWeight: 600 as const,
-            minWidth: compact ? 44 : 80,
+            minWidth: compact ? 44 : 88,
             width: compact ? 44 : 'auto',
-            height: compact ? 44 : 'auto',
-            padding: compact ? 0 : undefined,
+            height: compact ? 44 : 44,
+            padding: compact ? 0 : '0 12px',
             transition: 'background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, width 0.25s ease, min-width 0.25s ease, height 0.25s ease, padding 0.25s ease, font-size 0.25s ease',
             display: 'flex' as const,
             alignItems: 'center' as const,
             justifyContent: 'center' as const,
             gap: compact ? 0 : 8,
+            whiteSpace: 'nowrap' as const,
           });
 
           return (

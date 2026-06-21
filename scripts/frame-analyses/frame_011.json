@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "High severity: \"Guest Mode — Limited features\" tooltip overlaps with \"Living room (1)\" button, causing layout obstruction.  \nMedium severity: \"Guest Mode\" tooltip text has insufficient contrast against dark background.  \nLow severity: \"10 items\" badge in top-right corner has inconsistent spacing relative to adjacent icons.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066669,
+  "id": "2026062202310739cbda230f6d4f1a",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026062202310739cbda230f6d4f1a",
+  "usage": {
+    "completion_tokens": 66,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1238,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1304
+  }
+}

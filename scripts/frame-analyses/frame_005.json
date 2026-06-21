@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Center - \"STARTING UP...\" text below 3D model (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066431,
+  "id": "20260622022710e30eda9f18e84841",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622022710e30eda9f18e84841",
+  "usage": {
+    "completion_tokens": 24,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 8
+    },
+    "total_tokens": 1459
+  }
+}

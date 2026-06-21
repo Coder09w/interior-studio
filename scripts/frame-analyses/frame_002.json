@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Header - \"BETA\" badge has low contrast against dark background (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066391,
+  "id": "20260622022629ebe32162bfbd4bda",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622022629ebe32162bfbd4bda",
+  "usage": {
+    "completion_tokens": 24,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 8
+    },
+    "total_tokens": 1459
+  }
+}

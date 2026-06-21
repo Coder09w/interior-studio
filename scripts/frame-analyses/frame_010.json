@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Top-right toolbar - \"10 items\" badge has low contrast against dark background (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066482,
+  "id": "20260622022801dbf4ab3ecfff4460",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622022801dbf4ab3ecfff4460",
+  "usage": {
+    "completion_tokens": 26,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 1461
+  }
+}

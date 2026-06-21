@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Top-right corner - \"Back to Home\" link misaligned with header layout (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066391,
+  "id": "20260622022630b2375fb32a274b44",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622022630b2375fb32a274b44",
+  "usage": {
+    "completion_tokens": 26,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 1461
+  }
+}

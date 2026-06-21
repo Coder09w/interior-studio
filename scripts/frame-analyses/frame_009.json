@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Top-right toolbar - \"Guest Mode — Limited features\" tooltip overlaps with \"Living room (1)\" button (severity: MED)\nISSUE: Right sidebar - \"Top\" button has unclear icon (severity: LOW)\nISSUE: Left sidebar - \"Flooring\" label is cut off (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066472,
+  "id": "2026062202275017a8744728b540cf",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026062202275017a8744728b540cf",
+  "usage": {
+    "completion_tokens": 69,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 232
+    },
+    "total_tokens": 1504
+  }
+}

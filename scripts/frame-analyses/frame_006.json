@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Top toolbar - \"Guest Mode — Limited features\" dropdown overlaps with \"Living room\" button (severity: MED)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066441,
+  "id": "2026062202271988a367b3607640f4",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026062202271988a367b3607640f4",
+  "usage": {
+    "completion_tokens": 29,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 8
+    },
+    "total_tokens": 1464
+  }
+}

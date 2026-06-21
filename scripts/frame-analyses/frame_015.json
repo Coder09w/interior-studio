@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Left sidebar - \"Screensh\" text cut off (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066391,
+  "id": "202606220226309c80160457f043dd",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202606220226309c80160457f043dd",
+  "usage": {
+    "completion_tokens": 21,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 1456
+  }
+}

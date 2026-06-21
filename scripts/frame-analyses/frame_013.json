@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1. \"Guest Mode — Limited features\" tooltip lacks sufficient contrast (low severity).  \n2. \"Save Room\" button has inconsistent padding/alignment with adjacent buttons (medium severity).  \n3. \"Dashboard\" button text is less prominent than \"Save Room\" (low severity).  \n4. Right-side \"Top/Front/3D\" buttons have uneven spacing (low severity).  \n5. Bottom control icons (rotate/edit) have inconsistent sizing (low severity).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066695,
+  "id": "202606220231327b54c71e58d64444",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202606220231327b54c71e58d64444",
+  "usage": {
+    "completion_tokens": 98,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1238,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1336
+  }
+}

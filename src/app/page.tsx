@@ -1196,8 +1196,8 @@ function Footer() {
                     <Link
                       href={link.href}
                       prefetch={link.href.startsWith('#') || link.href === '#' ? undefined : false}
-                      className="text-sm transition-colors duration-200 hover:text-[#C17F4E]"
-                      style={{ color: '#A8A8A8' }}
+                      className="text-sm transition-colors duration-200 hover:text-[#FFFFFF]"
+                      style={{ color: '#B8B8B8' }}
                     >
                       {link.label}
                     </Link>

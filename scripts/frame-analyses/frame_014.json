@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Top-right - \"10 items\" text is cut off (severity: LOW)\nISSUE: Right sidebar - \"Share\" button label is truncated (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066606,
+  "id": "2026062202300399248221f842440f",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026062202300399248221f842440f",
+  "usage": {
+    "completion_tokens": 40,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 6
+    },
+    "total_tokens": 1475
+  }
+}

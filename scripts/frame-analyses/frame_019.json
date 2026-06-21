@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Footer links - \"Terms of Service\" text color is too light, low contrast against dark background (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066630,
+  "id": "20260622023029d7120abce1d44a85",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622023029d7120abce1d44a85",
+  "usage": {
+    "completion_tokens": 30,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1465
+  }
+}

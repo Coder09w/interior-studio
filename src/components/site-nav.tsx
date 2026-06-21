@@ -58,7 +58,7 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
             {showBeta && (
               <span
                 className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full text-white"
-                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                style={{ background: 'linear-gradient(135deg, #2D2D2D, #1A1A1A)', border: '1px solid rgba(193,127,78,0.4)' }}
               >
                 BETA
               </span>

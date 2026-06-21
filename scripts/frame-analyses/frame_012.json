@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Layout: Inconsistent button sizing in the right sidebar (e.g., \"Top\" vs. \"Reset\") - Medium.  \nContrast: \"Guest Mode — Limited features\" tooltip text has low contrast against its background - Medium.  \nTypography: \"Edit Ceiling Lights\" label is smaller than other sidebar text, reducing hierarchy - Low.  \nSpacing: Insufficient padding between \"Design Skins\" section and the \"Skeleton\" card - Low.  \nButtons: \"Capture\" button in the right sidebar lacks clear visual distinction from other buttons - Medium.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066682,
+  "id": "20260622023120baa8c251727f41f5",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622023120baa8c251727f41f5",
+  "usage": {
+    "completion_tokens": 114,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1238,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1352
+  }
+}

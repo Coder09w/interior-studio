@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Top toolbar - \"Guest Mode — Limited features\" dropdown has low contrast (severity: MED)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066462,
+  "id": "202606220227404adab40551034e81",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202606220227404adab40551034e81",
+  "usage": {
+    "completion_tokens": 25,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 1460
+  }
+}

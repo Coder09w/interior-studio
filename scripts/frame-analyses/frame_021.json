@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Center of screen - \"STARTING UP...\" text is cut off at bottom of loading card (severity: LOW)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782066645,
+  "id": "20260622023044db3a23fcc15148d9",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622023044db3a23fcc15148d9",
+  "usage": {
+    "completion_tokens": 29,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1435,
+    "prompt_tokens_details": {
+      "cached_tokens": 7
+    },
+    "total_tokens": 1464
+  }
+}
