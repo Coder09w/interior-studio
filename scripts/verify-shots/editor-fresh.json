@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: [Top bar] - [Guest Mode banner not visible (likely not overlapping room tabs as the top bar itself is obscured by the modal)]  \nISSUE: [Right-side buttons] - [Not visible (modal obscures the right-side Top/Front/3D/Capture/Share buttons, so width/label truncation cannot be assessed)]  \nISSUE: [Badge] - [Not visible (modal obscures the '10 items' badge, so full visibility cannot be assessed)]  \nISSUE: [Modal content] - [Dining Room and Bathroom icons are locked (padlock icon) but text is truncated (e.g., \"Dining Room\" appears as \"Dining\" in the icon label, \"Bathroom\" as \"Bathroo\")]  \nCLEAN: [Modal header] - [House icon and \"What would you like to design?\" text are properly aligned and visible]  \nCLEAN: [Modal subtitle] - [\"Choose a room type to get started\" is clearly visible and legible]  \nCLEAN: [Modal buttons] - [Room type buttons (Living Room, Bedroom, Kitchen, Office) have clear icons and text; \"Start from Scratch\" button is fully visible with icon and text]",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782067625,
+  "id": "202606220247019d41c56213e34595",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202606220247019d41c56213e34595",
+  "usage": {
+    "completion_tokens": 259,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1079,
+    "prompt_tokens_details": {
+      "cached_tokens": 7
+    },
+    "total_tokens": 1338
+  }
+}

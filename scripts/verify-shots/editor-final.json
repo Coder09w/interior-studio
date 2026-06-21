@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: Top bar - Guest Mode banner overlapping room tabs (severity: Critical)  \nISSUE: Right-side floating buttons - Inconsistent button widths with label truncation (severity: High)  \nISSUE: Top-right corner - '10 items' badge partially obscured (severity: Medium)  \nISSUE: Modal dialog - 'Start from Scratch' button icon misaligned (severity: Low)  \nISSUE: Modal dialog - Room type cards - Inconsistent padding/spacing (severity: Low)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782067725,
+  "id": "2026062202484153209c2ebb4c40aa",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026062202484153209c2ebb4c40aa",
+  "usage": {
+    "completion_tokens": 104,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1097,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1201
+  }
+}

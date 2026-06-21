@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1. GUEST MODE BANNER CHECK: VERIFIED - The brown Guest Mode banner is at the top and does not overlap the room tabs below it.  \n2. RIGHT SIDEBAR BUTTONS CHECK: VERIFIED - All floating buttons on the right edge are the same width, and no labels are truncated.  \n3. ITEM COUNT BADGE CHECK: VERIFIED - The '12 Items' badge in the top-right is fully visible with no truncation.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782067831,
+  "id": "20260622025028b9985bc9a6c544d6",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622025028b9985bc9a6c544d6",
+  "usage": {
+    "completion_tokens": 96,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1161,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1257
+  }
+}
