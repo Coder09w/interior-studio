@@ -190,7 +190,8 @@ function makeTileTexture(w: number, d: number, color = '#E8E0D8'): THREE.CanvasT
 
 /* ===== LIGHTING MOODS ===== */
 const lightMoods: Record<string, { bg: number; fog: number; ambient: [number, number]; dir: [number, number]; hemi: [number, number, number]; fill: [number, number]; exposure: number }> = {
-  daylight: { bg: 0xF5F0E8, fog: 0xF5F0E8, ambient: [0xFFE8D0, 0.5], dir: [0xFFF0D8, 0.5], hemi: [0xFFF5E6, 0x8B7355, 0.3], fill: [0xE0E8F0, 0.15], exposure: 0.9 },
+  // Daylight: neutral white lights so wall/furniture colors render TRUE (no warm tint shifting blues→brown)
+  daylight: { bg: 0xF8F6F2, fog: 0xF8F6F2, ambient: [0xFFFFFF, 0.55], dir: [0xFFFCF5, 0.55], hemi: [0xFFFFFF, 0xB8B0A0, 0.35], fill: [0xE8ECF0, 0.18], exposure: 1.0 },
   golden: { bg: 0xF0E0C8, fog: 0xF0E0C8, ambient: [0xFFD8A0, 0.35], dir: [0xFFE0A0, 0.4], hemi: [0xFFF0C0, 0x8B7355, 0.2], fill: [0xFFE8C0, 0.1], exposure: 0.95 },
   evening: { bg: 0x5C4A38, fog: 0x5C4A38, ambient: [0xFFC880, 0.2], dir: [0xFFE8C0, 0.25], hemi: [0xD8A070, 0x6B5340, 0.15], fill: [0xFFC880, 0.06], exposure: 0.85 },
   night: { bg: 0x2A2825, fog: 0x2A2825, ambient: [0xFFE0A0, 0.25], dir: [0xFFE0A0, 0.15], hemi: [0x1A1A2E, 0x0D0D15, 0.15], fill: [0x4455AA, 0.05], exposure: 1.05 },
@@ -279,6 +280,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [autoRotActive, setAutoRotActive] = useState(false);
+  const [activeView, setActiveView] = useState<'top' | 'front' | 'persp' | null>(null);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [shadowsEnabled, setShadowsEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -598,6 +600,16 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
   // Ceiling Edit Mode
   const [ceilingEditMode, setCeilingEditMode] = useState(false);
+  // Editor mode: 'normal' = free design, 'measure' = room + item dimensions overlay, 'advanced' = Photoshop-style guides + wall distances
+  const [editorMode, setEditorModeState] = useState<'normal' | 'measure' | 'advanced'>('normal');
+  const editorModeRef = useRef<'normal' | 'measure' | 'advanced'>('normal');
+  const changeEditorMode = useCallback((mode: 'normal' | 'measure' | 'advanced') => {
+    editorModeRef.current = mode;
+    setEditorModeState(mode);
+    needsRenderRef.current?.();
+  }, []);
+  // Convenience alias used in JSX
+  const setEditorMode = changeEditorMode;
   const ceilingEditModeRef = useRef(false);
   const [selectedCeilingLightIdx, setSelectedCeilingLightIdx] = useState(-1);
   const [selectedLightX, setSelectedLightX] = useState(0);
@@ -2033,6 +2045,58 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     step();
   }, []);
 
+  /* ===== VIEW MODE SWITCHING (Top/Front/3D) =====
+   * Top view: hides ceiling + ceiling lights so you can see furniture below,
+   *           camera positioned just below ceiling height looking straight down.
+   * Front/3D: restores ceiling visibility + normal polar angle limits.
+   */
+  const setView = useCallback((view: 'top' | 'front' | 'persp') => {
+    const camera = cameraRef.current, controls = controlsRef.current;
+    const roomGroup = roomGroupRef.current;
+    if (!camera || !controls || !roomGroup) return;
+
+    // Always restore ceiling first (in case we're switching out of top view)
+    roomGroup.traverse(c => {
+      if (c instanceof THREE.Mesh && c.name === 'ceiling') c.visible = true;
+      // Hide ceiling spot light meshes in top view (they sit at ceiling height and block the view)
+      if (c instanceof THREE.Mesh && c.name && c.name.startsWith('ceilingSpotMesh_')) {
+        c.visible = (view !== 'top');
+      }
+    });
+
+    const h = roomHRef.current;
+    const w = roomWRef.current;
+    const d = roomDRef.current;
+
+    if (view === 'top') {
+      // Position camera just below ceiling, looking straight down
+      roomGroup.traverse(c => {
+        if (c instanceof THREE.Mesh && c.name === 'ceiling') c.visible = false;
+      });
+      controls.maxPolarAngle = Math.PI * 0.5; // can't orbit above horizontal
+      controls.minPolarAngle = 0;
+      animateCamera([0, h - 0.15, 0.01], [0, 0, 0], 450);
+    } else if (view === 'front') {
+      controls.maxPolarAngle = Math.PI * 0.48;
+      controls.minPolarAngle = 0;
+      animateCamera([0, Math.min(2, h * 0.7), d], [0, 1, 0], 450);
+    } else {
+      // 3D perspective
+      controls.maxPolarAngle = Math.PI * 0.48;
+      controls.minPolarAngle = 0;
+      animateCamera([5.5, 4.5, 7], [0, 1, 0], 450);
+    }
+    setActiveView(view);
+    // Stop auto-rotate when manually switching views
+    if (autoRotateRef.current) {
+      autoRotateRef.current = false;
+      setAutoRotActive(false);
+      controls.autoRotate = false;
+    }
+    void w; void d; // (room dims available for future fine-tuning)
+    markSceneDirty();
+  }, [animateCamera, markSceneDirty]);
+
   /* ===== CEILING EDIT MODE ===== */
   const enterCeilingEditMode = useCallback(() => {
     const camera = cameraRef.current;
@@ -2638,7 +2702,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     }
 
     const canvas = canvasRef.current; if (!canvas) return;
-    const scene = new THREE.Scene(); scene.background = new THREE.Color(0xF5F0E8); scene.fog = new THREE.FogExp2(0xF5F0E8, 0.018); sceneRef.current = scene;
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0xF8F6F2); scene.fog = new THREE.FogExp2(0xF8F6F2, 0.014); sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100); camera.position.set(5.5, 4.5, 7); cameraRef.current = camera;
 
     // Performance: lower pixel ratio on mobile, limit to 1.5x
@@ -2647,7 +2711,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     renderer.setPixelRatio(pr);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = mobile ? THREE.BasicShadowMap : THREE.PCFShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.9; renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0; renderer.outputColorSpace = THREE.SRGBColorSpace;
     rendererRef.current = renderer;
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -2683,12 +2747,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     defaultCameraDistance.current = camera.position.distanceTo(controls.target);
     controlsRef.current = controls;
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xFFE8D0, 0.5);
+    // Lighting — neutral white so colors render true (no warm tint shifting blues→brown)
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.55);
     scene.add(ambientLight); ambientLightRef.current = ambientLight;
-    const hemiLight = new THREE.HemisphereLight(0xFFF5E6, 0x8B7355, 0.3);
+    const hemiLight = new THREE.HemisphereLight(0xFFFFFF, 0xB8B0A0, 0.35);
     scene.add(hemiLight); hemiLightRef.current = hemiLight;
-    const dirLight = new THREE.DirectionalLight(0xFFF0D8, 0.5); dirLight.position.set(4, 8, 5); dirLight.castShadow = true;
+    const dirLight = new THREE.DirectionalLight(0xFFFCF5, 0.55); dirLight.position.set(4, 8, 5); dirLight.castShadow = true;
     // Lower shadow map on mobile for perf
     const shadowSize = mobile ? 1024 : 2048;
     dirLight.shadow.mapSize.set(shadowSize, shadowSize);
@@ -3536,6 +3600,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       setAutoRotActive(false);
       // Reset to default perspective view deterministically
       animateCamera([5.5, 4.5, 7], [0, 1, 0], 400);
+      // Restore ceiling visibility (in case we were in top view)
+      const rg = roomGroupRef.current;
+      if (rg) rg.traverse(c => { if (c instanceof THREE.Mesh && (c.name === 'ceiling' || (c.name && c.name.startsWith('ceilingSpotMesh_')))) c.visible = true; });
+      controls.maxPolarAngle = Math.PI * 0.48;
+      controls.minPolarAngle = 0;
+      setActiveView(null);
     }
     showToast('Room reset');
   }, [buildRoom, addDefaultFurniture, pushHistory, showToast, animateCamera]);
@@ -4113,54 +4183,53 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
           {/* Save & Export actions */}
           <p className="int-section-header">Save & Export</p>
-          <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="grid grid-cols-2 gap-2.5 mb-3">
             <button onClick={() => { saveRoom(false); }}
-              className="py-3 rounded-xl text-[11px] font-bold cursor-pointer border-none flex flex-col items-center justify-center gap-1.5"
-              style={{ background: '#7A8B6F', color: '#fff' }}>
-              <i className="fas fa-save text-sm" />
+              className="py-4 rounded-xl text-[12px] font-bold cursor-pointer border-none flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 hover:shadow-md active:scale-[0.97]"
+              style={{ background: '#7A8B6F', color: '#fff', minHeight: 72 }}>
+              <i className="fas fa-save text-base" />
               Save Room
             </button>
             <button onClick={() => { takeScreenshot(); }}
-              className="py-3 rounded-xl text-[11px] font-bold cursor-pointer flex flex-col items-center justify-center gap-1.5"
-              style={{ background: '#fff', color: '#5A4E42', border: '1.5px solid #E2DDD4' }}>
-              <i className="fas fa-camera text-sm" />
+              className="py-4 rounded-xl text-[12px] font-bold cursor-pointer flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:bg-[#FAF6F0] hover:shadow-sm active:scale-[0.97]"
+              style={{ background: '#fff', color: '#5A4E42', border: '1.5px solid #E2DDD4', minHeight: 72 }}>
+              <i className="fas fa-camera text-base" />
               Screenshot
             </button>
             <button onClick={() => { shareRoom(); }}
-              className="py-3 rounded-xl text-[11px] font-bold cursor-pointer flex flex-col items-center justify-center gap-1.5"
-              style={{ background: '#fff', color: '#5A4E42', border: '1.5px solid #E2DDD4' }}>
-              <i className="fas fa-share-alt text-sm" />
+              className="py-4 rounded-xl text-[12px] font-bold cursor-pointer flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:bg-[#FAF6F0] hover:shadow-sm active:scale-[0.97]"
+              style={{ background: '#fff', color: '#5A4E42', border: '1.5px solid #E2DDD4', minHeight: 72 }}>
+              <i className="fas fa-share-alt text-base" />
               Share
             </button>
             <button onClick={() => { if (isGuest) { showToast('Sign in for undo history'); return; } undo(); }}
-              className="py-3 rounded-xl text-[11px] font-bold cursor-pointer flex flex-col items-center justify-center gap-1.5"
-              style={{ background: '#fff', color: isGuest ? '#B8A898' : '#5A4E42', border: '1.5px solid #E2DDD4', opacity: isGuest ? 0.5 : 1 }}>
-              <i className="fas fa-undo text-sm" />
+              className="py-4 rounded-xl text-[12px] font-bold cursor-pointer flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:bg-[#FAF6F0] hover:shadow-sm active:scale-[0.97]"
+              style={{ background: '#fff', color: isGuest ? '#B8A898' : '#5A4E42', border: '1.5px solid #E2DDD4', opacity: isGuest ? 0.5 : 1, minHeight: 72 }}>
+              <i className="fas fa-undo text-base" />
               {isGuest ? 'Undo (PRO)' : 'Undo'}
             </button>
             <button onClick={() => { if (isGuest) { showToast('Sign in for redo history'); return; } redo(); }}
-              className="py-3 rounded-xl text-[11px] font-bold cursor-pointer flex flex-col items-center justify-center gap-1.5"
-              style={{ background: '#fff', color: isGuest ? '#B8A898' : '#5A4E42', border: '1.5px solid #E2DDD4', opacity: isGuest ? 0.5 : 1 }}>
-              <i className="fas fa-redo text-sm" />
+              className="py-4 rounded-xl text-[12px] font-bold cursor-pointer flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:bg-[#FAF6F0] hover:shadow-sm active:scale-[0.97]"
+              style={{ background: '#fff', color: isGuest ? '#B8A898' : '#5A4E42', border: '1.5px solid #E2DDD4', opacity: isGuest ? 0.5 : 1, minHeight: 72 }}>
+              <i className="fas fa-redo text-base" />
               {isGuest ? 'Redo (PRO)' : 'Redo'}
+            </button>
+            <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); activeSkinRef.current = 'default'; applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
+              className="py-4 rounded-xl text-[12px] font-bold cursor-pointer flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:bg-[#FAF6F0] hover:shadow-sm active:scale-[0.97]"
+              style={{ background: '#fff', color: '#c0392b', border: '1.5px solid #f0d8d8', minHeight: 72 }}>
+              <i className="fas fa-eraser text-base" />
+              Clear All
             </button>
           </div>
 
           {/* Destructive actions */}
           <div className="pt-3 border-t" style={{ borderColor: '#E2DDD4' }}>
-            <p className="int-section-header">Clear & Reset</p>
-            <div className="flex gap-2">
-              <button onClick={() => { loadFurnitureData([]); setActiveSkin('default'); activeSkinRef.current = 'default'; applySkin('default'); markUnsaved(); showToast('All furniture cleared, skin reset'); }}
-                className="flex-1 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
-                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
-                <i className="fas fa-eraser text-[9px]" />Clear Furniture
-              </button>
-              <button onClick={() => { if (confirm('Reset the entire room? This will remove all furniture and reset room settings.')) resetRoom(); }}
-                className="flex-1 py-2.5 rounded-lg text-[11px] font-semibold cursor-pointer border flex items-center justify-center gap-1"
-                style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
-                <i className="fas fa-trash-alt text-[9px]" />Reset Room
-              </button>
-            </div>
+            <p className="int-section-header">Reset</p>
+            <button onClick={() => { if (confirm('Reset the entire room? This will remove all furniture and reset room settings.')) resetRoom(); }}
+              className="w-full py-3 rounded-xl text-[12px] font-bold cursor-pointer border flex items-center justify-center gap-2 transition-all duration-200 hover:bg-[#fdf2f2] active:scale-[0.98]"
+              style={{ borderColor: '#e8d0d0', color: '#c0392b', background: '#fff' }}>
+              <i className="fas fa-trash-alt text-xs" />Reset Entire Room
+            </button>
           </div>
         </div>
       ),
@@ -4512,6 +4581,36 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       </div>{/* end scrollable content rail */}
     </aside>
   );
+
+  /* ===== MEASUREMENT DATA — computed each render for the active editor mode ===== */
+  const measurements = useMemo(() => {
+    if (editorMode === 'normal') return null;
+    const room = { w: roomWRef.current, d: roomDRef.current, h: roomHRef.current };
+    const sel = selectedObjRef.current;
+    if (!sel) {
+      // No item selected — return just room dimensions
+      return { room, item: null as null | { name: string; width: number; depth: number; height: number; posX: number; posZ: number; distLeft: number; distRight: number; distBack: number; distFront: number; } };
+    }
+    // Compute bounding box of selected furniture
+    const box = new THREE.Box3().setFromObject(sel);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const center = new THREE.Vector3(); box.getCenter(center);
+    // Item dimensions in world units (round to 2 decimals, convert meters→cm for display)
+    const item = {
+      name: (sel.userData.name as string) || 'Item',
+      width: Math.round(size.x * 100) / 100,
+      depth: Math.round(size.z * 100) / 100,
+      height: Math.round(size.y * 100) / 100,
+      posX: Math.round(center.x * 100) / 100,
+      posZ: Math.round(center.z * 100) / 100,
+      // Distances from item center to each wall (Photoshop-style guide distances)
+      distLeft: Math.round((center.x + room.w / 2) * 100) / 100,
+      distRight: Math.round((room.w / 2 - center.x) * 100) / 100,
+      distBack: Math.round((center.z + room.d / 2) * 100) / 100,
+      distFront: Math.round((room.d / 2 - center.z) * 100) / 100,
+    };
+    return { room, item };
+  }, [editorMode]);
 
   return (
     <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} overflow-hidden`} style={{ background: '#F5F0E8', color: '#1A1A1A', fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", height: '100dvh', '--accent': accentColor, '--accent-dark': accentColorDark, '--accent-light': accentColorLight } as React.CSSProperties}>
@@ -5067,11 +5166,17 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                 {saveStatus === 'unsaved' && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C47F4E', display: 'inline-block' }} />}
                 {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving' : 'Unsaved'}
               </span>
-              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 48, minWidth: 72, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
+              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 48, minWidth: 72, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
                 <i className="fas fa-save text-[12px]" />{saveStatus === 'saving' ? '...' : 'Save'}
               </button>
+              {/* Big clear Dashboard button — only for signed-in users */}
+              {!isGuest && (
+                <a href="/dashboard" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer no-underline transition-all hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 48, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Dashboard" title="Go to Dashboard">
+                  <i className="fas fa-th-large text-[12px]" />Dashboard
+                </a>
+              )}
               {isGuest && (
-                <a href="/auth/signup" className="px-3.5 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5" style={{ background: '#4A3E32', color: '#fff', minHeight: 48, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <a href="/auth/signup" className="px-3.5 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5 transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 48, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                   <i className="fas fa-lock text-[11px]" />Sign Up
                 </a>
               )}
@@ -5087,17 +5192,123 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                 {saveStatus === 'unsaved' && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C47F4E', display: 'inline-block' }} />}
                 {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving' : 'Unsaved'}
               </span>
-              <button onClick={() => window.location.href = '/dashboard'} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }} aria-label="Dashboard" title="Dashboard"><i className="fas fa-th-large text-[13px]" /></button>
-              <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[13px]" /></button>
-              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[13px]" /></button>
-              <button onClick={shareRoom} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[13px]" /></button>
-              <button onClick={() => setShowShortcuts(true)} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Keyboard shortcuts" title="Shortcuts"><i className="fas fa-keyboard text-[13px]" /></button>
+              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 48, minWidth: 72, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
+                <i className="fas fa-save text-[12px]" />{saveStatus === 'saving' ? '...' : 'Save'}
+              </button>
+              {/* Big clear Dashboard button — only for signed-in users */}
+              {!isGuest && (
+                <a href="/dashboard" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer no-underline transition-all hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 48, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Dashboard" title="Go to Dashboard">
+                  <i className="fas fa-th-large text-[12px]" />Dashboard
+                </a>
+              )}
+              {isGuest && (
+                <a href="/auth/signup" className="px-3.5 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5 transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 48, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                  <i className="fas fa-lock text-[11px]" />Sign Up
+                </a>
+              )}
+              <button onClick={() => setSnapToGrid(!snapToGrid)} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2 transition-all hover:bg-[#FAF6F0]" style={{ borderColor: snapToGrid ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: snapToGrid ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32') }} aria-label="Snap to Grid" title="Snap to Grid"><i className="fas fa-th text-[13px]" /></button>
+              <button onClick={() => { const next = !shadowsEnabledRef.current; shadowsEnabledRef.current = next; setShadowsEnabled(next); if (dirLightRef.current) dirLightRef.current.castShadow = next; if (rendererRef.current) rendererRef.current.shadowMap.enabled = next; if (needsRenderRef.current) needsRenderRef.current(); }} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2 transition-all hover:bg-[#FAF6F0]" style={{ borderColor: shadowsEnabled ? accentColor : (lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4'), color: shadowsEnabled ? accentColor : (lightMood === 'night' ? '#C8C0B0' : '#4A3E32') }} aria-label="Toggle Shadows" title="Toggle Shadows"><i className="fas fa-cloud-sun text-[13px]" /></button>
+              <button onClick={shareRoom} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2 transition-all hover:bg-[#FAF6F0]" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Share room" title="Share"><i className="fas fa-share-alt text-[13px]" /></button>
+              <button onClick={() => setShowShortcuts(true)} className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border-2 transition-all hover:bg-[#FAF6F0]" style={{ borderColor: lightMood === 'night' ? 'rgba(255,255,255,0.12)' : '#E2DDD4', color: lightMood === 'night' ? '#C8C0B0' : undefined }} aria-label="Keyboard shortcuts" title="Shortcuts"><i className="fas fa-keyboard text-[13px]" /></button>
               <span className="text-[12px] px-3 py-1.5 rounded-full font-medium" style={{ background: lightMood === 'night' ? 'rgba(255,255,255,0.08)' : '#F0E8D8', color: lightMood === 'night' ? '#C8C0B0' : '#4A3E32' }}>{itemCount} items</span>
             </div>
           )}
         </div>
 
         <canvas ref={canvasRef} role="application" aria-label="3D Room Editor — use mouse to orbit, scroll to zoom" style={{ width: '100%', height: '100%', display: 'block', cursor: ceilingEditMode ? 'crosshair' : 'grab' }} />
+
+        {/* ===== MEASUREMENT OVERLAY (Simple + Advanced modes) ===== */}
+        {editorMode !== 'normal' && measurements && (
+          <div
+            className={`${isMobile ? 'fixed' : 'absolute'} top-16 left-1/2 -translate-x-1/2 z-30 rounded-xl pointer-events-none`}
+            style={{
+              background: 'rgba(15,15,15,0.85)',
+              backdropFilter: 'blur(10px)',
+              color: '#FFFFFF',
+              padding: '10px 14px',
+              border: '1px solid rgba(193,127,78,0.35)',
+              boxShadow: '0 6px 24px rgba(0,0,0,0.35)',
+              maxWidth: isMobile ? '92vw' : '480px',
+              width: 'auto',
+            }}
+          >
+            {/* Mode label + room dims */}
+            <div className="flex items-center gap-2 mb-1.5">
+              <i className="fas fa-ruler-combined text-[10px]" style={{ color: '#C17F4E' }} />
+              <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: '#C17F4E' }}>
+                {editorMode === 'measure' ? 'Measurement Mode' : 'Advanced Guides'}
+              </span>
+            </div>
+            <div className="text-[11px] font-medium" style={{ color: '#E8E0D0' }}>
+              Room: <span className="font-bold text-white">{measurements.room.w.toFixed(1)}m × {measurements.room.d.toFixed(1)}m × {measurements.room.h.toFixed(1)}m</span>
+              <span className="ml-2" style={{ color: '#A8A8A8' }}>({Math.round(measurements.room.w * measurements.room.d)}m²)</span>
+            </div>
+
+            {/* Selected item dimensions + wall distances (Photoshop-style) */}
+            {measurements.item && (
+              <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+                <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#A8A8A8' }}>{measurements.item.name}</div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                  <span><span style={{ color: '#A8A8A8' }}>W:</span> <span className="font-bold text-white">{measurements.item.width.toFixed(2)}m</span></span>
+                  <span><span style={{ color: '#A8A8A8' }}>D:</span> <span className="font-bold text-white">{measurements.item.depth.toFixed(2)}m</span></span>
+                  <span><span style={{ color: '#A8A8A8' }}>H:</span> <span className="font-bold text-white">{measurements.item.height.toFixed(2)}m</span></span>
+                </div>
+                {editorMode === 'advanced' && (
+                  <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[10.5px]">
+                    <span title="Distance to left wall"><i className="fas fa-arrow-left text-[8px] mr-1" style={{ color: '#C17F4E' }} /><span style={{ color: '#A8A8A8' }}>L:</span> <span className="font-bold text-white">{measurements.item.distLeft.toFixed(2)}m</span></span>
+                    <span title="Distance to right wall"><i className="fas fa-arrow-right text-[8px] mr-1" style={{ color: '#C17F4E' }} /><span style={{ color: '#A8A8A8' }}>R:</span> <span className="font-bold text-white">{measurements.item.distRight.toFixed(2)}m</span></span>
+                    <span title="Distance to back wall"><i className="fas fa-arrow-up text-[8px] mr-1" style={{ color: '#C17F4E' }} /><span style={{ color: '#A8A8A8' }}>B:</span> <span className="font-bold text-white">{measurements.item.distBack.toFixed(2)}m</span></span>
+                    <span title="Distance to front wall"><i className="fas fa-arrow-down text-[8px] mr-1" style={{ color: '#C17F4E' }} /><span style={{ color: '#A8A8A8' }}>F:</span> <span className="font-bold text-white">{measurements.item.distFront.toFixed(2)}m</span></span>
+                  </div>
+                )}
+              </div>
+            )}
+            {!measurements.item && (
+              <div className="mt-1.5 text-[10.5px] italic" style={{ color: '#A8A8A8' }}>
+                {editorMode === 'advanced' ? 'Select an item to see wall distances →' : 'Select an item to see dimensions →'}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===== MODE SWITCHER — Normal / Measure / Advanced ===== */}
+        <div
+          className={`${isMobile ? 'fixed' : 'absolute'} z-30 flex items-center gap-1 rounded-xl`}
+          style={{
+            left: isMobile ? '50%' : 12,
+            transform: isMobile ? 'translateX(-50%)' : 'none',
+            bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom, 0px) + 8px)' : 'auto',
+            top: isMobile ? 'auto' : 80,
+            background: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid #E2DDD4',
+            padding: 4,
+            boxShadow: '0 4px 14px rgba(0,0,0,0.10)',
+          }}
+        >
+          {([
+            { id: 'normal' as const, label: 'Design', icon: 'fa-pen' },
+            { id: 'measure' as const, label: 'Measure', icon: 'fa-ruler' },
+            { id: 'advanced' as const, label: 'Advanced', icon: 'fa-ruler-combined' },
+          ]).map(m => (
+            <button
+              key={m.id}
+              onClick={() => setEditorMode(m.id)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer transition-all duration-200"
+              style={{
+                background: editorMode === m.id ? 'linear-gradient(135deg, #C17F4E, #A86A3D)' : 'transparent',
+                color: editorMode === m.id ? '#FFFFFF' : '#5A4E42',
+                border: 'none',
+                minHeight: 28,
+              }}
+              aria-label={`${m.label} mode`}
+              title={`${m.label} mode`}
+            >
+              <i className={`fas ${m.icon} text-[10px]`} />
+              <span className="hidden sm:inline">{m.label}</span>
+            </button>
+          ))}
+        </div>
 
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
@@ -5248,12 +5459,12 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           return (
             <div className="absolute z-30 flex flex-col" style={{ right: compact ? 6 : 12, top: '50%', transform: 'translateY(-50%)', gap: compact ? 4 : 8, transition: 'right 0.25s ease, gap 0.25s ease' }}>
               {[
-                { id: 'top', icon: 'fa-border-all', label: 'Top', pos: [0, 10, 0.01] as [number, number, number], target: [0, 0, 0] as [number, number, number] },
-                { id: 'front', icon: 'fa-square', label: 'Front', pos: [0, 2, roomD] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
-                { id: 'persp', icon: 'fa-cube', label: '3D', pos: [5.5, 4.5, 7] as [number, number, number], target: [0, 1, 0] as [number, number, number] },
+                { id: 'top' as const, icon: 'fa-border-all', label: 'Top' },
+                { id: 'front' as const, icon: 'fa-square', label: 'Front' },
+                { id: 'persp' as const, icon: 'fa-cube', label: '3D' },
               ].map(v => (
-                <button key={v.id} onClick={() => animateCamera(v.pos, v.target)} aria-label={`${v.id} view`} title={`${v.label} view`} className="rounded-xl cursor-pointer border" style={btnStyle()}>
-                  <i className={`fas ${v.icon}`} style={{ fontSize: compact ? 16 : 15, color: accentColor, transition: 'font-size 0.25s ease' }} />
+                <button key={v.id} onClick={() => setView(v.id)} aria-label={`${v.id} view`} title={`${v.label} view`} className="rounded-xl cursor-pointer border" style={btnStyle({ bg: activeView === v.id ? accentColor + '1F' : btnBg, border: activeView === v.id ? accentColor : btnBorder, color: activeView === v.id ? accentColor : btnColor })}>
+                  <i className={`fas ${v.icon}`} style={{ fontSize: compact ? 16 : 15, color: activeView === v.id ? accentColor : accentColor, transition: 'font-size 0.25s ease' }} />
                   {!compact && <span style={{ fontFamily: "'Inter', 'Outfit', sans-serif", letterSpacing: 0.3 }}>{v.label}</span>}
                 </button>
               ))}

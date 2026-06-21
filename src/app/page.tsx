@@ -1222,10 +1222,65 @@ function Footer() {
   );
 }
 
+/* ─── SCROLL-FOLLOWING LIGHT — warm glow that tracks scroll position ─── */
+function ScrollFollowingLight() {
+  const { scrollY } = useScroll();
+  // Map scroll [0..3000px] to vertical position [10%..90%] of viewport
+  const y = useTransform(scrollY, [0, 4000], ['10vh', '90vh']);
+  const opacity = useTransform(scrollY, [0, 100, 4000, 4500], [0, 0.55, 0.55, 0]);
+
+  return (
+    <motion.div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        pointerEvents: 'none',
+        zIndex: 1, // above section backgrounds, below content (which is z-auto/10+)
+        y,
+        opacity,
+      }}
+    >
+      {/* Warm radial glow — like a flashlight beam following the user's scroll */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '900px',
+          height: '900px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(193,127,78,0.18) 0%, rgba(193,127,78,0.06) 30%, transparent 60%)',
+          filter: 'blur(40px)',
+        }}
+      />
+      {/* Smaller hotter core — gives the glow a "source" feel */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '300px',
+          height: '300px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,200,140,0.12) 0%, transparent 70%)',
+          filter: 'blur(20px)',
+        }}
+      />
+    </motion.div>
+  );
+}
+
 /* ─── MAIN PAGE ─── */
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col">
+      <ScrollFollowingLight />
       <Navbar />
       <HeroSection />
       <BeforeAfterSection />

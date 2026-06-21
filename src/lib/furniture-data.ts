@@ -120,6 +120,12 @@ export const wallColorOptions = [
   { color: '#B8C4C0', label: 'Sage' },
   { color: '#C4B8A8', label: 'Sand' },
   { color: '#FFFFFF', label: 'White' },
+  { color: '#A8C5D6', label: 'Sky Blue' },
+  { color: '#7B9EB0', label: 'Steel Blue' },
+  { color: '#3D5A6C', label: 'Navy' },
+  { color: '#6B8E7F', label: 'Forest' },
+  { color: '#C8A4A4', label: 'Dusty Rose' },
+  { color: '#2D2D2D', label: 'Charcoal' },
 ];
 
 export const roomTypeDefaults: Record<string, { width: number; depth: number; height: number; defaultFurniture: Array<{ fn: string; color: string; mat: MatType; pos: [number, number, number]; rot?: number }> }> = {
