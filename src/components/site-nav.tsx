@@ -101,10 +101,10 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
                 </Link>
               </div>
 
-              {/* Mobile hamburger */}
+              {/* Mobile hamburger — 48x48 touch target */}
               <button
-                className="md:hidden p-2 rounded-lg"
-                style={{ color: '#2D2D2D' }}
+                className="md:hidden flex items-center justify-center rounded-lg"
+                style={{ color: '#2D2D2D', width: 48, height: 48 }}
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label="Toggle menu"
               >

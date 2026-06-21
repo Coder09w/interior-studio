@@ -34,13 +34,16 @@ export function BetaBanner() {
         color: '#FFFFFF',
       }}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
+      <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 pr-8 sm:pr-0">
         <Sparkles className="w-4 h-4 flex-shrink-0" />
-        <span className="font-medium">
-          Early Access Beta — All premium features are free!{' '}
-          <a href="/pricing" className="underline underline-offset-2 hover:opacity-90">
-            Learn more
-          </a>
+        <span className="font-medium leading-snug">
+          <span className="sm:hidden">Early Access Beta — Premium features free!</span>
+          <span className="hidden sm:inline">
+            Early Access Beta — All premium features are free!{' '}
+            <a href="/pricing" className="underline underline-offset-2 hover:opacity-90">
+              Learn more
+            </a>
+          </span>
         </span>
         <button
           onClick={() => {

@@ -4050,7 +4050,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </div>
           ))}
           {/* Wall Color */}
-          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Wall Color</span>
+          <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Wall Color</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {wallColorOptions.map(wc => (
                 <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }}
@@ -4067,7 +4067,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </div>
           </div>
           {/* Floor Type */}
-          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
+          <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {floorTypeOptions.map(ft => (
                 <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; rebuildFloorOnly(); markUnsaved(); }}
@@ -4077,7 +4077,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </div>
           </div>
           {/* Floor Color */}
-          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Floor Color</span>
+          <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Floor Color</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {floorColorOptions.map(fc => (
                 <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }}
@@ -4094,7 +4094,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </div>
           </div>
           {/* Door - Mobile */}
-          <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
+          <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
             <div className="flex gap-1.5 mt-1.5">
               {[{ id: 'none', icon: 'fa-ban', label: 'None' }, { id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
                 <button key={id} onClick={() => { setDoorWall(id); doorWallRef.current = id; rebuildDoorOnly(); markUnsaved(); }} className="px-2 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1"
@@ -4105,7 +4105,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </div>
           </div>
           {/* Windows - Mobile */}
-          <div className="mb-2">
+          <div className="mb-4">
             <div className="flex justify-between mb-0.5"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Windows</span><span className="text-[12px]" style={{ color: '#5A4E42' }}>{windowCount}</span></div>
             <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; rebuildWindowsOnly(); markUnsaved(); }} />
             <div className="flex gap-1.5 mt-1.5">
@@ -4118,7 +4118,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             </div>
           </div>
           {/* Lighting */}
-          <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
+          <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
             <div className="flex gap-1.5 mt-1.5 flex-wrap">
               {lightMoodOptions.map(lm => {
                 const lockedMoods = new Set(['golden', 'night']);
@@ -4400,7 +4400,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         ))}
 
         {/* Wall Color */}
-        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Wall Color</span>
+        <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Wall Color</span>
           <div className="flex gap-2 mt-2 flex-wrap items-center">
             {wallColorOptions.map(wc => (
               <button key={wc.color} onClick={() => { setWallCol(wc.color); updateWallColor(wc.color); markUnsaved(); }} className="w-10 h-10 rounded-lg cursor-pointer border-2 transition-all"
@@ -4417,7 +4417,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
 
         {/* Floor Type */}
-        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
+        <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Flooring</span>
           <div className="flex gap-2 mt-2">
             {floorTypeOptions.map(ft => (
               <button key={ft.id} onClick={() => { setFloorType(ft.id); floorTypeRef.current = ft.id; rebuildFloorOnly(); markUnsaved(); }} className="w-10 h-10 rounded-lg cursor-pointer border-2 transition-all"
@@ -4427,7 +4427,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
 
         {/* Floor Color */}
-        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Floor Color</span>
+        <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Floor Color</span>
           <div className="flex gap-2 mt-2 flex-wrap items-center">
             {floorColorOptions.map(fc => (
               <button key={fc.color} onClick={() => { setFloorColor(fc.color); updateFloorColor(fc.color); markUnsaved(); }} className="w-10 h-10 rounded-lg cursor-pointer border-2 transition-all"
@@ -4444,7 +4444,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
 
         {/* Door */}
-        <div className="mb-2"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
+        <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Door</span>
           <div className="flex gap-1.5 mt-1.5">
             {[{ id: 'none', icon: 'fa-ban', label: 'None' }, { id: 'back', icon: 'fa-arrow-down', label: 'Back' }, { id: 'left', icon: 'fa-arrow-left', label: 'Left' }, { id: 'right', icon: 'fa-arrow-right', label: 'Right' }].map(({ id, icon, label }) => (
               <button key={id} onClick={() => { setDoorWall(id); doorWallRef.current = id; rebuildDoorOnly(); markUnsaved(); }} className="px-3 py-2 rounded-lg text-[12px] font-semibold cursor-pointer border-2 transition-all flex items-center gap-1.5 min-h-[40px]"
@@ -4456,7 +4456,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
 
         {/* Windows */}
-        <div className="mb-2">
+        <div className="mb-4">
           <div className="flex justify-between mb-0.5"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Windows</span><span className="text-[12px]" style={{ color: '#5A4E42' }}>{windowCount}</span></div>
           <input type="range" className="int-range" min={1} max={3} value={windowCount} step={1} onChange={e => { const v = parseInt(e.target.value); setWindowCount(v); windowCountRef.current = v; rebuildWindowsOnly(); markUnsaved(); }} />
           <div className="flex gap-1.5 mt-1.5">
@@ -4470,7 +4470,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
 
         {/* Lighting Mood */}
-        <div><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
+        <div className="mb-4"><span className="text-[12px] font-semibold" style={{ color: '#4A3E32' }}>Lighting</span>
           <div className="flex gap-1.5 mt-1.5">
             {lightMoodOptions.map(lm => {
               const lockedMoods = new Set(['golden', 'night']);
@@ -5126,9 +5126,9 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           )}
           {isMobile && (
             isGuest ? (
-              <span className="px-2 py-1 rounded text-base font-semibold" style={{ background: 'transparent', maxWidth: 110, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic', letterSpacing: '-0.01em' }}>{designName}</span>
+              <span className="px-1.5 py-1 rounded text-[13px] font-semibold truncate" style={{ background: 'transparent', maxWidth: 70, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : '#8B7355', fontStyle: 'italic', letterSpacing: '-0.01em' }}>{designName}</span>
             ) : (
-              <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-2 py-1 rounded text-base font-semibold border-none outline-none" style={{ background: 'transparent', maxWidth: 110, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined, letterSpacing: '-0.01em' }} />
+              <input value={designName} onChange={e => { setDesignName(e.target.value); designNameRef.current = e.target.value; markUnsaved(); }} className="px-1.5 py-1 rounded text-[13px] font-semibold border-none outline-none truncate" style={{ background: 'transparent', maxWidth: 70, fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", color: lightMood === 'night' ? '#E8E0D0' : undefined, letterSpacing: '-0.01em' }} />
             )
           )}
           {!isMobile && (isGuest ? (
@@ -5158,25 +5158,24 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
           {/* Right zone: Save status pill + Save button (mobile) */}
           {isMobile && (
-            <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
-              {/* Save status pill */}
-              <span className="int-save-pill" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#C47F4E', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.12)' : saveStatus === 'saving' ? 'rgba(138,132,120,0.12)' : 'rgba(196,127,78,0.12)', fontSize: 13, padding: '6px 10px' }}>
-                {saveStatus === 'saved' && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#7A8B6F', display: 'inline-block' }} />}
-                {saveStatus === 'saving' && <i className="fas fa-spinner fa-spin text-[10px]" />}
-                {saveStatus === 'unsaved' && <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#C47F4E', display: 'inline-block' }} />}
-                {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving' : 'Unsaved'}
+            <div className="flex items-center gap-1.5" style={{ flexShrink: 0 }}>
+              {/* Save status pill — compact dot-only on mobile to save horizontal space */}
+              <span className="int-save-pill flex items-center justify-center" style={{ color: saveStatus === 'saved' ? '#7A8B6F' : saveStatus === 'saving' ? '#7A6E62' : '#C47F4E', background: saveStatus === 'saved' ? 'rgba(122,139,111,0.12)' : saveStatus === 'saving' ? 'rgba(138,132,120,0.12)' : 'rgba(196,127,78,0.12)', fontSize: 13, padding: '10px 8px', minWidth: 32, minHeight: 40, borderRadius: 10 }} aria-label={saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving' : 'Unsaved'}>
+                {saveStatus === 'saved' && <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#7A8B6F', display: 'inline-block' }} />}
+                {saveStatus === 'saving' && <i className="fas fa-spinner fa-spin text-[11px]" />}
+                {saveStatus === 'unsaved' && <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#C47F4E', display: 'inline-block' }} />}
               </span>
-              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 48, minWidth: 72, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
+              <button onClick={() => { saveRoom(false); }} className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: saveStatus === 'saved' ? '#7A8B6F' : accentColor, color: '#fff', minHeight: 40, minWidth: 64, flexShrink: 0, transition: 'background 0.3s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Save Room">
                 <i className="fas fa-save text-[12px]" />{saveStatus === 'saving' ? '...' : 'Save'}
               </button>
               {/* Big clear Dashboard button — only for signed-in users */}
               {!isGuest && (
-                <a href="/dashboard" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer no-underline transition-all hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 48, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Dashboard" title="Go to Dashboard">
-                  <i className="fas fa-th-large text-[12px]" />Dashboard
+                <a href="/dashboard" className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer no-underline transition-all hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 40, minWidth: 48, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} aria-label="Dashboard" title="Go to Dashboard">
+                  <i className="fas fa-th-large text-[12px]" /><span className="hidden xs:inline sm:inline">Dashboard</span>
                 </a>
               )}
               {isGuest && (
-                <a href="/auth/signup" className="px-3.5 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap no-underline flex items-center gap-1.5 transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 48, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <a href="/auth/signup" className="px-3 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap no-underline flex items-center gap-1 transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]" style={{ background: '#4A3E32', color: '#fff', minHeight: 40, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                   <i className="fas fa-lock text-[11px]" />Sign Up
                 </a>
               )}

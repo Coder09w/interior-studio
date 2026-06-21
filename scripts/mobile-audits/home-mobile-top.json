@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "ISSUE: [Header area] - \"Learn more\" text is cut off (severity: LOW)  \nISSUE: [Hamburger menu icon] - Touch target may be too small (severity: MED)  \nISSUE: [Chat button] - Touch target may be too small (severity: MED)  \nCLEAN",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782069050,
+  "id": "202606220310484ffe5a6246f44597",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202606220310484ffe5a6246f44597",
+  "usage": {
+    "completion_tokens": 69,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 642,
+    "prompt_tokens_details": {
+      "cached_tokens": 6
+    },
+    "total_tokens": 711
+  }
+}
