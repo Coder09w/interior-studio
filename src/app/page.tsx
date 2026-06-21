@@ -122,7 +122,7 @@ function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm font-medium transition-colors hover:text-[#C17F4E]" style={{ color: mutedColor }}>
               Features
             </a>
@@ -135,7 +135,7 @@ function Navbar() {
             {session ? (
               <Link
                 href="/dashboard"
-                className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md"
+                className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md hover:shadow-[#C17F4E]/20 active:scale-[0.97]"
                 style={{ background: '#C17F4E' }}
               >
                 Dashboard
@@ -144,7 +144,7 @@ function Navbar() {
               <>
                 <Link
                   href="/auth/login"
-                  className="text-sm font-medium px-5 py-2.5 rounded-lg border transition-all hover:shadow-sm"
+                  className="text-sm font-medium px-5 py-2.5 rounded-lg border transition-all hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.97]"
                   style={{ borderColor, color: textColor }}
                 >
                   Sign In
@@ -152,7 +152,7 @@ function Navbar() {
                 <Link
                   href="/editor"
                   prefetch={false}
-                  className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md hover:shadow-[#C17F4E]/20"
+                  className="text-sm font-medium px-5 py-2.5 rounded-lg text-white transition-all hover:opacity-90 hover:shadow-md hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97]"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
                 >
                   Start Designing
@@ -291,11 +291,11 @@ function HeroSection() {
             </RevealOnScroll>
 
             <RevealOnScroll delay={0.4}>
-              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center">
+              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center w-full sm:w-auto">
                 <Link
                   href="/editor"
                   prefetch={false}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97]"
+                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97] w-full sm:w-auto"
                   style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
                 >
                   Start Designing Free
@@ -304,7 +304,7 @@ function HeroSection() {
                 <Link
                   href="/editor?room=living"
                   prefetch={false}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-base border-2 transition-all duration-200 hover:bg-white/5 hover:border-white/30 active:scale-[0.97]"
+                  className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl font-semibold text-base border-2 transition-all duration-200 hover:bg-white/5 hover:border-white/30 active:scale-[0.97] w-full sm:w-auto"
                   style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#FFFFFF' }}
                 >
                   <Play className="w-4 h-4" style={{ color: '#A8A8A8' }} />
@@ -1112,14 +1112,14 @@ function FinalCTASection() {
           <Link
             href="/editor"
             prefetch={false}
-            className="inline-flex items-center justify-center gap-3 px-12 py-5 rounded-2xl text-white font-bold text-xl transition-all duration-300 hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_0_60px_rgba(193,127,78,0.4)] active:scale-[0.97]"
+            className="inline-flex items-center justify-center gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-white font-bold text-lg sm:text-xl transition-all duration-300 hover:opacity-90 hover:-translate-y-1 hover:shadow-[0_0_60px_rgba(193,127,78,0.4)] active:scale-[0.97] w-full sm:w-auto"
             style={{
               background: 'linear-gradient(135deg, #C17F4E, #A86A3D)',
               boxShadow: '0 0 40px rgba(193,127,78,0.3)',
             }}
           >
             Launch Designer
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </Link>
         </RevealOnScroll>
       </div>

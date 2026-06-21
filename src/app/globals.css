@@ -411,6 +411,12 @@
   width: 100%;
   transition: all 0.2s ease;
   outline: none;
+  color: var(--int-fg);
+}
+.int-search-input::placeholder {
+  color: var(--int-muted);
+  opacity: 0.85; /* boosted from default ~0.5 for better visibility on dark sidebar */
+  font-weight: 500;
 }
 .int-search-input:focus {
   border-color: var(--int-accent);
