@@ -386,51 +386,137 @@ function HeroSection() {
   );
 }
 
-/* ─── 2. BEFORE / AFTER SECTION (White #FFFFFF) ─── */
+/* ─── 2. BEFORE / AFTER SECTION (White #FFFFFF) — Interactive Slider ─── */
+function BeforeAfterSlider() {
+  const [position, setPosition] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+
+  const updateFromClientX = (clientX: number) => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pct = ((clientX - rect.left) / rect.width) * 100;
+    setPosition(Math.max(0, Math.min(100, pct)));
+  };
+
+  // Pointer events handle mouse + touch uniformly
+  const onPointerDown = (e: React.PointerEvent) => {
+    isDraggingRef.current = true;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    updateFromClientX(e.clientX);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    updateFromClientX(e.clientX);
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    isDraggingRef.current = false;
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+      className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-2xl select-none cursor-ew-resize touch-none"
+      style={{ border: '2px solid #E8E2DA', boxShadow: '0 12px 48px rgba(0,0,0,0.10)' }}
+    >
+      {/* AFTER image (full-bleed, bottom layer) */}
+      <img
+        src="/images/room-designed-v2.png"
+        alt="Designed room after using Instod"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        draggable={false}
+      />
+      {/* AFTER badge */}
+      <div className="absolute top-4 right-4 z-20 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider pointer-events-none" style={{ background: 'rgba(193,127,78,0.95)', color: '#FFFFFF', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+        AFTER
+      </div>
+
+      {/* BEFORE image (clipped to left of slider handle) */}
+      <div
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        style={{ width: `${position}%` }}
+      >
+        <img
+          src="/images/room-empty-v2.png"
+          alt="Empty room before design"
+          className="absolute inset-0 h-full object-cover"
+          style={{ width: `${containerRef.current?.clientWidth ?? 1000}px`, maxWidth: 'none' }}
+          draggable={false}
+        />
+        {/* BEFORE badge */}
+        <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider" style={{ background: 'rgba(45,45,45,0.85)', color: '#FFFFFF', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+          BEFORE
+        </div>
+      </div>
+
+      {/* Drag handle line + knob */}
+      <div
+        className="absolute top-0 bottom-0 z-30 pointer-events-none"
+        style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+      >
+        {/* Vertical line */}
+        <div
+          className="absolute top-0 bottom-0 w-1 -translate-x-1/2"
+          style={{ background: '#FFFFFF', boxShadow: '0 0 12px rgba(0,0,0,0.35), 0 0 2px rgba(193,127,78,0.6)' }}
+        />
+        {/* Knob */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, #C17F4E, #A86A3D)',
+            boxShadow: '0 4px 18px rgba(0,0,0,0.25), 0 0 0 4px rgba(255,255,255,0.95)',
+          }}
+        >
+          {/* Arrow icon */}
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="8 6 4 12 8 18" />
+            <polyline points="16 6 20 12 16 18" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Hint pill */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wide pointer-events-none" style={{ background: 'rgba(15,15,15,0.75)', color: '#FFFFFF', backdropFilter: 'blur(8px)' }}>
+        ← Drag to compare →
+      </div>
+    </div>
+  );
+}
+
 function BeforeAfterSection() {
   return (
-    <section className="py-20 sm:py-28" style={{ background: '#FFFFFF' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative py-20 sm:py-28 overflow-hidden" style={{ background: '#FFFFFF' }}>
+      {/* Subtle cream backdrop wash on edges for atmosphere */}
+      <div
+        className="absolute inset-0 opacity-50 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 0%, rgba(250,246,240,0.8) 0%, rgba(255,255,255,0) 60%)',
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-4" style={{ background: 'rgba(193,127,78,0.10)', color: '#C17F4E' }}>
+              TRANSFORMATION
+            </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#1A1A1A' }}>
-              Stop Guessing. <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Start Visualizing.</span>
+              Stop Guessing. <span className="font-extrabold" style={{ color: '#C17F4E' }}>Start Visualizing.</span>
             </h2>
             <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
-              See the transformation — from an empty room to a fully designed space, all in your browser.
+              Drag the slider to reveal the transformation — from an empty room to a fully designed space, all in your browser.
             </p>
           </div>
         </RevealOnScroll>
 
         <RevealOnScroll delay={0.2}>
-          <div className="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden" style={{ border: '2px solid #E8E2DA', boxShadow: '0 8px 40px rgba(0,0,0,0.08)' }}>
-            {/* Before */}
-            <div className="relative group overflow-hidden">
-              <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider" style={{ background: 'rgba(0,0,0,0.6)', color: '#FFFFFF', backdropFilter: 'blur(8px)' }}>
-                BEFORE
-              </div>
-              <img
-                src="/images/room-empty.png"
-                alt="Empty room before design"
-                className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-
-            {/* Divider line */}
-            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px" style={{ background: '#E8E2DA' }} />
-
-            {/* After */}
-            <div className="relative group overflow-hidden">
-              <div className="absolute top-4 right-4 z-10 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider" style={{ background: 'rgba(193,127,78,0.9)', color: '#FFFFFF', backdropFilter: 'blur(8px)' }}>
-                AFTER
-              </div>
-              <img
-                src="/images/room-designed.png"
-                alt="Designed room after using Instod"
-                className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-          </div>
+          <BeforeAfterSlider />
         </RevealOnScroll>
       </div>
     </section>
@@ -447,12 +533,22 @@ const userTypes = [
 
 function WhyPeopleUseSection() {
   return (
-    <section className="py-20 sm:py-28" style={{ background: '#FAF6F0' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative py-20 sm:py-28 overflow-hidden" style={{ background: '#FAF6F0' }}>
+      {/* Atmospheric cream backdrop — subtle, doesn't compete with cards */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-30 pointer-events-none"
+        style={{ backgroundImage: 'url(/hero/section-bg-cream.png)' }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(250,246,240,0.5) 0%, rgba(250,246,240,0.85) 100%)' }} aria-hidden="true" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-4" style={{ background: 'rgba(193,127,78,0.10)', color: '#C17F4E' }}>
+              WHO IT'S FOR
+            </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-              Built for Everyone Who <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Designs Spaces</span>
+              Built for Everyone Who <span className="font-extrabold" style={{ color: '#C17F4E' }}>Designs Spaces</span>
             </h2>
           </div>
         </RevealOnScroll>
@@ -463,16 +559,26 @@ function WhyPeopleUseSection() {
               key={title}
               variants={staggerItem}
               whileHover={{ y: -8, scale: 1.02 }}
-              className="group rounded-2xl p-6 sm:p-8 text-center transition-all duration-300 cursor-default"
+              className="group relative rounded-2xl p-6 sm:p-8 text-center transition-all duration-300 cursor-default"
               style={{
                 background: '#FFFFFF',
-                border: '1.5px solid #E8E2DA',
+                border: '2px solid #E8E2DA',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = color;
+                el.style.boxShadow = `0 12px 36px ${color}26, 0 0 0 1px ${color}40`;
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = '#E8E2DA';
+                el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
               }}
             >
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-transform duration-300 group-hover:scale-110"
-                style={{ background: `${color}15`, border: `1.5px solid ${color}25` }}
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-all duration-300 group-hover:scale-110"
+                style={{ background: `${color}15`, border: `2px solid ${color}30` }}
               >
                 <Icon className="w-7 h-7" style={{ color }} />
               </div>
@@ -502,12 +608,22 @@ const designFeatures = [
 
 function DesignEveryPartSection() {
   return (
-    <section id="features" className="py-20 sm:py-28" style={{ background: '#0F0F0F' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="features" className="relative py-20 sm:py-28 overflow-hidden" style={{ background: '#0F0F0F' }}>
+      {/* Atmospheric dark backdrop — lamp glow ambiance */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-25 pointer-events-none"
+        style={{ backgroundImage: 'url(/hero/section-bg-dark.png)' }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(15,15,15,0.65) 0%, rgba(15,15,15,0.92) 100%)' }} aria-hidden="true" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-4" style={{ background: 'rgba(193,127,78,0.18)', color: '#C17F4E' }}>
+              FEATURES
+            </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
-              Design Every Part of <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Your Room</span>
+              Design Every Part of <span className="font-extrabold" style={{ color: '#C17F4E' }}>Your Room</span>
             </h2>
             <p className="mt-4 text-base" style={{ color: '#A8A8A8' }}>
               From walls to furniture, lighting to materials — control every detail.
@@ -524,15 +640,17 @@ function DesignEveryPartSection() {
               className="group rounded-2xl overflow-hidden transition-all duration-300"
               style={{
                 background: '#1A1A1A',
-                border: '1.5px solid rgba(255,255,255,0.08)',
+                border: '2px solid rgba(255,255,255,0.08)',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'rgba(193,127,78,0.55)';
+                el.style.boxShadow = '0 12px 36px rgba(0,0,0,0.45), 0 0 0 1px rgba(193,127,78,0.25), 0 0 28px rgba(193,127,78,0.18)';
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
-                (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'rgba(255,255,255,0.08)';
+                el.style.boxShadow = 'none';
               }}
             >
               {/* Image top */}
@@ -543,22 +661,21 @@ function DesignEveryPartSection() {
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(26,26,26,0.6) 100%)' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(26,26,26,0.7) 100%)' }} />
+                {/* Icon chip overlay */}
+                <div
+                  className="absolute -bottom-5 left-5 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                  style={{ background: 'linear-gradient(135deg, #1A1A1A, #0F0F0F)', border: '2px solid rgba(193,127,78,0.55)', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: '#C17F4E' }} />
+                </div>
               </div>
 
               {/* Content */}
-              <div className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                    style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color: '#A8A8A8' }} />
-                  </div>
-                  <h3 className="text-base font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
-                    {title}
-                  </h3>
-                </div>
+              <div className="p-5 pt-7">
+                <h3 className="text-base font-semibold tracking-tight mb-2" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+                  {title}
+                </h3>
                 <p className="text-sm leading-relaxed" style={{ color: '#A8A8A8' }}>
                   {description}
                 </p>
@@ -585,12 +702,15 @@ function GallerySection() {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <section id="gallery" className="py-20 sm:py-28" style={{ background: '#121212' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="gallery" className="relative py-20 sm:py-28 overflow-hidden" style={{ background: '#121212' }}>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-4" style={{ background: 'rgba(193,127,78,0.18)', color: '#C17F4E' }}>
+              GALLERY
+            </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
-              See What&apos;s <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Possible</span>
+              See What&apos;s <span className="font-extrabold" style={{ color: '#C17F4E' }}>Possible</span>
             </h2>
           </div>
         </RevealOnScroll>
@@ -606,7 +726,8 @@ function GallerySection() {
                 style={{
                   background: i === activeTab ? 'linear-gradient(135deg, #C17F4E, #A86A3D)' : 'rgba(255,255,255,0.06)',
                   color: i === activeTab ? '#FFFFFF' : '#A8A8A8',
-                  border: i === activeTab ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  border: i === activeTab ? '2px solid rgba(193,127,78,0.5)' : '1.5px solid rgba(255,255,255,0.1)',
+                  boxShadow: i === activeTab ? '0 6px 20px rgba(193,127,78,0.25)' : 'none',
                 }}
               >
                 {cat.label}
@@ -617,13 +738,16 @@ function GallerySection() {
 
         <RevealOnScroll delay={0.2}>
           {/* Gallery display */}
-          <div className="relative rounded-2xl overflow-hidden" style={{ border: '2px solid rgba(255,255,255,0.08)' }}>
+          <div
+            className="relative rounded-2xl overflow-hidden transition-all duration-500"
+            style={{ border: '2px solid rgba(255,255,255,0.10)', boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(193,127,78,0.06)' }}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, scale: 1.02 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
                 className="relative aspect-[4/3] sm:aspect-[16/9]"
               >
@@ -632,7 +756,11 @@ function GallerySection() {
                   alt={`${galleryCategories[activeTab].label} gallery`}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%)' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 45%)' }} />
+                {/* Active label chip — top-left */}
+                <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider" style={{ background: 'rgba(193,127,78,0.95)', color: '#FFFFFF', backdropFilter: 'blur(8px)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                  {galleryCategories[activeTab].label.toUpperCase()}
+                </div>
               </motion.div>
             </AnimatePresence>
 
@@ -641,8 +769,8 @@ function GallerySection() {
               <Link
                 href={`/editor?room=${galleryCategories[activeTab].type}`}
                 prefetch={false}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30"
-                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/40 hover:-translate-y-0.5"
+                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 6px 20px rgba(193,127,78,0.3)' }}
               >
                 Design This Room
                 <ChevronRight className="w-4 h-4" />
@@ -747,31 +875,53 @@ const comparisons = [
 
 function ValueComparisonSection() {
   return (
-    <section className="py-20 sm:py-28" style={{ background: '#FAF6F0' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative py-20 sm:py-28 overflow-hidden" style={{ background: '#FAF6F0' }}>
+      {/* Atmospheric cream backdrop */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-25 pointer-events-none"
+        style={{ backgroundImage: 'url(/hero/section-bg-cream.png)' }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(250,246,240,0.7) 0%, rgba(250,246,240,0.92) 100%)' }} aria-hidden="true" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-4" style={{ background: 'rgba(193,127,78,0.10)', color: '#C17F4E' }}>
+              COMPARISON
+            </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
-              The Smarter Way to <span className="font-extrabold" style={{ color: '#2D2D2D' }}>Design Rooms</span>
+              The Smarter Way to <span className="font-extrabold" style={{ color: '#C17F4E' }}>Design Rooms</span>
             </h2>
+            <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
+              Why guess when you can see? Here&apos;s how Instod compares to the old way of designing spaces.
+            </p>
           </div>
         </RevealOnScroll>
 
         <RevealOnScroll delay={0.2}>
           {/* Desktop table layout */}
-          <div className="hidden sm:block max-w-4xl mx-auto rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1.5px solid #E8E2DA', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <div
+            className="hidden sm:block max-w-4xl mx-auto rounded-2xl overflow-hidden"
+            style={{ background: '#FFFFFF', border: '2px solid #E8E2DA', boxShadow: '0 12px 48px rgba(0,0,0,0.06)' }}
+          >
             {/* Header row */}
-            <div className="grid grid-cols-3 gap-4 px-6 py-4" style={{ background: '#FAF6F0', borderBottom: '1.5px solid #E8E2DA' }}>
-              <div className="text-sm font-bold" style={{ color: '#5A4E42' }}>Feature</div>
-              <div className="text-sm font-bold text-center" style={{ color: '#B8433A' }}>Traditional Way</div>
-              <div className="text-sm font-bold text-center" style={{ color: '#6B8B5E' }}>Instod</div>
+            <div className="grid grid-cols-3 gap-4 px-6 py-5 relative" style={{ background: '#FAF6F0', borderBottom: '2px solid #E8E2DA' }}>
+              <div className="text-sm font-bold uppercase tracking-wider" style={{ color: '#5A4E42' }}>Feature</div>
+              <div className="text-sm font-bold text-center uppercase tracking-wider" style={{ color: '#B8433A' }}>Traditional Way</div>
+              <div className="text-sm font-bold text-center uppercase tracking-wider relative" style={{ color: '#C17F4E' }}>
+                Instod
+                {/* Recommended ribbon */}
+                <span className="absolute -top-1 right-0 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', color: '#FFFFFF', boxShadow: '0 2px 6px rgba(193,127,78,0.3)' }}>
+                  RECOMMENDED
+                </span>
+              </div>
             </div>
 
             {/* Comparison rows */}
             {comparisons.map((row, i) => (
               <div
                 key={row.category}
-                className="grid grid-cols-3 gap-4 px-6 py-5 items-center"
+                className="grid grid-cols-3 gap-4 px-6 py-5 items-center transition-colors duration-200 hover:bg-[#FAF6F0]/50"
                 style={{ borderBottom: i < comparisons.length - 1 ? '1px solid #F0E8DE' : 'none' }}
               >
                 <div className="text-sm font-semibold" style={{ color: '#2D2D2D' }}>
@@ -782,11 +932,33 @@ function ValueComparisonSection() {
                   <span className="text-sm text-center" style={{ color: '#7A6E62' }}>{row.traditional}</span>
                 </div>
                 <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#6B8B5E' }} />
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(107,139,94,0.15)' }}
+                  >
+                    <Check className="w-3 h-3" style={{ color: '#6B8B5E' }} />
+                  </div>
                   <span className="text-sm text-center font-medium" style={{ color: '#2D2D2D' }}>{row.instod}</span>
                 </div>
               </div>
             ))}
+
+            {/* Footer row inside the table — Instod CTA */}
+            <div className="grid grid-cols-3 gap-4 px-6 py-5 items-center" style={{ background: 'linear-gradient(90deg, rgba(250,246,240,0) 0%, rgba(250,246,240,0) 33%, rgba(193,127,78,0.06) 33%)' }}>
+              <div></div>
+              <div></div>
+              <div className="text-center">
+                <Link
+                  href="/editor"
+                  prefetch={false}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-white text-xs font-semibold transition-all hover:opacity-90 hover:shadow-md hover:shadow-[#C17F4E]/30"
+                  style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+                >
+                  Try It Free
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* Mobile card layout */}
@@ -795,23 +967,37 @@ function ValueComparisonSection() {
               <div
                 key={row.category}
                 className="rounded-xl p-4"
-                style={{ background: '#FFFFFF', border: '1.5px solid #E8E2DA', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}
+                style={{ background: '#FFFFFF', border: '2px solid #E8E2DA', boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}
               >
                 <div className="text-sm font-bold mb-3" style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}>
                   {row.category}
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#B8433A' }} />
+                  <div className="flex items-start gap-2">
+                    <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#B8433A' }} />
                     <span className="text-sm" style={{ color: '#7A6E62' }}>{row.traditional}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#6B8B5E' }} />
+                  <div className="flex items-start gap-2">
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(107,139,94,0.18)' }}>
+                      <Check className="w-2.5 h-2.5" style={{ color: '#6B8B5E' }} />
+                    </div>
                     <span className="text-sm font-medium" style={{ color: '#2D2D2D' }}>{row.instod}</span>
                   </div>
                 </div>
               </div>
             ))}
+            {/* Mobile CTA */}
+            <div className="text-center pt-4">
+              <Link
+                href="/editor"
+                prefetch={false}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30"
+                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}
+              >
+                Try It Free
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </RevealOnScroll>
       </div>
@@ -831,16 +1017,25 @@ const betaBenefits = [
 
 function EarlyAccessSection() {
   return (
-    <section className="py-20 sm:py-28" style={{ background: '#0F0F0F' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative py-20 sm:py-28 overflow-hidden" style={{ background: '#0F0F0F' }}>
+      {/* Atmospheric dark backdrop — matches the hero bookend */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none"
+        style={{ backgroundImage: 'url(/hero/section-bg-dark.png)' }}
+        aria-hidden="true"
+      />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div
-            className="relative rounded-3xl p-1"
-            style={{ background: 'linear-gradient(135deg, rgba(193,127,78,0.3), rgba(193,127,78,0.05), rgba(193,127,78,0.3))' }}
+            className="relative rounded-3xl p-1.5"
+            style={{ background: 'linear-gradient(135deg, rgba(193,127,78,0.5) 0%, rgba(193,127,78,0.1) 35%, rgba(193,127,78,0.1) 65%, rgba(193,127,78,0.5) 100%)', boxShadow: '0 0 60px rgba(193,127,78,0.12)' }}
           >
             <div className="rounded-[22px] p-8 sm:p-12 lg:p-16 text-center" style={{ background: '#1A1A1A' }}>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider mb-4" style={{ background: 'rgba(193,127,78,0.18)', color: '#C17F4E' }}>
+                EARLY ACCESS BETA
+              </span>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
-                Early Access Beta — <span className="font-extrabold" style={{ color: '#FFFFFF' }}>Everything Free</span>
+                Everything Free — <span className="font-extrabold" style={{ color: '#C17F4E' }}>For a Limited Time</span>
               </h2>
               <p className="text-base mb-10 max-w-lg mx-auto" style={{ color: '#A8A8A8' }}>
                 Join the beta and get full access to every feature at no cost. Your input helps shape the future of Instod.
@@ -850,7 +1045,7 @@ function EarlyAccessSection() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
                   {betaBenefits.map((benefit) => (
                     <div key={benefit} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,139,94,0.15)' }}>
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,139,94,0.18)', border: '1px solid rgba(107,139,94,0.3)' }}>
                         <Check className="w-3 h-3" style={{ color: '#6B8B5E' }} />
                       </div>
                       <span className="text-sm" style={{ color: '#E8E0D6' }}>{benefit}</span>
@@ -862,8 +1057,8 @@ function EarlyAccessSection() {
               <Link
                 href="/editor"
                 prefetch={false}
-                className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/30 hover:-translate-y-0.5 active:scale-[0.97]"
-                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.2)' }}
+                className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-[#C17F4E]/40 hover:-translate-y-0.5 active:scale-[0.97]"
+                style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)', boxShadow: '0 0 30px rgba(193,127,78,0.25)' }}
               >
                 Start Designing
                 <ArrowRight className="w-5 h-5" />
@@ -876,7 +1071,7 @@ function EarlyAccessSection() {
   );
 }
 
-/* ─── 9. FINAL CTA SECTION (Dark bg with gradient) ─── */
+/* ─── 9. FINAL CTA SECTION (Dark bg with gradient + backdrop) ─── */
 function FinalCTASection() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
@@ -884,17 +1079,25 @@ function FinalCTASection() {
 
   return (
     <section ref={ref} className="relative py-24 sm:py-32 overflow-hidden" style={{ background: '#0F0F0F' }}>
-      {/* Parallax background effect */}
+      {/* Atmospheric backdrop — same moody interior as hero for bookend feeling */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-30"
+        style={{ backgroundImage: 'url(/hero/hero-backdrop-dark.png)' }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(15,15,15,0.78) 0%, rgba(15,15,15,0.92) 100%)' }} aria-hidden="true" />
+
+      {/* Parallax glow effect */}
       <motion.div style={{ y }} className="absolute inset-0 pointer-events-none">
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(193,127,78,0.08) 0%, rgba(193,127,78,0.02) 40%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(193,127,78,0.15) 0%, rgba(193,127,78,0.04) 40%, transparent 70%)' }}
         />
       </motion.div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <RevealOnScroll>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-5" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-5" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF', textShadow: '0 2px 18px rgba(0,0,0,0.55)' }}>
             Your Future Room <br className="hidden sm:block" />Is Waiting
           </h2>
         </RevealOnScroll>
