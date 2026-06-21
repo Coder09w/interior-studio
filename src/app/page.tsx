@@ -225,6 +225,25 @@ function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden" style={{ background: '#0F0F0F' }}>
+      {/* Backdrop image — moody architectural interior matching dark brand theme */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: 'url(/hero/hero-backdrop-dark.png)',
+          backgroundPosition: 'center 40%',
+        }}
+        aria-hidden="true"
+      />
+      {/* Dark wash + radial vignette so the white headline stays crisp */}
+      <div
+        className="absolute inset-0"
+        style={{
+          // Center-heavy radial: darkest behind the headline, fades out toward edges
+          background:
+            'radial-gradient(ellipse at 50% 45%, rgba(15,15,15,0.78) 0%, rgba(15,15,15,0.88) 35%, rgba(15,15,15,0.94) 100%)',
+        }}
+        aria-hidden="true"
+      />
       {/* Subtle pattern overlay */}
       <div
         className="absolute inset-0 opacity-[0.03]"
@@ -237,7 +256,7 @@ function HeroSection() {
       {/* Decorative gradient blobs */}
       <div
         className="absolute top-20 right-1/4 w-96 h-96 rounded-full blur-3xl animate-float1"
-        style={{ background: 'linear-gradient(135deg, rgba(139,115,85,0.2), rgba(168,152,132,0.15))' }}
+        style={{ background: 'linear-gradient(135deg, rgba(193,127,78,0.18), rgba(168,152,132,0.10))' }}
       />
 
       <motion.div style={{ y: y1 }} className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
