@@ -239,8 +239,9 @@ function HeroSection() {
         className="absolute inset-0"
         style={{
           // Center-heavy radial: darkest behind the headline, fades out toward edges
+          // Pushed lighter so the architectural photo bleeds through more strongly
           background:
-            'radial-gradient(ellipse at 50% 45%, rgba(15,15,15,0.78) 0%, rgba(15,15,15,0.88) 35%, rgba(15,15,15,0.94) 100%)',
+            'radial-gradient(ellipse at 50% 45%, rgba(15,15,15,0.55) 0%, rgba(15,15,15,0.72) 40%, rgba(15,15,15,0.85) 100%)',
         }}
         aria-hidden="true"
       />
@@ -273,11 +274,11 @@ function HeroSection() {
             <RevealOnScroll delay={0.2}>
               <h1
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold leading-tight tracking-tight"
-                style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}
+                style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF', textShadow: '0 2px 18px rgba(0,0,0,0.55)' }}
               >
                 See Your Room in 3D{' '}
                 <span className="relative inline-block">
-                  <span className="font-extrabold" style={{ color: '#C17F4E' }}>Before You Move a Thing</span>
+                  <span className="font-extrabold" style={{ color: '#C17F4E', textShadow: '0 2px 18px rgba(0,0,0,0.55)' }}>Before You Move a Thing</span>
                   <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="#C17F4E" strokeWidth="3" strokeLinecap="round" opacity="0.4" /></svg>
                 </span>
               </h1>
