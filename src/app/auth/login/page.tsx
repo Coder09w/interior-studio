@@ -85,7 +85,7 @@ export default function LoginPage() {
         {/* Branding overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-10 z-10">
           <div className="flex items-center gap-2.5 mb-4">
-            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+            <Image src="/logo.png" alt="Instod" width={36} height={36} unoptimized className="rounded-lg object-cover" />
             <span className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
               Instod
             </span>
@@ -127,7 +127,7 @@ export default function LoginPage() {
         </div>
         <div className="absolute bottom-4 left-4 right-4 z-10">
           <div className="flex items-center gap-2 mb-2">
-            <Image src="/logo.svg" alt="Instod" width={28} height={28} className="rounded-lg" />
+            <Image src="/logo.png" alt="Instod" width={28} height={28} unoptimized className="rounded-lg object-cover" />
             <span className="text-white font-bold text-base tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Instod</span>
             <span className="text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-full text-white" style={{ background: 'linear-gradient(135deg, #C17F4E, #A86A3D)' }}>BETA</span>
           </div>

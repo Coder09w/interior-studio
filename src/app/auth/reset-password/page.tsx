@@ -97,7 +97,7 @@ function ResetPasswordForm() {
         >
           {/* Logo */}
           <div className="flex items-center gap-2.5 mb-8 justify-center">
-            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+            <Image src="/logo.png" alt="Instod" width={36} height={36} unoptimized className="rounded-lg object-cover" />
             <span
               className="text-xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
@@ -174,7 +174,7 @@ function ResetPasswordForm() {
         >
           {/* Logo */}
           <div className="flex items-center gap-2.5 mb-8 justify-center">
-            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+            <Image src="/logo.png" alt="Instod" width={36} height={36} unoptimized className="rounded-lg object-cover" />
             <span
               className="text-xl font-bold tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
@@ -238,7 +238,7 @@ function ResetPasswordForm() {
       >
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-8 justify-center">
-          <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+          <Image src="/logo.png" alt="Instod" width={36} height={36} unoptimized className="rounded-lg object-cover" />
           <span
             className="text-xl font-bold tracking-tight"
             style={{ fontFamily: "'Outfit', sans-serif", color: '#2D2D2D' }}
@@ -406,7 +406,7 @@ export default function ResetPasswordPage() {
           className="min-h-screen flex items-center justify-center"
           style={{ backgroundColor: '#F5F0E8' }}
         >
-          <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg" />
+          <Image src="/logo.png" alt="Instod" width={36} height={36} unoptimized className="rounded-lg object-cover" />
         </div>
       }
     >

@@ -45,9 +45,9 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <img
-              src="/logo.svg"
+              src="/logo.png"
               alt="Instod"
-              className="w-9 h-9 rounded-lg transition-transform group-hover:scale-110"
+              className="w-9 h-9 rounded-lg object-cover transition-transform group-hover:scale-110"
             />
             <span
               className="text-xl font-bold tracking-tight"

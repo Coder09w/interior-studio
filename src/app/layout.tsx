@@ -93,11 +93,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/logo.svg", type: "image/svg+xml" },
-      { url: "/logo.png", type: "image/png", sizes: "1024x1024" },
+      { url: "/logo.png", type: "image/png", sizes: "150x185" },
       { url: "/favicon.ico", sizes: "any" },
     ],
-    apple: "/logo.svg",
+    apple: "/logo.png",
   },
   alternates: {
     canonical: "https://instod.vercel.app",

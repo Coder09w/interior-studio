@@ -276,7 +276,7 @@ function ProfileContent() {
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => router.push('/dashboard')}
           >
-            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg shadow-sm" />
+            <Image src="/logo.png" alt="Instod" width={36} height={36} unoptimized className="rounded-lg shadow-sm object-cover" />
             <span
               className="text-lg font-bold tracking-tight hidden sm:inline"
               style={{ color: '#2D2D2D' }}

@@ -284,7 +284,7 @@ function DashboardContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <Image src="/logo.svg" alt="Instod" width={36} height={36} className="rounded-lg shadow-sm" />
+            <Image src="/logo.png" alt="Instod" width={36} height={36} unoptimized className="rounded-lg shadow-sm object-cover" />
             <span
               className="text-lg font-bold tracking-tight hidden sm:inline"
               style={{ color: '#2D2D2D' }}

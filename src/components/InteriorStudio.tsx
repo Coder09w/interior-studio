@@ -1006,6 +1006,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           item_count: placedItemsRef.current.length,
           has_cloud_save: !isGuestRef.current && currentRoomId !== 'default',
         });
+        // After a MANUAL save (not auto-save), gently offer the feedback form.
+        // FeedbackButton self-throttles to once per 24h so this stays polite.
+        try {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('instod:open-feedback'));
+          }
+        } catch { /* event dispatch failed — ignore */ }
       }
     }, 300);
   }, [currentRoomId, serializeFurniture, designName, showToast]);
@@ -4306,7 +4313,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       {/* Logo — fixed anchor, never scrolls */}
       <div className="p-5 int-logo-border" style={{ flexShrink: 0 }}>
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-xl" />
+          <img src="/logo.png" alt="Instod" className="w-9 h-9 rounded-xl object-cover" />
           <div><h1 className="text-lg font-bold leading-tight" style={{ fontFamily: "'Inter', 'Outfit', sans-serif" }}>Instod</h1><p className="text-[12px]" style={{ color: '#7A6E62' }}>3D Design Previewer</p></div>
         </div>
       </div>

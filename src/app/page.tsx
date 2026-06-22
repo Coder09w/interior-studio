@@ -110,7 +110,7 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <img src="/logo.svg" alt="Instod" className="w-9 h-9 rounded-lg transition-transform group-hover:scale-110" />
+            <img src="/logo.png" alt="Instod" className="w-9 h-9 rounded-lg object-cover transition-transform group-hover:scale-110" />
             <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: textColor }}>
               Instod
             </span>
@@ -386,79 +386,77 @@ function HeroSection() {
   );
 }
 
-/* ─── 2. BEFORE / AFTER SECTION (White #FFFFFF) — Interactive Slider ─── */
+/* ─── 2. BEFORE / AFTER SECTION (White #FFFFFF) — Auto-Sliding Slider ─── */
 function BeforeAfterSlider() {
-  const [position, setPosition] = useState(50);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef(false);
+  const [paused, setPaused] = useState(false);
 
-  const updateFromClientX = (clientX: number) => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const pct = ((clientX - rect.left) / rect.width) * 100;
-    setPosition(Math.max(0, Math.min(100, pct)));
-  };
-
-  // Pointer events handle mouse + touch uniformly
-  const onPointerDown = (e: React.PointerEvent) => {
-    isDraggingRef.current = true;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    updateFromClientX(e.clientX);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingRef.current) return;
-    updateFromClientX(e.clientX);
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    isDraggingRef.current = false;
-    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
-  };
-
+  // Animation runs purely in CSS (no per-frame React re-renders).
+  // Hover / touch pauses the loop so users can study either state.
   return (
     <div
-      ref={containerRef}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
-      className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-2xl select-none cursor-ew-resize touch-none"
+      className={`relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-2xl select-none ba-slider ${paused ? 'is-paused' : ''}`}
       style={{ border: '2px solid #E8E2DA', boxShadow: '0 12px 48px rgba(0,0,0,0.10)' }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
     >
+      <style>{`
+        .ba-slider .ba-before-layer {
+          animation: ba-clip 8.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+          will-change: clip-path;
+        }
+        .ba-slider .ba-handle {
+          animation: ba-handle 8.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+          will-change: left;
+        }
+        .ba-slider.is-paused .ba-before-layer,
+        .ba-slider.is-paused .ba-handle {
+          animation-play-state: paused;
+        }
+        @keyframes ba-clip {
+          0%, 100% { clip-path: inset(0 95% 0 0); }
+          50%      { clip-path: inset(0 5% 0 0); }
+        }
+        @keyframes ba-handle {
+          0%, 100% { left: 5%; }
+          50%      { left: 95%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ba-slider .ba-before-layer,
+          .ba-slider .ba-handle { animation: none; }
+          .ba-slider .ba-before-layer { clip-path: inset(0 50% 0 0); }
+          .ba-slider .ba-handle { left: 50%; }
+        }
+      `}</style>
+
       {/* AFTER image (full-bleed, bottom layer) */}
-      <img
-        src="/images/room-designed-v2.png"
-        alt="Designed room after using Instod"
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        draggable={false}
+      <div
+        className="absolute inset-0 bg-cover bg-center pointer-events-none"
+        style={{ backgroundImage: 'url(/images/room-designed-v2.png)' }}
+        aria-label="Designed room after using Instod"
+        role="img"
       />
       {/* AFTER badge */}
       <div className="absolute top-4 right-4 z-20 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider pointer-events-none" style={{ background: 'rgba(193,127,78,0.95)', color: '#FFFFFF', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
         AFTER
       </div>
 
-      {/* BEFORE image (clipped to left of slider handle) */}
+      {/* BEFORE image (top layer, clipped via animated clip-path) */}
       <div
-        className="absolute inset-0 overflow-hidden pointer-events-none"
-        style={{ width: `${position}%` }}
-      >
-        <img
-          src="/images/room-empty-v2.png"
-          alt="Empty room before design"
-          className="absolute inset-0 h-full object-cover"
-          style={{ width: `${containerRef.current?.clientWidth ?? 1000}px`, maxWidth: 'none' }}
-          draggable={false}
-        />
-        {/* BEFORE badge */}
-        <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider" style={{ background: 'rgba(45,45,45,0.85)', color: '#FFFFFF', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-          BEFORE
-        </div>
+        className="absolute inset-0 bg-cover bg-center pointer-events-none ba-before-layer"
+        style={{ backgroundImage: 'url(/images/room-empty-v2.png)' }}
+        aria-label="Empty room before design"
+        role="img"
+      />
+      {/* BEFORE badge */}
+      <div className="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider pointer-events-none" style={{ background: 'rgba(45,45,45,0.85)', color: '#FFFFFF', backdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+        BEFORE
       </div>
 
-      {/* Drag handle line + knob */}
+      {/* Slider handle line + knob (driven by CSS animation) */}
       <div
-        className="absolute top-0 bottom-0 z-30 pointer-events-none"
-        style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+        className="absolute top-0 bottom-0 z-30 pointer-events-none ba-handle"
+        style={{ transform: 'translateX(-50%)' }}
       >
         {/* Vertical line */}
         <div
@@ -473,7 +471,6 @@ function BeforeAfterSlider() {
             boxShadow: '0 4px 18px rgba(0,0,0,0.25), 0 0 0 4px rgba(255,255,255,0.95)',
           }}
         >
-          {/* Arrow icon */}
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="8 6 4 12 8 18" />
             <polyline points="16 6 20 12 16 18" />
@@ -481,10 +478,31 @@ function BeforeAfterSlider() {
         </div>
       </div>
 
-      {/* Hint pill */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wide pointer-events-none" style={{ background: 'rgba(15,15,15,0.75)', color: '#FFFFFF', backdropFilter: 'blur(8px)' }}>
-        ← Drag to compare →
+      {/* Hint pill — auto-comparing */}
+      <div
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wide pointer-events-none flex items-center gap-1.5"
+        style={{ background: 'rgba(15,15,15,0.75)', color: '#FFFFFF', backdropFilter: 'blur(8px)' }}
+      >
+        {paused ? (
+          <>Hover off to resume auto-slide</>
+        ) : (
+          <>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/90 animate-pulse" />
+            Auto-comparing before &amp; after
+          </>
+        )}
       </div>
+
+      {/* Play/Pause button — top center, for mobile/touch users who can't hover-off */}
+      <button
+        type="button"
+        onClick={() => setPaused(p => !p)}
+        className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-all hover:scale-105 active:scale-95"
+        style={{ background: 'rgba(255,255,255,0.92)', color: '#2D2D2D', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+        aria-label={paused ? 'Resume animation' : 'Pause animation'}
+      >
+        {paused ? '▶ Play' : '❚❚ Pause'}
+      </button>
     </div>
   );
 }
@@ -510,7 +528,7 @@ function BeforeAfterSection() {
               Stop Guessing. <span className="font-extrabold" style={{ color: '#C17F4E' }}>Start Visualizing.</span>
             </h2>
             <p className="mt-4 text-base" style={{ color: '#5A4E42' }}>
-              Drag the slider to reveal the transformation — from an empty room to a fully designed space, all in your browser.
+              Watch the slider glide back and forth to reveal the transformation — from an empty room to a fully designed space, all in your browser. Hover to pause.
             </p>
           </div>
         </RevealOnScroll>
@@ -1156,7 +1174,7 @@ function Footer() {
           {/* Logo column */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 mb-5">
-              <img src="/logo.svg" alt="Instod" className="w-10 h-10 rounded-lg" />
+              <img src="/logo.png" alt="Instod" className="w-10 h-10 rounded-lg object-cover" />
               <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>
                 Instod
               </span>
