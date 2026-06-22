@@ -2508,6 +2508,13 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       showToast(`Guest limit: ${GUEST_MAX_ROOMS} rooms — sign up for unlimited`);
       return;
     }
+    // SECURITY (defense-in-depth): block guests from creating premium room types
+    // even if the UI lock is bypassed. kitchen/dining/bathroom are signed-up-only.
+    const lockedTypes = new Set(['kitchen', 'dining', 'bathroom']);
+    if (isGuest && lockedTypes.has(newRoomType)) {
+      showToast('Sign up to unlock ' + newRoomType.charAt(0).toUpperCase() + newRoomType.slice(1) + ' rooms');
+      return;
+    }
     const id = `room_${Date.now()}`;
     const typeLabel: Record<string, string> = { living: 'Living Room', bedroom: 'Bedroom', kitchen: 'Kitchen', bathroom: 'Bathroom', office: 'Office', dining: 'Dining Room' };
     const name = newRoomName || typeLabel[newRoomType] || 'New Room';
@@ -2535,7 +2542,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
     setShowAddRoom(false); setNewRoomName(''); setNewRoomType('bedroom');
     showToast(`Added ${name}`);
     trackRoomCreated({ room_name: name, room_type: newRoomType, project_id: _projectId });
-  }, [currentRoomId, serializeFurniture, loadFurnitureData, buildRoom, newRoomName, newRoomType, showToast]);
+  }, [currentRoomId, serializeFurniture, loadFurnitureData, buildRoom, newRoomName, newRoomType, showToast, isGuest, rooms.length]);
 
   const deleteRoom = useCallback((roomId: string) => {
     if (rooms.length <= 1) {
@@ -3923,10 +3930,8 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               </button>
             ))}
           </div>
-          {/* Search */}
-          <div className="px-3 py-1">
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="int-search-input" style={{ paddingLeft: '14px' }} />
-          </div>
+          {/* Search removed per UX request — was taking up too much vertical space */}
+
           {/* Items grid */}
           <div className="grid grid-cols-3 gap-1.5 p-3">
             {filteredItems.map(item => {
@@ -3949,7 +3954,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       material: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Material & Color</p>
           <div className="flex gap-1 mb-2 flex-wrap">
             {(['fabric', 'leather', 'wood', 'metal'] as MatType[]).map(t => (
@@ -4005,7 +4010,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       skin: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Themes</p>
           <div className="grid grid-cols-2 gap-2">
             {SKINS_LIST.filter(s => s.id !== 'default').map(skin => (
@@ -4039,7 +4044,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       room: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Room Settings</p>
           {[
             { label: 'Width', val: roomW, min: 4, max: 14, step: 0.5, setter: [setRoomW, (v: number) => roomWRef.current = v] },
@@ -4163,7 +4168,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       skeleton: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
           {/* Actions & Settings header */}
           <div className="flex items-center gap-2 mb-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: accentColor + '1A' }}>
@@ -4241,7 +4246,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
         </div>
       ),
       presets: (
-        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="h-full overflow-y-auto int-scrollbar p-3" style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}>
           <p className="int-section-header">Design Presets</p>
           <p className="text-[11px] mb-3" style={{ color: '#7A6E62' }}>Tap a preset to instantly load a curated room design</p>
           {/* Room type filter */}
@@ -4328,10 +4333,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           <i className="fas fa-info-circle text-[8px]" />
           Showing {rooms.find(r => r.id === currentRoomId)?.roomType || 'living'} items
         </div>
-        <div className="relative mb-2">
-          <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[13px]" style={{ color: '#7A6E62' }} />
-          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search furniture..." className="int-search-input" />
-        </div>
+        {/* Search removed per UX request — was taking up too much vertical space */}
         <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
           {categories.filter(cat => {
             // Get current room type
@@ -5011,15 +5013,29 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             <div className="mb-4">
               <label className="text-xs font-medium mb-1 block">Room Type</label>
               <div className="flex flex-wrap gap-1.5">
-                {['living', 'bedroom', 'kitchen', 'bathroom', 'office', 'dining'].map(t => (
-                  <button key={t} onClick={() => setNewRoomType(t)} className="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer border transition-all"
-                    style={{ borderColor: newRoomType === t ? accentColor : '#E2DDD4', background: newRoomType === t ? accentColor + '1A' : 'transparent', color: newRoomType === t ? accentColor : '#5A4E42' }}>
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </button>
-                ))}
+                {['living', 'bedroom', 'kitchen', 'bathroom', 'office', 'dining'].map(t => {
+                  // SECURITY: kitchen/dining/bathroom are premium-only — block guests
+                  const lockedTypes = new Set(['kitchen', 'dining', 'bathroom']);
+                  const isLocked = isGuest && lockedTypes.has(t);
+                  return (
+                    <button key={t} onClick={() => { if (isLocked) { showToast('Sign up to unlock ' + t.charAt(0).toUpperCase() + t.slice(1)); return; } setNewRoomType(t); }} className="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer border transition-all relative"
+                      style={{ borderColor: newRoomType === t ? accentColor : '#E2DDD4', background: newRoomType === t ? accentColor + '1A' : 'transparent', color: newRoomType === t ? accentColor : '#5A4E42', opacity: isLocked ? 0.5 : 1 }}>
+                      {isLocked && <i className="fas fa-lock text-[7px] absolute top-0.5 right-0.5" style={{ color: '#7A6E62' }} />}
+                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    </button>
+                  );
+                })}
               </div>
+              {isGuest && (
+                <p className="text-[10px] mt-1.5" style={{ color: '#7A6E62' }}>
+                  <i className="fas fa-info-circle mr-1" />Guests can add Living, Bedroom & Office rooms. Sign up to unlock Kitchen, Dining & Bathroom.
+                </p>
+              )}
             </div>
-            <button onClick={addNewRoom} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer border-none" style={{ background: accentColor }}>Add Room</button>
+            <button onClick={addNewRoom}
+              disabled={isGuest && new Set(['kitchen', 'dining', 'bathroom']).has(newRoomType)}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer border-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: accentColor }}>Add Room</button>
           </div>
         </div>
       )}
@@ -5277,14 +5293,18 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
           </div>
         )}
 
-        {/* ===== MODE SWITCHER — Normal / Measure / Advanced ===== */}
+        {/* ===== MODE SWITCHER — Normal / Measure / Advanced =====
+            Mobile: top-right, just below the top app header (was bottom-center,
+            where it overlapped the rotate tool in the bottom action bar).
+            Desktop: unchanged (top-left, 80px from top). */}
         <div
           className={`${isMobile ? 'fixed' : 'absolute'} z-30 flex items-center gap-1 rounded-xl`}
           style={{
-            left: isMobile ? '50%' : 12,
-            transform: isMobile ? 'translateX(-50%)' : 'none',
-            bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom, 0px) + 8px)' : 'auto',
-            top: isMobile ? 'auto' : 80,
+            left: isMobile ? 'auto' : 12,
+            right: isMobile ? 12 : 'auto',
+            transform: isMobile ? 'none' : 'none',
+            bottom: isMobile ? 'auto' : 'auto',
+            top: isMobile ? 'calc(64px + env(safe-area-inset-top, 0px) + 6px)' : 80,
             background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(8px)',
             border: '1px solid #E2DDD4',
@@ -5318,7 +5338,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Ceiling Edit Mode — bottom drawer on mobile, floating panel on desktop */}
         {ceilingEditMode && (
-          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
+          <div className={`${isMobile ? 'fixed left-0 right-0 bottom-0 rounded-t-2xl z-40' : 'absolute top-14 left-1/2 -translate-x-1/2 z-40 rounded-xl'}`} style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', border: isMobile ? '1px solid #E2DDD4' : '1px solid #E2DDD4', ...(isMobile ? { paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' } : { minWidth: 280 }), maxHeight: isMobile ? '42vh' : 'none', overflowY: 'auto' }}>
             {isMobile && <div className="w-10 h-1 rounded-full mx-auto mt-2 mb-1" style={{ background: '#D4D0C8' }} />}
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
@@ -5515,7 +5535,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
 
         {/* Mobile: Zoom controls — bottom-left floating buttons with long-press repeat, zoom indicator, reset view, and fit-to-room */}
         {isMobile && !ceilingEditMode && (
-          <div className="absolute left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : (itemPanelVisible ? 108 : 64)) : (itemPanelVisible ? 128 : 68) }}>
+          <div className="absolute left-2 flex flex-col gap-1 z-10" style={{ bottom: isMobile ? (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : (itemPanelVisible ? 112 : 72)) : (itemPanelVisible ? 128 : 68) }}>
             {/* Zoom In — long-press repeats with acceleration */}
             <button
               onClick={() => zoomCamera('in')}
@@ -5622,7 +5642,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
             style={{
               left: 12 + actionBarPos.x,
               right: undefined,
-              bottom: (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : 64) + actionBarPos.y,
+              bottom: (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : 72) + actionBarPos.y,
               height: 48,
               maxWidth: 'calc(100vw - 24px)',
               background: lightMood === 'night' ? 'rgba(30,28,25,0.97)' : 'rgba(255,255,255,0.97)',
@@ -5795,8 +5815,17 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
               <div data-bottom-sheet-handle className="int-bottom-sheet-handle" />
             )}
 
-            {/* Tab bar — 60px height, 20px icons, 10px labels */}
-            <div role="tablist" className="flex" style={{ height: 60, borderColor: '#E2DDD4', borderTop: '1px solid #E2DDD4', background: 'rgba(255,255,255,0.98)' }}>
+            {/* Tab bar — 64px height (Apple HIG minimum touch target), properly padded.
+                Each tab gets equal flex width with vertical-centered icon+label,
+                4px gap between icon and label, and consistent padding so the
+                active top-border highlight has breathing room.
+                (Safe-area-inset-bottom is handled by the outer container.) */}
+            <div role="tablist" className="flex" style={{
+              height: 64,
+              borderColor: '#E2DDD4',
+              borderTop: '1px solid #E2DDD4',
+              background: 'rgba(255,255,255,0.98)',
+            }}>
               {([
                 { id: 'furniture' as const, icon: 'fa-couch', label: 'Furniture' },
                 { id: 'material' as const, icon: 'fa-palette', label: 'Colors' },
@@ -5804,15 +5833,26 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
                 { id: 'skin' as const, icon: 'fa-wand-magic-sparkles', label: 'Skins' },
                 { id: 'presets' as const, icon: 'fa-magic', label: 'Presets' },
                 { id: 'skeleton' as const, icon: 'fa-cog', label: 'More' },
-              ]).map(({ id, icon, label }) => (
+              ]).map(({ id, icon, label }) => {
+                const isActive = mobilePanel === id;
+                return (
                 <button key={id} onClick={() => { const newPanel = mobilePanel === id ? null : id; setMobilePanel(newPanel); setMobileActionsOpen(false); setBottomSheetState(newPanel ? 'half' : 'collapsed'); }}
-                  role="tab" aria-selected={mobilePanel === id}
-                  className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all relative"
-                  style={{ color: mobilePanel === id ? accentColor : '#7A6E62', background: mobilePanel === id ? accentColor + '14' : 'transparent', borderTop: mobilePanel === id ? `2.5px solid ${accentColor}` : '2.5px solid transparent', minHeight: 60 }}>
-                  <i className={`fas ${icon}`} style={{ fontSize: 20 }} />
-                  <span style={{ fontSize: 10, fontWeight: mobilePanel === id ? 700 : 500, letterSpacing: 0.2 }}>{label}</span>
+                  role="tab" aria-selected={isActive}
+                  className="flex-1 flex flex-col items-center justify-center transition-all relative"
+                  style={{
+                    color: isActive ? accentColor : '#7A6E62',
+                    background: isActive ? accentColor + '14' : 'transparent',
+                    borderTop: isActive ? `3px solid ${accentColor}` : '3px solid transparent',
+                    minHeight: 64,
+                    paddingTop: 8,
+                    paddingBottom: 6,
+                    gap: 4,
+                  }}>
+                  <i className={`fas ${icon}`} style={{ fontSize: 19, lineHeight: 1 }} />
+                  <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, letterSpacing: 0.2, lineHeight: 1 }}>{label}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             {/* Panel content */}
@@ -5833,7 +5873,7 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
       )}
 
       {/* Toast */}
-      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : (itemPanelVisible ? 110 : 60)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="fixed z-[1000] pointer-events-none" style={{ bottom: isMobile ? (bottomSheetState !== 'collapsed' ? Math.min(window.innerHeight * (bottomSheetState === 'half' ? 0.35 : 0.7), window.innerHeight * 0.7) + 10 : (itemPanelVisible ? 114 : 76)) : 24, left: '50%', transform: toastVisible ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(80px)', opacity: toastVisible ? 1 : 0, transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div role="status" aria-live="polite" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#333', color: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}><i className="fas fa-check-circle text-xs" style={{ color: '#7A8B6F' }} />{toastMsg}</div>
       </div>
       </>
