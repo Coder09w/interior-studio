@@ -1184,9 +1184,11 @@ const footerLinks = {
   ],
   Resources: [
     { label: 'Help Center', href: '/contact' },
+    { label: 'Case Studies', href: '/case-studies' },
+    { label: 'Press', href: '/press' },
   ],
   Company: [
-    { label: 'About', href: '/contact' },
+    { label: 'About', href: '/about' },
     { label: 'Contact', href: '/contact' },
   ],
   Legal: [

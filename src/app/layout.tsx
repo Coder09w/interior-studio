@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Outfit, DM_Sans, Inter } from "next/font/google";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./globals.css";
@@ -7,7 +8,10 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 // import { PostHogProvider } from "@/components/providers/posthog-provider";
 import { BetaBanner } from "@/components/beta-banner";
 import { FeedbackButton } from "@/components/feedback-button";
+import { AnalyticsRouteTracker } from "@/components/analytics/analytics-route-tracker";
 // import { CookieConsent } from "@/components/cookie-consent";
+
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -113,12 +117,30 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${outfit.variable} ${dmSans.variable} antialiased bg-background text-foreground`}
       >
+        {/* Google Analytics 4 — only loads when NEXT_PUBLIC_GA_ID is set */}
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="gtag-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}', { send_page_view: false });
+              `}
+            </Script>
+          </>
+        )}
         <a href="#main-content" className="skip-to-content">
           Skip to content
         </a>
         <AuthProvider>
           {/* <PostHogProvider> */}
             <BetaBanner />
+            <AnalyticsRouteTracker />
             <div id="main-content">
               {children}
             </div>

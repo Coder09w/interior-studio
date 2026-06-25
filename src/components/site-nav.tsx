@@ -78,6 +78,13 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
                   Features
                 </a>
                 <Link
+                  href="/case-studies"
+                  className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
+                  style={{ color: '#5A4E42' }}
+                >
+                  Case Studies
+                </Link>
+                <Link
                   href="/pricing"
                   className="text-sm font-medium transition-colors hover:text-[#C17F4E]"
                   style={{ color: '#5A4E42' }}
@@ -120,6 +127,7 @@ export default function SiteNav({ variant = 'solid', showBeta = true, rightConte
         <div className="md:hidden border-t" style={{ borderColor: '#E2DDD4', background: '#FFFFFF' }}>
           <div className="px-4 py-4 space-y-3">
             <a href="#features" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#5A4E42' }}>Features</a>
+            <Link href="/case-studies" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#5A4E42' }}>Case Studies</Link>
             <Link href="/pricing" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#5A4E42' }}>Pricing</Link>
             <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="block text-sm font-medium" style={{ color: '#5A4E42' }}>Sign In</Link>
             <Link href="/editor" prefetch={false} onClick={() => setMobileOpen(false)} className="block text-sm font-medium px-4 py-2 rounded-lg text-white text-center" style={{ background: '#C17F4E' }}>Open Editor</Link>
