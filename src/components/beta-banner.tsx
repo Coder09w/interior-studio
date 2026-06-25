@@ -41,7 +41,7 @@ export function BetaBanner() {
           <span className="hidden sm:inline">
             Early Access Beta — All premium features are free!{' '}
             <a href="/pricing" className="underline underline-offset-2 hover:opacity-90">
-              Learn more
+              See what's included in Beta
             </a>
           </span>
         </span>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import '@/styles/editor.css';
 
 /* ===== CLASH-OF-CLANS STYLE CINEMATIC LOADER FOR INSTOD ===== */
 
@@ -135,19 +136,19 @@ function IsometricRoom({ progress, theme }: { progress: number; theme: ThemeToke
         borderColor: theme.rugBorder,
       }} />
 
-      {/* Sofa */}
+      {/* Brand logo as the centerpiece (replaces old decorative sofa) */}
       {furnitureVisible && (
-        <div className="coc-iso-sofa">
-          <svg width="72" height="38" viewBox="0 0 72 38" fill="none">
-            <rect x="6" y="14" width="60" height="18" rx="4" fill="#8B7355" />
-            <rect x="6" y="7"  width="60" height="10" rx="4" fill="#7A6348" />
-            <rect x="6" y="16" width="24" height="12" rx="2" fill="#9B8365" />
-            <rect x="34" y="16" width="24" height="12" rx="2" fill="#9B8365" />
-            <rect x="9"  y="32" width="4" height="5" rx="1.5" fill="#5C4033" />
-            <rect x="59" y="32" width="4" height="5" rx="1.5" fill="#5C4033" />
-            <rect x="8"  y="16" width="22" height="4" rx="1" fill="rgba(255,255,255,.1)" />
-            <rect x="36" y="16" width="22" height="4" rx="1" fill="rgba(255,255,255,.1)" />
-          </svg>
+        <div className="coc-iso-sofa" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 72, height: 48 }}>
+          <img
+            src="/logo.png"
+            alt="Instod"
+            style={{
+              width: 64,
+              height: 64,
+              objectFit: 'contain',
+              filter: `drop-shadow(0 6px 14px ${theme.accent}66) drop-shadow(0 2px 4px rgba(0,0,0,0.45))`,
+            }}
+          />
         </div>
       )}
 

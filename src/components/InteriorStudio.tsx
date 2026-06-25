@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { useSession } from 'next-auth/react';
+import '@/styles/editor.css';
 import { builders, makeMat } from '@/lib/furniture-builders';
 import EditorLoader from '@/components/EditorLoader';
 import type { MatType } from '@/lib/furniture-builders';
