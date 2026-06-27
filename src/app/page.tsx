@@ -1263,9 +1263,21 @@ function Footer() {
           <p className="text-sm" style={{ color: '#A8A8A8' }}>
             &copy; {new Date().getFullYear()} Instod. All rights reserved.
           </p>
-          <p className="text-sm" style={{ color: '#A8A8A8' }}>
-            Made with ❤️ for designers
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm" style={{ color: '#A8A8A8' }}>
+              Made with ❤️ for designers
+            </p>
+            {/* Hail Mary — private content studio. Low-contrast by design. */}
+            <Link
+              href="/hail-mary"
+              prefetch={false}
+              className="text-[10px] font-mono transition-colors hover:text-white/50"
+              style={{ color: 'rgba(255,255,255,0.15)' }}
+              aria-label="Hail Mary"
+            >
+              ·
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
