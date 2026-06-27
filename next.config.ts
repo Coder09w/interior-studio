@@ -29,11 +29,15 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      // Google Analytics 4 needs googletagmanager.com (script loader) +
+      // google-analytics.com + analytics.google.com (event beacon).
+      // 'unsafe-inline' required for the inline gtag init script in layout.tsx.
+      // 'unsafe-eval' required for Next.js dev + some lib internals.
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https: https://*.ufileos.com",
-      "connect-src 'self' https://*.vercel.app https://internal-api.z.ai https://us.i.posthog.com https://us-assets.i.posthog.com",
+      "img-src 'self' data: blob: https: https://*.ufileos.com https://www.googletagmanager.com https://www.google-analytics.com",
+      "connect-src 'self' https://*.vercel.app https://internal-api.z.ai https://us.i.posthog.com https://us-assets.i.posthog.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
       "frame-ancestors 'none'",
     ].join("; "),
   },
