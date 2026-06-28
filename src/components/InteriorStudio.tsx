@@ -319,6 +319,114 @@ export default function InteriorStudio({ initialRoomType, projectId: _projectId,
   // Draggable action bar state (mobile)
   const [actionBarPos, setActionBarPos] = useState({ x: 0, y: 0 });
   const actionBarDragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean } | null>(null);
+
+  /* ===== HAIL MARY CAPTURE MODE =====
+   * When the editor is opened with ?capture=true, this listener exposes
+   * a postMessage API so the Hail Mary panel can:
+   *   - Rotate the camera to preset angles
+   *   - Change lighting mood
+   *   - Take screenshots from the Three.js canvas
+   *   - Switch room views (top / front / 3D)
+   *
+   * This is COMPLETELY INERT when ?capture=true is NOT in the URL.
+   * Zero impact on normal editor behavior or performance.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('capture') !== 'true') return;
+
+    const handler = (event: MessageEvent) => {
+      // Only accept messages from same origin
+      if (event.origin !== window.location.origin) return;
+      const { type, id } = event.data || {};
+      const reply = (payload: Record<string, unknown>) => {
+        window.postMessage({ type: `${type}-response`, id, ...payload }, window.location.origin);
+      };
+
+      switch (type) {
+        case 'hail-mary:screenshot': {
+          const r = rendererRef.current, s = sceneRef.current, c = cameraRef.current;
+          if (!r || !s || !c) { reply({ error: 'renderer not ready' }); return; }
+          r.render(s, c);
+          reply({ dataUrl: r.domElement.toDataURL('image/png') });
+          break;
+        }
+        case 'hail-mary:set-view': {
+          const view = event.data.view as 'top' | 'front' | 'persp';
+          if (view) setView(view);
+          // Wait for camera animation to finish, then screenshot
+          setTimeout(() => {
+            const r = rendererRef.current, s = sceneRef.current, c = cameraRef.current;
+            if (!r || !s || !c) { reply({ error: 'renderer not ready' }); return; }
+            r.render(s, c);
+            reply({ dataUrl: r.domElement.toDataURL('image/png'), view });
+          }, 600);
+          break;
+        }
+        case 'hail-mary:set-mood': {
+          const mood = event.data.mood as string;
+          if (mood && lightMoods[mood]) {
+            setLightMood(mood);
+            // Wait for lighting to apply, then screenshot
+            setTimeout(() => {
+              const r = rendererRef.current, s = sceneRef.current, c = cameraRef.current;
+              if (!r || !s || !c) { reply({ error: 'renderer not ready' }); return; }
+              r.render(s, c);
+              reply({ dataUrl: r.domElement.toDataURL('image/png'), mood });
+            }, 400);
+          }
+          break;
+        }
+        case 'hail-mary:capture-all': {
+          // Capture 4 views × current mood → return all screenshots
+          const views: Array<{ view: 'top' | 'front' | 'persp'; label: string }> = [
+            { view: 'persp', label: '3D Perspective' },
+            { view: 'front', label: 'Front View' },
+            { view: 'top', label: 'Top View' },
+          ];
+          const moods: Array<{ mood: string; label: string }> = [
+            { mood: 'daylight', label: 'Daylight' },
+            { mood: 'golden', label: 'Golden Hour' },
+            { mood: 'evening', label: 'Evening' },
+            { mood: 'night', label: 'Night' },
+          ];
+          const results: Array<{ view: string; mood: string; label: string; dataUrl: string }> = [];
+          let idx = 0;
+          const captureNext = () => {
+            if (idx >= views.length) {
+              reply({ captures: results });
+              return;
+            }
+            const v = views[idx];
+            setView(v.view);
+            setTimeout(() => {
+              const r = rendererRef.current, s = sceneRef.current, c = cameraRef.current;
+              if (r && s && c) {
+                r.render(s, c);
+                results.push({ view: v.view, mood: lightMoodRef.current, label: `${v.label} · ${lightMoodRef.current}`, dataUrl: r.domElement.toDataURL('image/png') });
+              }
+              idx++;
+              captureNext();
+            }, 700);
+          };
+          captureNext();
+          break;
+        }
+        case 'hail-mary:ping': {
+          reply({ status: 'ok', roomType: initialRoomType || 'living', mood: lightMoodRef.current });
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('message', handler);
+    // Signal that the editor is ready for capture commands
+    window.postMessage({ type: 'hail-mary:editor-ready' }, window.location.origin);
+    return () => window.removeEventListener('message', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Reset action bar position when panel opens/closes to prevent off-screen positioning
   useEffect(() => { setActionBarPos({ x: 0, y: 0 }); }, [mobilePanel]);
 
