@@ -11,7 +11,7 @@ const securityHeaders = [
   },
   {
     key: "X-Frame-Options",
-    value: "DENY",
+    value: "SAMEORIGIN",
   },
   {
     key: "X-XSS-Protection",
@@ -38,7 +38,7 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https: https://*.ufileos.com https://www.googletagmanager.com https://www.google-analytics.com",
       "connect-src 'self' https://*.vercel.app https://internal-api.z.ai https://us.i.posthog.com https://us-assets.i.posthog.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
-      "frame-ancestors 'none'",
+      "frame-ancestors 'self'",
     ].join("; "),
   },
 ];
